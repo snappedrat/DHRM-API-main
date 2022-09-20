@@ -1,16 +1,16 @@
 const { NULL } = require("mysql/lib/protocol/constants/types");
 
 exports.dbConfig = {
-    'user': 'sa',
-    'password': '1234',
-    'server': 'AHAMED',
+    'user': 'superuser',
+    'password': 'superuser123',
+    'server': '172.16.53.5',
 
 
     options: {
     port: 1433,
     enableArithAbort: false,
     encrypt: false,
-    database: 'DHRM_PRD_DB',
+    database: 'DHRM_PRD_DB_BKP',
     instance:'MSSQLSERVER',
     rowCollectionOnDone: true,
     useColumnNames: false,  
