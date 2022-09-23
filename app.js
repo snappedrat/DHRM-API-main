@@ -83,9 +83,9 @@ app.post('/basicforms',async(req,res)=>{
     var martial = req.body.mar;
     var phy_disable = req.body.pd;
     console.log(req.body)
-    user.query("insert into prev(mobileNumber,permanent,present,name,father,dob,height,perm_as_pres,weight,dose1,dose2,gender,aadhar,nation,religion,martial,phy_disable) values('"+mobileNumber+"','"+permanent+"','"+present+"','"+name+"','"+father+"','"+dob+"','"+height+"','"+perm_as_pres+"','"+weight+"','"+dose1+"','"+dose2+"','"+gender+"','"+aadhar1+"','"+nation+"','"+religion+"','"+martial+"','"+phy_disable+"')").then(function (datas) {
+    user.query("update trainee_apln set  mobile_no1 = '"+mobileNumber+"' ,permanent_address = '"+permanent+"',present_address = '"+present+"' ,fullname = '"+name+"' ,fathername = '"+father+"',birthdate = '"+dob+"' ,height = '"+height+"',weight = '"+weight+"',dose1_dt = '"+dose1+"',dose2_dt = '"+dose2+"' ,gender = '"+gender+"',aadhar_no = '"+aadhar1+"',nationality = '"+nation+"',religion = '"+religion+"',marital_status = '"+martial+"',physical_disability = '"+phy_disable+"'").then(function (datas) {
         console.log()
-        res.send(datas);
+        res.send(datas['recordset']);
     })
 });
 
