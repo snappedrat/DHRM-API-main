@@ -83,7 +83,7 @@ app.post('/basicforms',async(req,res)=>{
     var martial = req.body.mar;
     var phy_disable = req.body.pd;
     console.log(req.body)
-    user.query("insert into basicforms(mobileNumber,permanent,present,name,father,dob,height,perm_as_pres,weight,dose1,dose2,gender,aadhar,nation,religion,martial,phy_disable) values('"+mobileNumber+"','"+permanent+"','"+present+"','"+name+"','"+father+"','"+dob+"','"+height+"','"+perm_as_pres+"','"+weight+"','"+dose1+"','"+dose2+"','"+gender+"','"+aadhar1+"','"+nation+"','"+religion+"','"+martial+"','"+phy_disable+"')").then(function (datas) {
+    user.query("insert into prev(mobileNumber,permanent,present,name,father,dob,height,perm_as_pres,weight,dose1,dose2,gender,aadhar,nation,religion,martial,phy_disable) values('"+mobileNumber+"','"+permanent+"','"+present+"','"+name+"','"+father+"','"+dob+"','"+height+"','"+perm_as_pres+"','"+weight+"','"+dose1+"','"+dose2+"','"+gender+"','"+aadhar1+"','"+nation+"','"+religion+"','"+martial+"','"+phy_disable+"')").then(function (datas) {
         console.log()
         res.send(datas);
     })
@@ -94,14 +94,41 @@ app.post('/bankforms',async(req,res)=>{
     var account = req.body.account;
     var ifsc = req.body.ifsc;
     var bankName = req.body.bankName;
-    var sno = req.body.sno;
+    var mobileNumber = req.body.mobilenumber
     console.log(req.body)
-    user.query("insert into bankforms(acc_num,ifsc,bank_name)values('"+account+"','"+ifsc+"','"+bankName+"')").then(function (datas) {
+    user.query("update trainee_apln set bank_account_number = '"+account+"', ifsc_code = '"+ifsc+"', bank_name = '"+bankName+"' where mobile_no1 = '"+mobileNumber+"'").then(function (datas) {
         console.log()
         res.send(datas);
     })
 });
 
+app.post('/plantcodelist', async(req,res)=>
+{
+  var user = await getpool();
+  user.query("select plant_code from plant").then(function(datas){
+    miu = datas['recordset']
+    res.send(miu)
+  })
+}) ;
+
+app.post('/companycodelist', async(req,res)=>
+{
+  var user = await getpool();
+  user.query("select company_code from master_company").then(function(datas){
+    miu = datas['recordset']
+    res.send(miu)
+  })
+}) ;
+
+app.post('/traineeformdata', async(req,res)=>
+{
+  var user = await getpool();
+  var mobileNumber = req.body.mobileNumber;
+  user.query("select * from trainee_apln where mobile_no1 = '"+mobileNumber+"'").then(function(datas){
+    let miu = datas['recordset']
+    res.send(miu)
+  })
+});
 
 app.post('/emergency',async(req,res)=>{
     var user = await getpool();
@@ -269,11 +296,10 @@ app.post('/excelline',async(req,res)=>{
   console.log("insert into line(plant_name,dept_name,line_name,per_subarea,active_status,created_on,del_status) values"+append)
   var query="insert into line(plant_name,dept_name,line_name,per_subarea,active_status,created_on,del_status) values"+append;
   user.query(query).then(function (datas) {
-     console.log()
-       res.send(datas);
+    let miu=datas['recordset'];
+    res.send(miu)
   })
 });
-
 
 app.post('/dept',async(req,res)=>{
   var user = await getpool();
