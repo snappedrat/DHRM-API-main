@@ -136,7 +136,7 @@ app.post('/emergency',async(req,res)=>{
     var contactNumber = req.body.contactNumber;
     var relations = req.body.relations;
     console.log(req.body)
-    user.query("insert into emergency(name,ph_num,relation)values('"+contactName+"','"+contactNumber+"','"+relations+"')").then(function (datas) {
+    user.query("update emergency where name='"+contactName+"',ph_num='"+contactNumber+"',relation='"+relations+"'").then(function(datas){
         console.log()
         res.send(datas);
     })
@@ -148,7 +148,7 @@ app.post('/family',async(req,res)=>{
     let append="";
     for(var i=0;i<details.length;i++)
     {
-        user.query("insert into family(name,relation,age,occupation,ph_no,dep_self)values('"+details[i].name+"','"+details[i].relation+"','"+details[i].age+"','"+details[i].occupation+"','"+details[i].contactNumber+"','"+details[i].dependant_self+"')").then(function (datas) {
+        user.query("update family where name= '"+details[i].name+"',relation='"+details[i].relation+"',age='"+details[i].age+"',,occupation='"+details[i].occupation+"',ph_no='"+details[i].contactNumber+"',dep_self='"+details[i].dependant_self+"'").then(function (datas) {
             console.log()
             res.send();
         })
@@ -162,7 +162,7 @@ app.post('/edu',async(req,res)=>{
     let append="";
     for(var i=0;i<details.length;i++)
     {
-        user.query("insert into edu(s_c,exampassed,YOP,mainsub,certificateno,certifieddate,percentage)values('"+details[i].s_c+"','"+details[i].examPassed+"','"+details[i].YOP+"','"+details[i].mainSub+"','"+details[i].certificateNo+"','"+details[i].certifiedDate+"','"+details[i].percentage+"')").then(function (datas) {
+        user.query("update edu where s_c='"+details[i].s_c+"',exampassed='"+details[i].examPassed+"',YOP='"+details[i].YOP+"',mainsub='"+details[i].mainSub+"',certificateno='"+details[i].certificateNo+"',certifieddate='"+details[i].certificateNo+"',percentage='"+details[i].percentage+"'").then(function (datas) {
             console.log()
             res.send();
         })
@@ -176,7 +176,7 @@ app.post('/prev',async(req,res)=>{
     let append="";
     for(var i=0;i<details.length;i++)
     {
-        user.query("insert into prev(nameofcompany,desig,pof,pot,sld,rfl)values('"+details[i].nameofcompany+"','"+details[i].desig+"','"+details[i].pof+"','"+details[i].pot+"','"+details[i].sld+"','"+details[i].rfl+"')").then(function (datas) {
+        user.query("update prev where nameofcompany='"+details[i].nameofcompany+"',desig='"+details[i].desig+"',pof='"+details[i].pof+"',pot='"+details[i].pot+"',sld='"+details[i].sld+"',rfl='"+details[i].rfl+"'").then(function (datas) {
             console.log()
             res.send();
         })
@@ -192,7 +192,7 @@ app.post('/others',async(req,res)=>{
     var com = req.body.com;
     var extra = req.body.extra;
     console.log(req.body)
-    user.query("insert into others(known,worked,name_rel,place,company_name,extra_activites)values('"+known+"','"+work+"','"+names+"','"+place+"','"+com+"','"+extra+"')").then(function (datas) {
+    user.query("update others where known='"+known+"',worked='"+work+"',name_rel='"+names+"',place='"+place+"',company_name='"+com+"',extra_activites='"+extra+"'").then(function (datas) {
         console.log()
         res.send(datas);
     console.log(req.body);
