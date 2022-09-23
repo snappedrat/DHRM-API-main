@@ -135,10 +135,11 @@ app.post('/emergency',async(req,res)=>{
     var contactName = req.body.contactName;
     var contactNumber = req.body.contactNumber;
     var relations = req.body.relations;
+    var mobilenumber = req.body.mobilenumber;
     console.log(req.body)
-    user.query("update emergency where name='"+contactName+"',ph_num='"+contactNumber+"',relation='"+relations+"'").then(function(datas){
+    user.query("update trainee_apln set emergency_name='"+contactName+"',mobile_no2='"+contactNumber+"',emergency_rel='"+relations+"' where mobile_no1 = '"+mobilenumber+"' ").then(function(datas){
         console.log()
-        res.send(datas);
+        res.send(datas['recordset']);
     })
 });
 
@@ -148,9 +149,9 @@ app.post('/family',async(req,res)=>{
     let append="";
     for(var i=0;i<details.length;i++)
     {
-        user.query("update family where name= '"+details[i].name+"',relation='"+details[i].relation+"',age='"+details[i].age+"',,occupation='"+details[i].occupation+"',ph_no='"+details[i].contactNumber+"',dep_self='"+details[i].dependant_self+"'").then(function (datas) {
+        user.query("update trainee_apln_family set relation_name= '"+details[i].name+"',relation_type='"+details[i].relation+"',age= "+details[i].age+",occupation='"+details[i].occupation+"',contact_number='"+details[i].contactNumber+"', dependent= 0 where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+details[i].mobilenumber+"')").then(function (datas) {
             console.log()
-            res.send();
+            res.send(datas['recordset']);
         })
 
     }
@@ -162,9 +163,9 @@ app.post('/edu',async(req,res)=>{
     let append="";
     for(var i=0;i<details.length;i++)
     {
-        user.query("update edu where s_c='"+details[i].s_c+"',exampassed='"+details[i].examPassed+"',YOP='"+details[i].YOP+"',mainsub='"+details[i].mainSub+"',certificateno='"+details[i].certificateNo+"',certifieddate='"+details[i].certificateNo+"',percentage='"+details[i].percentage+"'").then(function (datas) {
-            console.log()
-            res.send();
+        user.query("update trainee_apln_qualifn set school_name='"+details[i].s_c+"',exam_passed='"+details[i].examPassed+"',passing_yr='"+details[i].YOP+"',subjects='"+details[i].mainSub+"',cert_number='"+details[i].certificateNo+"',cert_date='"+details[i].certificateNo+"',percentage='"+details[i].percentage+"' where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = "+details[i].mobilenumber+")" ).then(function (datas) {
+            console.log(datas)
+            res.send(datas['recordset']);
         })
 
     }
@@ -176,9 +177,9 @@ app.post('/prev',async(req,res)=>{
     let append="";
     for(var i=0;i<details.length;i++)
     {
-        user.query("update prev where nameofcompany='"+details[i].nameofcompany+"',desig='"+details[i].desig+"',pof='"+details[i].pof+"',pot='"+details[i].pot+"',sld='"+details[i].sld+"',rfl='"+details[i].rfl+"'").then(function (datas) {
-            console.log()
-            res.send();
+        user.query("update trainee_apln_career set company_name='"+details[i].nameofcompany+"',designation='"+details[i].desig+"',period_from ='"+details[i].pof+"',period_to='"+details[i].pot+"',last_salary='"+details[i].sld+"',leaving_reason='"+details[i].rfl+"' where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = "+details[i].mobilenumber+")").then(function (datas) {
+            console.log(datas['recordset'])
+            res.send(datas['recordset']);
         })
     }
 });
@@ -191,10 +192,11 @@ app.post('/others',async(req,res)=>{
     var place = req.body.place;
     var com = req.body.com;
     var extra = req.body.extra;
+    var mobilenumber = req.body.mobilenumber;
     console.log(req.body)
-    user.query("update others where known='"+known+"',worked='"+work+"',name_rel='"+names+"',place='"+place+"',company_name='"+com+"',extra_activites='"+extra+"'").then(function (datas) {
+    user.query("update trainee_apln set any_empl_rane='"+known+"',prev_rane_empl='"+work+"',existing_empl_name='"+names+"',existing_empl_company='"+place+"',prev_rane_exp='"+com+"',extra_curricular='"+extra+"' where mobile_no1 = "+mobilenumber+"  ").then(function (datas) {
         console.log()
-        res.send(datas);
+        res.send(datas['recordset']);
     console.log(req.body);
     })
 });
