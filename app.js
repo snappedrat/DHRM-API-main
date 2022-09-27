@@ -63,6 +63,26 @@ app.post('/logins', async(request, response)=> {
 
 });
 
+app.post('/gethr', async(req,res)=>{
+  var user = await getpool()
+
+  var user_name = req.body.username;
+  user.query("select Is_HR from employees where User_Name = '"+user_name+"'").then(function(datas){
+    res.send(datas['recordset'])
+  })
+}
+);
+
+app.post('/gethrappr', async(req,res)=>{
+  var user = await getpool()
+  var user_name = req.body.username;
+  user.query("select Is_HRAppr from employees where User_Name = '"+user_name+"'").then(function(datas){
+    console.log('test', datas);
+    res.send(datas['recordset'])
+  })
+}
+);
+
 app.post('/basicforms',async(req,res)=>{
     var user = await getpool();
     var  mobileNumber = req.body.mobileNumber;
@@ -110,7 +130,7 @@ app.post('/bankforms',async(req,res)=>{
 app.post('/plantcodelist', async(req,res)=>
 {
   var user = await getpool();
-  user.query("select plant_code from plant").then(function(datas){
+  user.query("select plant_name from plant").then(function(datas){
     miu = datas['recordset']
     res.send(miu)
   })
@@ -128,10 +148,10 @@ app.post('/companycodelist', async(req,res)=>
 app.post('/traineeformdata', async(req,res)=>
 {
   var user = await getpool();
-  var plantcode = req.body.plant
+  var plantname = req.body.plant
   var companycode = req.body.company
   var mobileNumber = req.body.mobileNumber;
-  user.query("insert into trainee_apln(apln_slno,mobile_no1, plant_code, created_dt, for_quality) values((select max(apln_slno) from trainee_apln)+1,'"+mobileNumber+"' ,'"+plantcode+"', CURRENT_TIMESTAMP, 0)").then(function(datas){
+  user.query("insert into trainee_apln(apln_slno,mobile_no1, plant_code, created_dt, for_quality) values((select max(apln_slno) from trainee_apln)+1,'"+mobileNumber+"' ,(select plant_code from plant where plant_name = '"+plantname+"'), CURRENT_TIMESTAMP, 0)").then(function(datas){
     let miu = datas['recordset']
     res.send(miu)
     console.log(datas)
@@ -249,6 +269,17 @@ app.post('/filter', async(req,res)=>{
   var todate = req.body.todate
 
   user.query("select doj, fullname, fathername, birthdate, mobile_no1, aadhar_no, apln_status from trainee_apln where apln_status = '"+status+"' AND (doj between '"+fromdate+"' AND '"+todate+"')").then(function(datas){
+    res.send(datas['recordset'])
+  })
+})
+
+app.post('/filterforapproval', async(req,res)=>{
+  var user = await getpool();
+  var status = req.body.status
+  var fromdate = req.body.fromdate
+  var todate = req.body.todate
+  
+  user.query("select doj, fullname, fathername, birthdate, mobile_no1,trainee_idno, aadhar_no, apln_status from trainee_apln where apln_status = '"+status+"' AND (doj between '"+fromdate+"' AND '"+todate+"')").then(function(datas){
     res.send(datas['recordset'])
   })
 })
@@ -485,6 +516,7 @@ app.post('/opredit',async(req,res)=>{
   user.query("update operation set opr_desc='"+opr_desc+"',skill_level='"+skill_level+"',critical_opr='"+critical_opr+"',active_status= '"+active_status+"',modified_on=CURRENT_TIMESTAMP where sno=" +sno).then(function (datas) {
      console.log()
      res.send(datas);
+
   })
 });
 
