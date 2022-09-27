@@ -151,10 +151,11 @@ app.post('/traineeformdata', async(req,res)=>
   var plantname = req.body.plant
   var companycode = req.body.company
   var mobileNumber = req.body.mobileNumber;
-  user.query("insert into trainee_apln(apln_slno,mobile_no1, plant_code, created_dt, for_quality) values((select max(apln_slno) from trainee_apln)+1,'"+mobileNumber+"' ,(select plant_code from plant where plant_name = '"+plantname+"'), CURRENT_TIMESTAMP, 0)").then(function(datas){
+  var pass = req.body.pass;
+  user.query("insert into trainee_apln(apln_slno,mobile_no1, plant_code, created_dt, for_quality, temp_password, apln_status) values((select max(apln_slno) from trainee_apln)+1,'"+mobileNumber+"' ,(select plant_code from plant where plant_name = '"+plantname+"'), CURRENT_TIMESTAMP, 0, '"+pass+"', 'PENDING')").then(function(datas){
     let miu = datas['recordset']
     res.send(miu)
-    console.log(datas)
+    console.log(req.body)
   })
 });
 
@@ -276,12 +277,52 @@ app.post('/filter', async(req,res)=>{
 app.post('/filterforapproval', async(req,res)=>{
   var user = await getpool();
   var status = req.body.status
-  var fromdate = req.body.fromdate
-  var todate = req.body.todate
+
   
-  user.query("select doj, fullname, fathername, birthdate, mobile_no1,trainee_idno, aadhar_no, apln_status from trainee_apln where apln_status = '"+status+"' AND (doj between '"+fromdate+"' AND '"+todate+"')").then(function(datas){
+  user.query("select doj, fullname, fathername, birthdate, mobile_no1,trainee_idno, aadhar_no, apln_status from trainee_apln where apln_status = '"+status+"'").then(function(datas){
     res.send(datas['recordset'])
   })
+})
+
+app.post('/submitted', async(req,res)=>{
+  var user = await getpool()
+  var mob = req.body.mobile
+  console.log(mob)
+  user.query("update trainee_apln set apln_status = 'SUBMITTED' where mobile_no1 = '"+mob+"'").then(function(datas){
+    console.log(datas)
+  })
+})
+
+
+app.post('/approved', async(req,res)=>{
+  var user = await getpool()
+  var mob = req.body.mobile
+  console.log(mob)
+  user.query("update trainee_apln set apln_status = 'APPROVED' where mobile_no1 = '"+mob+"'").then(function(datas){
+    console.log(datas)
+  })
+})
+
+app.post('/rejected', async(req,res)=>{
+  var user = await getpool()
+  var mob = req.body.mobile
+  console.log(mob)
+  user.query("update trainee_apln set apln_status = 'REJECTED' where mobile_no1 = '"+mob+"'").then(function(datas){
+    console.log(datas)
+  })
+})
+
+app.post('/getdataforid', async(req,res)=>{
+  var user = await getpool()
+  var mobile = req.body.mobile
+  console.log(mobile)
+  user.query("select fullname,fathername, trainee_idno,dept_slno, permanent_address, emergency_name, emergency_rel from trainee_apln where mobile_no1 = "+mobile+" ").then(function(datas1){
+    console.log("one", datas1['recordset']);
+    res.send(datas1['recordset'])
+  })
+  // user.query("select dept_name from department where dept_slno = (select dept_slno from trainee_apln  where mobile_no1 = "+mobile+")").then(function(datas2){console.log("two", datas2['recordset']);res.send(datas2['recordset']) })
+  // user.query("select desig_name from designation where plant_code = (select plant_code from trainee_apln where mobile_no1 = "+mobile+")").then(function(datas3){console.log("three", datas3['recordset']);res.send(datas3['recordset'])})
+
 })
 
 app.post('/user',async(req,res)=>{
