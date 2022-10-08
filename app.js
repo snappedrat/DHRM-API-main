@@ -120,7 +120,6 @@ app.post('/basicforms',async(req,res)=>{
 }
 catch(error){
   console.log(e);
-
   res.write("Basic form failed");
   res.send(e);
 
