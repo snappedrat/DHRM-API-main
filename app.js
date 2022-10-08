@@ -12,6 +12,7 @@ const db = require('./db');
 const { json } = require('express/lib/response');
 const { pool, rows } = require('mssql');
 const { response } = require('express');
+const res = require('express/lib/response');
 let glob = 0;
 app.use(morgan('dev'));
 const corsOptions = {
@@ -83,6 +84,7 @@ app.post('/gethrappr', async(req,res)=>{
 }
 );
 
+try{
 app.post('/basicforms',async(req,res)=>{
     var user = await getpool();
     var  mobileNumber = req.body.mobileNumber;
@@ -115,6 +117,14 @@ app.post('/basicforms',async(req,res)=>{
         res.send(datas['recordset']);
     })
 });
+}
+catch(error){
+  console.log(e);
+
+  res.write("Basic form failed");
+  res.send(e);
+
+}
 
 app.post('/bankforms',async(req,res)=>{
     var user = await getpool();
@@ -320,7 +330,6 @@ app.post('/getdataforid', async(req,res)=>{
     console.log("one", datas1['recordset']);
     res.send(datas1['recordset'])
   })
-
 })
 
 app.post('/getdatabasic', async(req,res)=>{
