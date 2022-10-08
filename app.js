@@ -118,7 +118,7 @@ app.post('/basicforms',async(req,res)=>{
     })
 });
 }
-catch(error){
+catch(e){
   console.log(e);
   res.write("Basic form failed");
   res.send(e);
