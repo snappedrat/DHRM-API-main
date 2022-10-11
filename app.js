@@ -219,11 +219,11 @@ app.post('/traineeformdata', async(req,res)=>
   var companycode = req.body.company
   var mobileNumber = req.body.mobileNumber;
   var pass = req.body.pass;
-  user.query("insert into trainee_apln(apln_slno,mobile_no1, plant_code, doj, for_quality, temp_password, apln_status) values((select max(apln_slno) from trainee_apln)+1,'"+mobileNumber+"' ,(select plant_code from plant where plant_name = '"+plantname+"'), CAST(getdate() AS date), 0, '"+pass+"', 'PENDING')").then(function(datas){
+  user.query("insert into trainee_apln(apln_slno,mobile_no1, plant_code, created_dt, for_quality, temp_password, apln_status) values((select max(apln_slno) from trainee_apln)+1,'"+mobileNumber+"' ,(select plant_code from plant where plant_name = '"+plantname+"'), CAST(getdate() AS date), 0, '"+pass+"', 'PENDING')").then(function(datas){
     let miu = datas['recordset']
     res.send(miu)
     console.log(req.body)
-  },function(err){if(err) return 'error incoming'})
+  })
   user.query("insert into trainee_apln_career(career_slno, apln_slno) values((select max(career_slno) from trainee_apln_career)+1,(select max(apln_slno) from trainee_apln)+1)")
   user.query("insert into trainee_apln_family(family_slno, apln_slno) values((select max(family_slno) from trainee_apln_family)+1,(select max(apln_slno) from trainee_apln))")
   user.query("insert into trainee_apln_qualifn(qual_slno, apln_slno) values((select max(qual_slno) from trainee_apln_qualifn)+1,(select max(apln_slno) from trainee_apln))")
