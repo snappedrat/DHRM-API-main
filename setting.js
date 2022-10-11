@@ -4,7 +4,7 @@ exports.dbConfig = {
     'user': 'superuser',
     'password': 'superuser123',
     'server': '14.99.10.243',
-    // 'server': '172.16,53.5',
+    // 'server': '172.16.53.5',
 
 
     options: {

@@ -9,6 +9,7 @@ return pool
 })
     .catch(err => console.log('Database Connection Failed! Bad Config: ', err));
 
-module.exports = {
-sqlDb, poolPromise
+module.exports = 
+{
+    sqlDb, poolPromise
 }
