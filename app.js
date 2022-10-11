@@ -12,6 +12,7 @@ const db = require('./db');
 const { json } = require('express/lib/response');
 const { pool, rows } = require('mssql');
 const { response } = require('express');
+const res = require('express/lib/response');
 let glob = 0;
 const multer = require('multer');
 
@@ -125,6 +126,7 @@ app.post('/gethrappr', async(req,res)=>{
 }
 );
 
+try{
 app.post('/basicforms', async(req,res,err)=>{
   
     var user = await getpool();
@@ -171,6 +173,13 @@ app.post('/basicforms', async(req,res,err)=>{
 }
 
 );
+}
+catch(e){
+  console.log(e);
+  res.write("Basic form failed");
+  res.send(e);
+
+}
 
 app.post('/bankforms',async(req,res)=>{
     var user = await getpool();
@@ -374,7 +383,6 @@ app.post('/getdataforid', async(req,res)=>{
     console.log("one", datas1['recordset']);
     res.send(datas1['recordset'])
   },function(err){if(err) return 'error incoming'})
-
 })
 
 app.post('/getdatabasic', async(req,res)=>{
