@@ -12,6 +12,7 @@ exports.dbConfig = {
     enableArithAbort: false,
     encrypt: false,
     database: 'DHRM_PRD_DB_BKP',
+    
     instance:'MSSQLSERVER',
     rowCollectionOnDone: true,
     useColumnNames: false,  
