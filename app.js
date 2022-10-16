@@ -337,10 +337,19 @@ app.post('/filter', async(req,res)=>{
   },function(err){if(err) return 'error incoming'})
 })
 
+app.post('/searchfilter', async(req,res)=>{
+  var user = await getpool();
+  var input = req.body.input
+  var value = req.body.value
+  console.log("select * from trainee_apln where "+value+" like '%"+input+"%'")
+  user.query("select * from trainee_apln where "+value+" like '%"+input+"%'").then(function(datas){
+    res.send(datas['recordset'])
+  },function(err){if(err) return 'error incoming'})
+})
+
 app.post('/filterforapproval', async(req,res)=>{
   var user = await getpool();
   var status = req.body.status
-
   user.query("select doj, first_name, fathername, birthdate, mobile_no1,trainee_idno, aadhar_no, apln_status from trainee_apln where apln_status = '"+status+"'").then(function(datas){
     res.send(datas['recordset'])
   },function(err){if(err) return 'error incoming'})
