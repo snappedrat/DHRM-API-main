@@ -237,32 +237,32 @@ app.post('/traineeformdata', async(req,res)=>
   var companycode = req.body.company
   var mobileNumber = req.body.mobileNumber;
   var pass = req.body.pass;
-  var status = ''
+  var status = {}
 
   var pool =await db.poolPromise
   var result =await pool.request()
-    .query("select * from trainee_apln where mobile_no1 = '"+mobileNumber+"' ")
+    .query("select * from trainee_apln where mobile_no1 = '"+mobileNumber+"' ");
     if(result['recordset'].length > 0)
       {
-        if(result['recordset'][0]?.apln_status == 'PENDING')
+        if(result['recordset'][0]?.apln_status == 'PENDING' ||result['recordset'][0]?.apln_status == 'SUBMITTED' ||result['recordset'][0]?.apln_status == 'APPROVED')
         {
-        status = 'registered'
-        res.send(status)
+        status.status = 'registered';
+        res.send(result['recordset']);
         }
         else if((result['recordset'][0]?.apln_status == 'NEW INCOMPLETE'))
           {
-            status = 'incomplete'
-            res.send(status)
+            status.status = 'incomplete';
+            res.send(status);
           }
       }
-    else
+    else if(result['recordset'].length == 0)
     {
-      var result2 = await pool.request()
-        .query("insert into trainee_apln(apln_slno,mobile_no1, plant_code, created_dt, for_quality, temp_password, apln_status) values((select max(apln_slno) from trainee_apln)+1,'"+mobileNumber+"' ,(select plant_code from plant where plant_name = '"+plantname+"'), CAST(getdate() AS date), 0, '"+pass+"', 'NEW INCOMPLETE')")
-      res.send('newform')
+      var result2 =await pool.request()
+      result2.query("insert into trainee_apln(apln_slno,mobile_no1, plant_code, created_dt, for_quality, temp_password, apln_status) values((select max(apln_slno) from trainee_apln)+1,'"+mobileNumber+"' ,(select plant_code from plant where plant_name = '"+plantname+"'), CAST(getdate() AS date), 0, '"+pass+"', 'NEW INCOMPLETE')");
+      status.status = 'newform';
+      res.send(status);
     }
    
-
   // user.query("insert into trainee_apln(apln_slno,mobile_no1, plant_code, created_dt, for_quality, temp_password, apln_status) values((select max(apln_slno) from trainee_apln)+1,'"+mobileNumber+"' ,(select plant_code from plant where plant_name = '"+plantname+"'), CAST(getdate() AS date), 0, '"+pass+"', 'PENDING')").then(function(datas){
   //   let miu = datas['recordset']
   //   res.send(miu)
@@ -453,12 +453,21 @@ app.post('/submitted', async(req,res)=>{
 //   res.send(result3)
 // })
 
+app.post('/pending', async(req,res)=>{
+  var user = await getpool()
+  var mob = req.body.mobile
+  console.log(mob)
+  user.query("update trainee_apln set apln_status = 'PENDING' where mobile_no1 = '"+mob+"'").then(function(datas){
+    console.log(datas)
+  },function(err){if(err) return 'error incoming'})
+})
+
 app.post('/approved', async(req,res)=>{
   var user = await getpool()
   var mob = req.body.mobile
   console.log(mob)
   user.query("update trainee_apln set apln_status = 'APPROVED' where mobile_no1 = '"+mob+"'").then(function(datas){
-    console.log(datas)
+    console.log("approved : ",datas)
   },function(err){if(err) return 'error incoming'})
 })
 
