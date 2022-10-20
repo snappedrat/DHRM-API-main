@@ -147,7 +147,7 @@ try{
 app.post('/basicforms', async(req,res,err)=>{
   
     var user = await getpool();
-
+    var title = req.body.title;
     var permanent = req.body.permanent;
     var present = req.body.present;
     var fname = req.body.fname;
@@ -177,13 +177,14 @@ app.post('/basicforms', async(req,res,err)=>{
     var martial = req.body.mar;
     var phy_disable = req.body.pd;
     var mobilenumber = req.body.mobilenumber
+    var fullname = fname+' '+lname
     console.log(req.body)
     // console.log('====================================');
     // console.log("update trainee_apln set permanent_address = '"+permanent+"' ,present_address = '"+present+"' ,first_name = '"+fname+"' ,last_name = '"+lname+"',fathername = '"+father+"', aadhar_no = '"+aadhar+"', birthdate = '"+dob+"' ,height = '"+height+"',weight = '"+weight+"' ,dose1_dt = '"+dose1+"',dose2_dt = '"+dose2+"' ,gender = '"+gender+"',nationality = '"+nation+"',religion = '"+religion+"', city = '"+city+"', state_name = '"+state+"', birth_place = '"+bp+"',   marital_status = '"+martial+"',physical_disability = '"+phy_disable+"' where mobile_no1 = '"+mobilenumber+"' ");
     // console.log('====================================');
-    console.log("update trainee_apln set permanent_address = '"+permanent+"' ,present_address = '"+permanent+"' ,first_name = '"+fname+"' ,last_name = '"+lname+"',fathername = '"+father+"', aadhar_no = '"+aadhar+"', birthdate = '"+dob+"' ,height = '"+height+"',weight = '"+weight+"' , blood_group = '" +bg+"' , dose1_dt = '"+dose1+"',dose2_dt = '"+dose2+"' ,gender = '"+gender+"',nationality = '"+nation+"',religion = '"+religion+"',  city = '"+city+"', state_name = '"+state+"', birth_place = '"+bp+"', pincode = '"+pc+"', ident_mark1 = '"+idm1+"', ident_mark2 = '"+idm2+"',  marital_status = '"+martial+"',physical_disability = '"+phy_disable+"' where mobile_no1 = '"+mobilenumber+"' ")
+    console.log("update trainee_apln set title = '"+title+"',fullname = '"+fullname+"', fullname = '' permanent_address = '"+permanent+"' ,present_address = '"+permanent+"' ,first_name = '"+fname+"' ,last_name = '"+lname+"',fathername = '"+father+"', aadhar_no = '"+aadhar+"', birthdate = '"+dob+"' ,height = '"+height+"',weight = '"+weight+"' , blood_group = '" +bg+"' , dose1_dt = '"+dose1+"',dose2_dt = '"+dose2+"' ,gender = '"+gender+"',nationality = '"+nation+"',religion = '"+religion+"',  city = '"+city+"', state_name = '"+state+"', birth_place = '"+bp+"', pincode = '"+pc+"', ident_mark1 = '"+idm1+"', ident_mark2 = '"+idm2+"',  marital_status = '"+martial+"',physical_disability = '"+phy_disable+"' where mobile_no1 = '"+mobilenumber+"' ")
 
-    user.query("update trainee_apln set permanent_address = '"+permanent+"' ,present_address = '"+permanent+"' ,first_name = '"+fname+"' ,last_name = '"+lname+"',fathername = '"+father+"', aadhar_no = '"+aadhar+"', birthdate = '"+dob+"' ,height = '"+height+"',weight = '"+weight+"' ,  blood_group = '" +bg+"' , dose1_dt = '"+dose1+"',dose2_dt = '"+dose2+"' ,gender = '"+gender+"',nationality = '"+nation+"',religion = '"+religion+"',  city = '"+city+"', state_name = '"+state+"', birth_place = '"+bp+"', pincode = '"+pc+"', ident_mark1 = '"+idm1+"', ident_mark2 = '"+idm2+"',  marital_status = '"+martial+"',physical_disability = '"+phy_disable+"' where mobile_no1 = '"+mobilenumber+"' ").then(function (datas) {
+    user.query("update trainee_apln set title = '"+title+"',fullname = '"+fullname+"', permanent_address = '"+permanent+"' ,present_address = '"+permanent+"' ,first_name = '"+fname+"' ,last_name = '"+lname+"',fathername = '"+father+"', aadhar_no = '"+aadhar+"', birthdate = '"+dob+"' ,height = '"+height+"',weight = '"+weight+"' ,  blood_group = '" +bg+"' , dose1_dt = '"+dose1+"',dose2_dt = '"+dose2+"' ,gender = '"+gender+"',nationality = '"+nation+"',religion = '"+religion+"',  city = '"+city+"', state_name = '"+state+"', birth_place = '"+bp+"', pincode = '"+pc+"', ident_mark1 = '"+idm1+"', ident_mark2 = '"+idm2+"',  marital_status = '"+martial+"',physical_disability = '"+phy_disable+"' where mobile_no1 = '"+mobilenumber+"' ").then(function (datas) {
         res.send(datas['recordset']);
     }, function(err){if(err) return 'error incoming'})
 
@@ -246,7 +247,7 @@ app.post('/traineeformdata', async(req,res)=>
         if(result['recordset'][0]?.apln_status == 'PENDING' ||result['recordset'][0]?.apln_status == 'SUBMITTED' ||result['recordset'][0]?.apln_status == 'APPROVED')
         {
         status.status = 'registered';
-        res.send(result['recordset']);
+        res.send(status);
         }
         else if((result['recordset'][0]?.apln_status == 'NEW INCOMPLETE'))
           {
@@ -331,23 +332,27 @@ app.post('/family',async(req,res)=>{
 
   var user = await getpool() 
   var details = req.body;
+
   for(var i = 0 ; i<4 ;i++)
   {
     if(details[i].dependent == 'Dependent')
       details[i].dependent = 1
     else
       details[i].dependent = 0
+    
+    if(details[i].age == undefined)
+      details[i].age = 0
   }
-
+  console.log(details)
   var pool = await db.poolPromise
   var result = await pool.request()
       .query("select * from trainee_apln_family where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"')")
-    console.log(result['recordset'].length)
+    console.log("len",result['recordset'].length)
   if(result['recordset'].length == 0 )
   {
     console.log('1')
     for(var i = 0; i< details.length ; i++)
-      if(details[i].name !='')
+      if(details[i].name !='' &&details[i].name != 'undefined')
         user.query("insert into trainee_apln_family(apln_slno,relation_name ,relation_type, age, occupation, dependent, contact_number) values((select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"'),'"+details[i].name+"', '"+details[i].relation+"', '"+details[i].age+"', '"+details[i].occupation+"', '"+details[i].dependent+"', '"+details[i].contactnumber+"')")
   }
   else if(result['recordset'].length > 0)
@@ -357,7 +362,7 @@ app.post('/family',async(req,res)=>{
     {
       if(result['recordset'][i] == undefined)
       {
-        if(details[i].name != '')
+        if(details[i].name != '' && details[i].name != 'undefined')
         // console.log("insert into trainee_apln_family(family_slno, apln_slno,relation_name ,relation_type, age, occupation, dependent, contact_number) values((select max(family_slno) from trainee_apln_family)+1,(select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"'),'"+details[i].name+"', '"+details[i].relation+"', '"+details[i].age+"', '"+details[i].occupation+"', '"+details[i].dependent+"', '"+details[i].contactnumber+"')")
           user.query("insert into trainee_apln_family(apln_slno,relation_name ,relation_type, age, occupation, dependent, contact_number) values((select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"'),'"+details[i].name+"', '"+details[i].relation+"', '"+details[i].age+"', '"+details[i].occupation+"', '"+details[i].dependent+"', '"+details[i].contactnumber+"')")
       }
@@ -368,40 +373,104 @@ app.post('/family',async(req,res)=>{
         user.query("update trainee_apln_family set relation_name = '"+details[i].name+"' ,relation_type = '"+details[i].relation+"', age = '"+details[i].age+"', occupation = '"+details[i].occupation+"', dependent = '"+details[i].dependent+"', contact_number = '"+details[i].contactnumber+"' where family_slno = (select min(family_slno) from trainee_apln_family where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"'))+'"+i+"'  ") 
       }
     }
-
-  }  // else
-  // {
-  //   user.query("update traine_apln_family set ")
-  // }
+  }
 },function(err){if(err) return 'error incoming'});
 
+
+
 app.post('/edu',async(req,res)=>{
-  var user = await getpool();
+
+  var user = await getpool() 
   var details = req.body;
-  let append="";
 
-  user.query("update trainee_apln_qualifn set school_name1='"+details[0].school+"',exam_passed1='"+details[0].passed+"',passing_yr1='"+details[0].year+"',subjects1='"+details[0].department+"',cert_number1='"+details[0].certificatenumber+"',cert_date1='"+details[0].certificatedate+"',percentage1='"+details[0].percentage+"', school_name2='"+details[1].school+"',exam_passed2='"+details[1].passed+"',passing_yr2='"+details[1].year+"',subjects2='"+details[1].department+"',cert_number2='"+details[1].certificatenumber+"',cert_date2='"+details[1].certificatedate+"',percentage2='"+details[1].percentage+"', school_name3='"+details[2].school+"',exam_passed3='"+details[2].passed+"',passing_yr3='"+details[2].year+"',subjects3='"+details[2].department+"',cert_number3='"+details[2].certificatenumber+"',cert_date3='"+details[2].certificatedate+"',percentage3='"+details[2].percentage+"', school_name4='"+details[3].school+"',exam_passed4='"+details[3].passed+"',passing_yr4='"+details[3].year+"',subjects4='"+details[3].department+"',cert_number4='"+details[3].certificatenumber+"',cert_date4='"+details[3].certificatedate+"',percentage4='"+details[3].percentage+"' where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"')").then(function (datas) {
-        console.log("education",details)
-          res.send(datas['recordset']);
-      },function(err){if(err) return 'error incoming'})
+  var pool = await db.poolPromise
+  var result = await pool.request()
+      .query("select * from trainee_apln_qualifn where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"')")
+    console.log(result['recordset'].length)
+  if(result['recordset'].length == 0 )
+  {
+    console.log('1')
+    for(var i = 0; i< details.length ; i++)
+      if(details[i].school !='' || undefined )
+        user.query("insert into trainee_apln_qualifn (apln_slno,school_name ,exam_passed, passing_yr, subjects, cert_number, cert_date, percentage) values((select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"'),'"+details[i].school+"', '"+details[i].passed+"', '"+details[i].year+"', '"+details[i].department+"', '"+details[i].certificatenumber+"', '"+details[i].certificatedate+"', '"+details[i].percentage+"')")
+  }
+  else if(result['recordset'].length > 0)
+  {
+    console.log('2')
+    for(var i = 0;i<4; i++)
+    {
+      if(result['recordset'][i] == undefined)
+      {
+        if(details[i].school != '')
+        // console.log("insert into trainee_apln_family(family_slno, apln_slno,relation_name ,relation_type, age, occupation, dependent, contact_number) values((select max(family_slno) from trainee_apln_family)+1,(select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"'),'"+details[i].name+"', '"+details[i].relation+"', '"+details[i].age+"', '"+details[i].occupation+"', '"+details[i].dependent+"', '"+details[i].contactnumber+"')")
+        user.query("insert into trainee_apln_qualifn (apln_slno,school_name ,exam_passed, passing_yr, subjects, cert_number, cert_date, percentage) values((select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"'),'"+details[i].school+"', '"+details[i].passed+"', '"+details[i].year+"', '"+details[i].department+"', '"+details[i].certificatenumber+"', '"+details[i].certificatedate+"', '"+details[i].percentage+"')")
+      }
+      
+      else if(result['recordset'][i] != undefined)
+      {
+        console.log('4')
+        user.query("update trainee_apln_qualifn set school_name = '"+details[i].school+"' ,exam_passed = '"+details[i].passed+"', passing_yr = '"+details[i].year+"', subjects = '"+details[i].department+"', cert_number = '"+details[i].certificatenumber+"', cert_date = '"+details[i].certificatedate+"',percentage = '"+details[i].percentage+"' where qual_slno = (select min(qual_slno) from trainee_apln_qualifn where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"'))+'"+i+"'  ") 
+      }
+    }
+  }
+},function(err){if(err) return 'error incoming'});
 
-  
-});
 
 app.post('/prev',async(req,res)=>{
-  var user = await getpool();
+
+  var user = await getpool() 
   var details = req.body;
-  let append="";
-      user.query("update trainee_apln_career set company_name1='"+details[0].name+"',designation1='"+details[0].desig+"',period_from1 ='"+details[0].periodf+"',period_to1='"+details[0].periodt+"',last_salary1='"+details[0].sal+"',leaving_reason1='"+details[0].reason+"', company_name2='"+details[1].name+"',designation2='"+details[1].desig+"',period_from2 ='"+details[1].periodf+"',period_to2='"+details[1].periodt+"',last_salary2='"+details[1].sal+"',leaving_reason2='"+details[1].reason+"',company_name3='"+details[2].name+"',designation3='"+details[2].desig+"',period_from3 ='"+details[2].periodf+"',period_to3='"+details[2].periodt+"',last_salary3 = '"+details[2].sal+"',leaving_reason3='"+details[2].reason+"', company_name4='"+details[3].name+"',designation4='"+details[3].desig+"',period_from4 ='"+details[3].periodf+"',period_to4='"+details[3].periodt+"',last_salary4='"+details[3].sal+"',leaving_reason4='"+details[3].reason+"' where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"')").then(function (datas) {
-        console.log("prev",details)
-          res.send(datas['recordset']);
-      },function(err){if(err) return 'error incoming'})
-});
+
+  var pool = await db.poolPromise
+  var result = await pool.request()
+      .query("select * from trainee_apln_career where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"')")
+    console.log(result['recordset'].length)
+  if(result['recordset'].length == 0 )
+  {
+    console.log('1')
+    for(var i = 0; i< details.length ; i++)
+      if(details[i].name !='' || undefined )
+        user.query("insert into trainee_apln_career (apln_slno,company_name ,designation, period_from,period_to, last_salary, leaving_reason) values((select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"'),'"+details[i].name+"', '"+details[i].desig+"', '"+details[i].periodf+"', '"+details[i].periodt+"', '"+details[i].sal+"', '"+details[i].reason+"')")
+  }
+
+  else if(result['recordset'].length > 0)
+  {
+    console.log('2')
+    for(var i = 0;i<4; i++)
+    {
+      if(result['recordset'][i] == undefined)
+      {
+        if(details[i].name != '')
+        // console.log("insert into trainee_apln_family(family_slno, apln_slno,relation_name ,relation_type, age, occupation, dependent, contact_number) values((select max(family_slno) from trainee_apln_family)+1,(select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"'),'"+details[i].name+"', '"+details[i].relation+"', '"+details[i].age+"', '"+details[i].occupation+"', '"+details[i].dependent+"', '"+details[i].contactnumber+"')")
+          user.query("insert into trainee_apln_career (apln_slno,company_name ,designation, period_from,period_to, last_salary, leaving_reason) values((select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"'),'"+details[i].name+"', '"+details[i].desig+"', '"+details[i].periodf+"', '"+details[i].periodt+"', '"+details[i].sal+"', '"+details[i].reason+"')")
+      }
+      
+      else if(result['recordset'][i] != undefined)
+      {
+        console.log('4')
+          user.query("update trainee_apln_career set company_name = '"+details[i].name+"' ,designation = '"+details[i].desig+"', period_from = '"+details[i].periodf+"', period_to = '"+details[i].periodt+"', last_salary = '"+details[i].sal+"', leaving_reason = '"+details[i].reason+"' where career_slno = (select min(career_slno) from trainee_apln_career where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"'))+'"+i+"'  ") 
+      }
+    }
+  }
+},function(err){if(err) return 'error incoming'});
+
 
 app.post('/others',async(req,res)=>{
     var user = await getpool();
     var known = req.body.known;
+
+    if(known == 'Yes')
+      known = 'Y'
+    else if (known == 'No')
+      known = 'N'
+
     var work = req.body.work;
+
+    if(work == 'Yes')
+    work = 'Y'
+    else if (work == 'No')
+    work = 'N'
+
     var names = req.body.names;
     var place = req.body.place;
     var com = req.body.com;
@@ -465,6 +534,7 @@ app.post('/submitted', async(req,res)=>{
   id = result['recordset'][0]?.pl+'/'+year+'/'+result2['recordset'][0]?.apln_slno
   var result3 = await pool.request()
     .query("update trainee_apln set apln_status = 'SUBMITTED', trainee_idno = '"+id+"' where mobile_no1 = '"+mob+"' ")
+  console.log("..........", result3)
   res.send(result3)
 })
 
