@@ -490,19 +490,27 @@ app.post('/filter', async(req,res)=>{
   var fromdate = req.body.fromdate
   var todate = req.body.todate
   var plantcode = req.body.plantcode
-
-  console.log("select created_dt, first_name, fathername, birthdate, mobile_no1, aadhar_no, apln_status from trainee_apln where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND plant_code = '"+plantcode+"' "  )
-  user.query("select created_dt, first_name, fathername, birthdate, mobile_no1, aadhar_no, apln_status from trainee_apln where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"')  ").then(function(datas){
+  console.log(req.body)
+  console.log("select created_dt, first_name, fathername, birthdate, mobile_no1, aadhar_no, apln_status from trainee_apln where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND plant_code = '"+plantcode+"' ")
+  user.query("select created_dt, fullname, fathername, birthdate, mobile_no1, aadhar_no, apln_status from trainee_apln where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND plant_code = '"+plantcode+"' ").then(function(datas){
     res.send(datas['recordset'])
+    console.log(datas['recordset'])
   },function(err){if(err) return 'error incoming'})
 })
 
-app.post('/searchfilter', async(req,res)=>{
+app.post('/searchfilter', async(req,res)=>
+{
   var user = await getpool();
-  var input = req.body.input
-  var value = req.body.value
-  console.log("select * from trainee_apln where "+value+" like '%"+input+"%'")
-  user.query("select * from trainee_apln where "+value+" like '%"+input+"%'").then(function(datas){
+  var status = req.body.status
+  var fromdate = req.body.fromdate
+  var todate = req.body.todate
+  var plantcode = req.body.plantcode
+  var colname = req.body.colname
+  var colvalue = req.body.colvalue
+  colvalue = colvalue.trim()
+
+  console.log("----------select created_dt, first_name, fathername, birthdate, mobile_no1, aadhar_no, apln_status from trainee_apln where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND "+colname+"= '"+colvalue+"' "  )
+  user.query("select created_dt, fullname, fathername, birthdate, mobile_no1, aadhar_no, apln_status from trainee_apln where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND "+colname+"= '"+colvalue+"' AND plant_code = '"+plantcode+"' ").then(function(datas){
     res.send(datas['recordset'])
   },function(err){if(err) return 'error incoming'})
 })
@@ -510,7 +518,9 @@ app.post('/searchfilter', async(req,res)=>{
 app.post('/filterforapproval', async(req,res)=>{
   var user = await getpool();
   var status = req.body.status
-  user.query("select doj, first_name, fathername, birthdate, mobile_no1,trainee_idno, aadhar_no, apln_status from trainee_apln where apln_status = '"+status+"'").then(function(datas){
+  var plantcode = req.body.plantcode
+
+  user.query("select created_dt, fullname, fathername, birthdate, mobile_no1,trainee_idno, aadhar_no, apln_status from trainee_apln where apln_status = '"+status+"'AND plant_code = '"+plantcode+"' ").then(function(datas){
     res.send(datas['recordset'])
   },function(err){if(err) return 'error incoming'})
 })
@@ -527,7 +537,7 @@ app.post('/submitted', async(req,res)=>{
   var result =await pool.request()
   
   .query("select pl from plant where plant_code = (select plant_code from trainee_apln where mobile_no1 = '"+mob+"') ")
-
+  
   var result2 = await pool.request()
     .query("select apln_slno from trainee_apln where mobile_no1 = '"+mob+"' ")
   
@@ -590,10 +600,18 @@ app.post('/rejected', async(req,res)=>{
 app.post('/getdataforid', async(req,res)=>{
   var user = await getpool()
   var mobile = req.body.mobile
+
+  var r = await db.poolPromise
+  var result = await r.request()
+    .query("select addr from plant where plant_code = (select plant_code from trainee_apln where mobile_no1 = '"+mobile+"') ")
+
   console.log(mobile)
-  user.query("select fullname,fathername, trainee_idno,dept_slno, permanent_address, emergency_name, emergency_rel from trainee_apln where mobile_no1 = '"+mobile+"' ").then(function(datas1){
-    console.log("one", datas1['recordset']);
-    res.send(datas1['recordset'])
+  user.query("select fullname,fathername, trainee_idno,dept_slno, permanent_address, emergency_name, emergency_rel, other_files7 from trainee_apln where mobile_no1 = '"+mobile+"' ").then(function(datas1){
+   
+    object = datas1['recordset']
+    object[0].addr = result['recordset'][0].addr
+    console.log("one", object);
+    res.send(object)
   },function(err){if(err) return 'error incoming'})
 })
 
