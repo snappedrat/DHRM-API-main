@@ -143,6 +143,13 @@ app.post('/getpincode', async(req,res)=>{
   })
 })
 
+app.get('/getaadhar', async(req,res)=>{
+  var user = await getpool()
+  user.query("select aadhar_no from trainee_apln").then(function(datas){
+    res.send(datas['recordset'])
+  })
+})
+
 try{
 app.post('/basicforms', async(req,res,err)=>{
   
@@ -215,7 +222,8 @@ app.post('/bankforms',async(req,res)=>{
 app.post('/plantcodelist', async(req,res)=>
 {
   var user = await getpool();
-  user.query("select plant_name from plant").then(function(datas){
+  var company_name = req.body.company_name
+  user.query("select plant_name from plant where company_code =  (select company_code from master_company where company_name = '"+company_name+"')  ").then(function(datas){
     miu = datas['recordset']
     res.send(miu)
   }, )
