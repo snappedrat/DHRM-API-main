@@ -43,7 +43,7 @@ app.post("/image", upload , async(req, res) => {
     console.log(req.body)
     console.log('====================================');
     console.log("update trainee_apln set other_files"+fileno+" = '"+name+"' where mobile_no1= '"+mobile+"' ")
-    user.query("update trainee_apln set other_files"+fileno+" = '"+name+"' where mobile_no1= '"+mobile+"' ", function(err){if(err) return 'error incoming'})
+    user.query("update trainee_apln set other_files"+fileno+" = '"+name+"' where mobile_no1= '"+mobile+"' ",  )
     console.log('====================================');
     console.log(req.file);
     console.log('====================================');
@@ -112,7 +112,7 @@ app.post('/gethr', async(req,res)=>{
 
   user.query("select Is_HR from employees where User_Name = '"+user_name+"'").then(function(datas){
     res.send(datas['recordset'])
-  },function(err){if(err) return 'error incoming'})
+  },function(err){if(err) return 'error incoming'} )
 }
 );
 
@@ -122,7 +122,7 @@ app.post('/gethrappr', async(req,res)=>{
   user.query("select Is_HRAppr, plant_code, Emp_name from employees where User_Name = '"+user_name+"'").then(function(datas){
     console.log('test', datas);
     res.send(datas['recordset'])
-  },function(err){if(err) return 'error incoming'})
+  },function(err){if(err) return 'error incoming'} )
 }
 );
 
@@ -186,7 +186,7 @@ app.post('/basicforms', async(req,res,err)=>{
 
     user.query("update trainee_apln set title = '"+title+"',fullname = '"+fullname+"', permanent_address = '"+permanent+"' ,present_address = '"+permanent+"' ,first_name = '"+fname+"' ,last_name = '"+lname+"',fathername = '"+father+"', aadhar_no = '"+aadhar+"', birthdate = '"+dob+"' ,height = '"+height+"',weight = '"+weight+"' ,  blood_group = '" +bg+"' , dose1_dt = '"+dose1+"',dose2_dt = '"+dose2+"' ,gender = '"+gender+"',nationality = '"+nation+"',religion = '"+religion+"',  city = '"+city+"', state_name = '"+state+"', birth_place = '"+bp+"', pincode = '"+pc+"', ident_mark1 = '"+idm1+"', ident_mark2 = '"+idm2+"',  marital_status = '"+martial+"',physical_disability = '"+phy_disable+"' where mobile_no1 = '"+mobilenumber+"' ").then(function (datas) {
         res.send(datas['recordset']);
-    }, function(err){if(err) return 'error incoming'})
+    },  )
 
 }
 
@@ -209,7 +209,7 @@ app.post('/bankforms',async(req,res)=>{
     user.query("update trainee_apln set bank_account_number = '"+account+"', ifsc_code = '"+ifsc+"', bank_name = '"+bankName+"' where mobile_no1 = '"+mobileNumber+"'").then(function (datas) {
       console.log("bank",req.body)
         res.send(datas);
-    },function(err){if(err) return 'error incoming'})
+    },function(err){if(err) return 'error incoming'} )
 });
 
 app.post('/plantcodelist', async(req,res)=>
@@ -218,7 +218,7 @@ app.post('/plantcodelist', async(req,res)=>
   user.query("select plant_name from plant").then(function(datas){
     miu = datas['recordset']
     res.send(miu)
-  },function(err){if(err) return 'error incoming'})
+  }, )
 }) ;
 
 app.post('/companycodelist', async(req,res)=>
@@ -227,7 +227,7 @@ app.post('/companycodelist', async(req,res)=>
   user.query("select company_name from master_company").then(function(datas){
     miu = datas['recordset']
     res.send(miu)
-  },function(err){if(err) return 'error incoming'})
+  },function(err){if(err) return 'error incoming'} )
 }) ;
 
 app.post('/traineeformdata', async(req,res)=>
@@ -284,7 +284,7 @@ app.post('/emergency',async(req,res)=>{
     user.query("update trainee_apln set emergency_name='"+contactName+"',mobile_no2='"+contactNumber+"',emergency_rel='"+relations+"' where mobile_no1 = '"+mobilenumber+"' ").then(function(datas){
       console.log("emer",req.body)
         res.send(datas['recordset']);
-    },function(err){if(err) return 'error incoming'})
+    }, function(err){if(err) return 'error incoming'})
 });
 
 
@@ -324,7 +324,7 @@ app.post('/lang', async(req,res)=>
   user.query("update trainee_apln set lang6_name = '"+ lang6.language+"' , lang6_speak = '"+ lang6.speak +"', lang6_read = '"+ lang6.read +"', lang6_write = '"+ lang6.write +"', lang6_understand = '"+ lang6.understand +"', lang6_mothertounge = '"+ lang6.mothertongue +"' where mobile_no1 = '"+ lang1.mobile+"' ")
 }
   console.log(details[0])
-},function(err){if(err) return 'error incoming'})
+}, function(err){if(err) return 'error incoming'})
 
 
 
@@ -353,7 +353,7 @@ app.post('/family',async(req,res)=>{
     console.log('1')
     for(var i = 0; i< details.length ; i++)
       if(details[i].name !='' &&details[i].name != 'undefined')
-        user.query("insert into trainee_apln_family(apln_slno,relation_name ,relation_type, age, occupation, dependent, contact_number) values((select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"'),'"+details[i].name+"', '"+details[i].relation+"', '"+details[i].age+"', '"+details[i].occupation+"', '"+details[i].dependent+"', '"+details[i].contactnumber+"')")
+        user.query("insert into trainee_apln_family(apln_slno,relation_name ,relation_type, age, occupation, dependent, contact_number) values((select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"'),'"+details[i].name+"', '"+details[i].relation+"', '"+details[i].age+"', '"+details[i].occupation+"', '"+details[i].dependent+"', '"+details[i].contactnumber+"')").then(function(datas){console.log(datas)})
   }
   else if(result['recordset'].length > 0)
   {
@@ -362,19 +362,25 @@ app.post('/family',async(req,res)=>{
     {
       if(result['recordset'][i] == undefined)
       {
-        if(details[i].name != '' && details[i].name != 'undefined')
+
+        if(details[i].name != '')
+        {
+          user.query("insert into trainee_apln_family(apln_slno,relation_name ,relation_type, age, occupation, dependent, contact_number) values((select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"'),'"+details[i].name+"', '"+details[i].relation+"', '"+details[i].age+"', '"+details[i].occupation+"', '"+details[i].dependent+"', '"+details[i].contactnumber+"')").then(function(datas){console.log(datas)})
+          console.log('insert', i) 
+        }
         // console.log("insert into trainee_apln_family(family_slno, apln_slno,relation_name ,relation_type, age, occupation, dependent, contact_number) values((select max(family_slno) from trainee_apln_family)+1,(select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"'),'"+details[i].name+"', '"+details[i].relation+"', '"+details[i].age+"', '"+details[i].occupation+"', '"+details[i].dependent+"', '"+details[i].contactnumber+"')")
-          user.query("insert into trainee_apln_family(apln_slno,relation_name ,relation_type, age, occupation, dependent, contact_number) values((select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"'),'"+details[i].name+"', '"+details[i].relation+"', '"+details[i].age+"', '"+details[i].occupation+"', '"+details[i].dependent+"', '"+details[i].contactnumber+"')")
       }
       
       else if(result['recordset'][i] != undefined)
       {
-        console.log('4')
-        user.query("update trainee_apln_family set relation_name = '"+details[i].name+"' ,relation_type = '"+details[i].relation+"', age = '"+details[i].age+"', occupation = '"+details[i].occupation+"', dependent = '"+details[i].dependent+"', contact_number = '"+details[i].contactnumber+"' where family_slno = (select min(family_slno) from trainee_apln_family where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"'))+'"+i+"'  ") 
+        console.log("update", i)
+        user.query("update trainee_apln_family set relation_name = '"+details[i].name+"' ,relation_type = '"+details[i].relation+"', age = '"+details[i].age+"', occupation = '"+details[i].occupation+"', dependent = '"+details[i].dependent+"', contact_number = '"+details[i].contactnumber+"' where family_slno = (select min(family_slno) from trainee_apln_family where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"'))+'"+i+"'  ").then(function(datas){console.log(datas)})
       }
     }
   }
-},function(err){if(err) return 'error incoming'});
+  console.log('finished')
+  res.send(result['recordset'])
+},function(err){if(err) return 'error incoming'}  );
 
 
 
@@ -413,7 +419,8 @@ app.post('/edu',async(req,res)=>{
       }
     }
   }
-},function(err){if(err) return 'error incoming'});
+  res.send(result['recordset'])
+},function(err){if(err) return 'error incoming'} );
 
 
 app.post('/prev',async(req,res)=>{
@@ -452,7 +459,8 @@ app.post('/prev',async(req,res)=>{
       }
     }
   }
-},function(err){if(err) return 'error incoming'});
+  res.send(result['recordset'])
+}, function(err){if(err) return 'error incoming'});
 
 
 app.post('/others',async(req,res)=>{
@@ -464,7 +472,23 @@ app.post('/others',async(req,res)=>{
     else if (known == 'No')
       known = 'N'
 
+  console.log("========================================");
+   console.log(req.body.work)
+    console.log(req.body.known)
+
     var work = req.body.work;
+
+    console.log(req.body.work == null)
+
+    if(req.body.work == null || 'null')
+    {
+      work = ''
+    }
+
+    if(req.body.known == null || 'null')
+    {
+      known = 'y'
+    }
 
     if(work == 'Yes')
     work = 'Y'
@@ -481,7 +505,7 @@ app.post('/others',async(req,res)=>{
       console.log("other",req.body)
         res.send(datas['recordset']);
     console.log(req.body);
-    },function(err){if(err) return 'error incoming'})
+    }, function(err){if(err) return 'error incoming'})
 });
 
 app.post('/filter', async(req,res)=>{
@@ -495,7 +519,7 @@ app.post('/filter', async(req,res)=>{
   user.query("select created_dt, fullname, fathername, birthdate, mobile_no1, aadhar_no, apln_status from trainee_apln where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND plant_code = '"+plantcode+"' ").then(function(datas){
     res.send(datas['recordset'])
     console.log(datas['recordset'])
-  },function(err){if(err) return 'error incoming'})
+  },function(err){if(err) return 'error incoming'} )
 })
 
 app.post('/searchfilter', async(req,res)=>
@@ -512,7 +536,7 @@ app.post('/searchfilter', async(req,res)=>
   console.log("----------select created_dt, first_name, fathername, birthdate, mobile_no1, aadhar_no, apln_status from trainee_apln where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND "+colname+"= '"+colvalue+"' "  )
   user.query("select created_dt, fullname, fathername, birthdate, mobile_no1, aadhar_no, apln_status from trainee_apln where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND "+colname+"= '"+colvalue+"' AND plant_code = '"+plantcode+"' ").then(function(datas){
     res.send(datas['recordset'])
-  },function(err){if(err) return 'error incoming'})
+  }, function(err){if(err) return 'error incoming'})
 })
 
 app.post('/filterforapproval', async(req,res)=>{
@@ -522,7 +546,7 @@ app.post('/filterforapproval', async(req,res)=>{
 
   user.query("select created_dt, fullname, fathername, birthdate, mobile_no1,trainee_idno, aadhar_no, apln_status from trainee_apln where apln_status = '"+status+"'AND plant_code = '"+plantcode+"' ").then(function(datas){
     res.send(datas['recordset'])
-  },function(err){if(err) return 'error incoming'})
+  }, )
 })
 
 app.post('/submitted', async(req,res)=>{
@@ -576,7 +600,7 @@ app.post('/pending', async(req,res)=>{
   console.log(mob)
   user.query("update trainee_apln set apln_status = 'PENDING' where mobile_no1 = '"+mob+"'").then(function(datas){
     console.log(datas)
-  },function(err){if(err) return 'error incoming'})
+  },function(err){if(err) return 'error incoming'} )
 })
 
 app.post('/approved', async(req,res)=>{
@@ -585,7 +609,7 @@ app.post('/approved', async(req,res)=>{
   console.log(mob)
   user.query("update trainee_apln set apln_status = 'APPROVED' where mobile_no1 = '"+mob+"'").then(function(datas){
     console.log("approved : ",datas)
-  },function(err){if(err) return 'error incoming'})
+  },function(err){if(err) return 'error incoming'} )
 })
 
 app.post('/rejected', async(req,res)=>{
@@ -594,7 +618,7 @@ app.post('/rejected', async(req,res)=>{
   console.log(mob)
   user.query("update trainee_apln set apln_status = 'REJECTED' where mobile_no1 = '"+mob+"'").then(function(datas){
     console.log(datas)
-  },function(err){if(err) return 'error incoming'})
+  },function(err){if(err) return 'error incoming'} )
 })
 
 app.post('/getdataforid', async(req,res)=>{
@@ -612,7 +636,7 @@ app.post('/getdataforid', async(req,res)=>{
     object[0].addr = result['recordset'][0].addr
     console.log("one", object);
     res.send(object)
-  },function(err){if(err) return 'error incoming'})
+  },function(err){if(err) return 'error incoming'} )
 })
 
 app.post('/getdatabasic', async(req,res)=>{
@@ -622,7 +646,7 @@ app.post('/getdatabasic', async(req,res)=>{
   user.query("select * from trainee_apln where mobile_no1 = '"+mobile+"' ").then(function(datas){
 
     res.send(datas['recordset'])
-  },function(err){if(err) return 'error incoming'})
+  }, function(err){if(err) return 'error incoming'})
 })
 
 app.post('/getdatafamily', async(req,res)=>{
@@ -632,7 +656,7 @@ app.post('/getdatafamily', async(req,res)=>{
   user.query("select * from trainee_apln_family where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+mobile+"') ").then(function(datas1){
     console.log("one", datas1['recordset']);
     res.send(datas1['recordset'])
-  },function(err){if(err) return 'error incoming'})
+  },function(err){if(err) return 'error incoming'} )
 })
 
 app.post('/getdatacareer', async(req,res)=>{
@@ -642,7 +666,7 @@ app.post('/getdatacareer', async(req,res)=>{
   user.query("select * from trainee_apln_career where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+mobile+"') ").then(function(datas1){
     console.log("one", datas1['recordset']);
     res.send(datas1['recordset'])
-  },function(err){if(err) return 'error incoming'})
+  },function(err){if(err) return 'error incoming'} )
 })
 
 app.post('/getdataqualfn', async(req,res)=>{
@@ -652,7 +676,7 @@ app.post('/getdataqualfn', async(req,res)=>{
   user.query("select * from trainee_apln_qualifn where apln_slno = (select apln_slno from trainee_apln where mobile_no1 ='"+mobile+"') ").then(function(datas1){
     console.log("one", datas1['recordset']);
     res.send(datas1['recordset'])
-  },function(err){if(err) return 'error incoming'})
+  },function(err){if(err) return 'error incoming'} )
 })
 
 app.post('/getfiles' , async(req,res)=>{
@@ -661,7 +685,7 @@ app.post('/getfiles' , async(req,res)=>{
   user.query("select other_files7 from trainee_apln where mobile_no1 = '72002929101' ").then(function(datas){
     console.log('filenames', datas['recordset'])
     res.send(datas['recordset'])
-  },function(err){if(err) return 'error incoming'})
+  }, function(err){if(err) return 'error incoming'})
 })
 
 
@@ -692,7 +716,7 @@ app.post('/user',async(req,res)=>{
                    res.send(stat);
                })
        }
-    },function(err){if(err) return 'error incoming'});
+    }, );
 });
 
 app.post('/desig',async(req,res)=>{
@@ -703,7 +727,7 @@ app.post('/desig',async(req,res)=>{
   user.query("insert into desigination(company_code,desig_name,del_status) values('"+company_code+"','"+desig_name+"',0)").then(function (datas) {
      console.log()
        res.send(datas);
-  },function(err){if(err) return 'error incoming'})
+  },function(err){if(err) return 'error incoming'} )
 });
 
 app.post('/bank',async(req,res)=>{
@@ -714,7 +738,7 @@ app.post('/bank',async(req,res)=>{
   user.query("insert into bank(bank_name,active_status,del_status,created_on) values('"+bank_name+"','"+active_status+"',0,CURRENT_TIMESTAMP)").then(function (datas) {
      console.log()
        res.send(datas);
-  },function(err){if(err) return 'error incoming'})
+  }, )
 });
 
 app.post('/line',async(req,res)=>{
@@ -727,7 +751,7 @@ app.post('/line',async(req,res)=>{
   user.query("insert into line(plant_name,dept_name,line_name,per_subarea,active_status,created_on,del_status) values('VARANAVASI','"+dept_name+"','"+line_name+"','"+per_subarea+"','"+active_status+"',CURRENT_TIMESTAMP,0)").then(function (datas) {
      console.log()
        res.send(datas);
-  },function(err){if(err) return 'error incoming'})
+  },function(err){if(err) return 'error incoming'} )
 });
 
 app.post('/plant',async(req,res)=>{
@@ -745,7 +769,7 @@ app.post('/plant',async(req,res)=>{
   user.query("insert into [dbo].[plant] (company_code,plant_code,plant_name,del_status,pl,addr,locatn,plant_sign,personal_area,payroll_area,created_on,created_by) values('a','"+plant_code+"','"+plant_name+"',0,'"+pl+"','"+address+"','"+location+"','"+plant_sign+"',"+personal_area+","+payroll_area+",CURRENT_TIMESTAMP,'admin')  SET ANSI_WARNINGS ON").then(function (datas) {
      console.log()
        res.send(datas);
-  },function(err){if(err) return 'error incoming'})
+  }, function(err){if(err) return 'error incoming'})
 });
 app.post('/excelline',async(req,res)=>{
   var user = await getpool();
@@ -765,7 +789,7 @@ app.post('/excelline',async(req,res)=>{
   user.query(query).then(function (datas) {
     let miu=datas['recordset'];
     res.send(miu)
-  }),function(err){if(err) return 'error incoming'}
+  }) 
 });
 
 app.post('/dept',async(req,res)=>{
@@ -778,7 +802,7 @@ app.post('/dept',async(req,res)=>{
   user.query("insert into dept(dept_name,plant_code,sap_code,active_status,del_status,created_on) values('"+dept_name+"','"+plant_code+"','"+sap_code+"',"+active_status+",0,CURRENT_TIMESTAMP)").then(function (datas) {
      console.log()
        res.send(datas);
-  },function(err){if(err) return 'error incoming'})
+  }, )
 });
 
 app.post('/opr',async(req,res)=>{
@@ -791,7 +815,7 @@ app.post('/opr',async(req,res)=>{
   user.query("insert into operation(plant_code,opr_desc,skill_level,critical_opr,active_status,del_status,created_on) values(1150,'"+opr_desc+"','"+skill_level+"','"+critical_opr+"',"+active_status+",0,CURRENT_TIMESTAMP)").then(function (datas) {
      console.log()
        res.send(datas);
-  },function(err){if(err) return 'error incoming'})
+  }, )
 });
 
 app.post('/userdel',async(req,res)=>{
@@ -801,7 +825,7 @@ app.post('/userdel',async(req,res)=>{
   user.query("UPDATE master_company SET del_status = 1,modified_on=CURRENT_TIMESTAMP WHERE sno="+sno).then(function (datas) {
      console.log()
        res.send(datas);
-  },function(err){if(err) return 'error incoming'})
+  }, )
 });
 
 app.post('/desigdel',async(req,res)=>{
@@ -811,7 +835,7 @@ app.post('/desigdel',async(req,res)=>{
   user.query("UPDATE desigination SET del_status = 1,modified_on=CURRENT_TIMESTAMP WHERE sno="+sno).then(function (datas) {
      console.log()
        res.send(datas);
-  },function(err){if(err) return 'error incoming'})
+  }, )
 });
 
 app.post('/deptdel',async(req,res)=>{
@@ -821,7 +845,7 @@ app.post('/deptdel',async(req,res)=>{
   user.query("UPDATE dept SET del_status = 1,modified_on=CURRENT_TIMESTAMP WHERE sno="+sno).then(function (datas) {
      console.log()
        res.send(datas);
-  },function(err){if(err) return 'error incoming'})
+  }, )
 });
 
 app.post('/oprdel',async(req,res)=>{
@@ -831,7 +855,7 @@ app.post('/oprdel',async(req,res)=>{
   user.query("UPDATE operation SET del_status = 1,modified_on=CURRENT_TIMESTAMP WHERE sno="+sno).then(function (datas) {
      console.log()
        res.send(datas);
-  },function(err){if(err) return 'error incoming'})
+  }, )
 });
 
 app.post('/bankdel',async(req,res)=>{
@@ -841,7 +865,7 @@ app.post('/bankdel',async(req,res)=>{
   user.query("UPDATE  bank SET del_status = 1,modified_on=CURRENT_TIMESTAMP WHERE sno="+sno).then(function (datas) {
      console.log()
        res.send(datas);
-  },function(err){if(err) return 'error incoming'})
+  }, )
 });
 
 app.post('/useredit',async(req,res)=>{
@@ -856,7 +880,7 @@ app.post('/useredit',async(req,res)=>{
   user.query("update master_company set company_name= '"+name+"',status= '"+active_status+"',modified_on= CURRENT_TIMESTAMP, modified_by ='"+modified_by+"' where sno=" +sno).then(function (datas) {
      console.log()
      res.send(datas);
-  },function(err){if(err) return 'error incoming'})
+  }, )
 });
 
 app.post('/lineedit',async(req,res)=>{
@@ -871,7 +895,7 @@ app.post('/lineedit',async(req,res)=>{
   user.query("update line set plant_name='VARANAVASI',dept_name= '"+dept_name+"',line_name='"+line_name+"',per_subarea='"+per_subarea+"',active_status= '"+active_status+"',modified_on=CURRENT_TIMESTAMP where sno=" +sno).then(function (datas) {
      console.log()
      res.send(datas);
-  },function(err){if(err) return 'error incoming'})
+  }, )
 });
 
 app.post('/deptedit',async(req,res)=>{
@@ -884,7 +908,7 @@ app.post('/deptedit',async(req,res)=>{
   user.query("update dept set plant_code='"+plant_code+"',sap_code='"+sap_code+"',active_status= '"+active_status+"',modified_on=CURRENT_TIMESTAMP where sno=" +sno).then(function (datas) {
      console.log()
      res.send(datas);
-  },function(err){if(err) return 'error incoming'})
+  }, )
 });
 
 app.post('/opredit',async(req,res)=>{
@@ -899,7 +923,7 @@ app.post('/opredit',async(req,res)=>{
      console.log()
      res.send(datas);
 
-  },function(err){if(err) return 'error incoming'})
+  }, )
 });
 
 app.post('/desigedit',async(req,res)=>{
@@ -911,7 +935,7 @@ app.post('/desigedit',async(req,res)=>{
   user.query("update desigination set desig_name= '"+desig_name+"',del_status= '"+status+"'where sno="+sno).then(function (datas) {
      console.log()
      res.send(datas);
-  },function(err){if(err) return 'error incoming'})
+  }, )
 });
 
 app.post('/bankedit',async(req,res)=>{
@@ -925,7 +949,7 @@ app.post('/bankedit',async(req,res)=>{
   user.query("update bank set bank_name='"+bank_name+"',active_status='"+active_status+"',modified_on=CURRENT_TIMESTAMP where sno="+sno).then(function (datas) {
      console.log()
      res.send(datas);
-  },function(err){if(err) return 'error incoming'})
+  }, )
 });
 
 app.get('/usershow',async(req,res)=>{
@@ -933,7 +957,7 @@ app.get('/usershow',async(req,res)=>{
   user.query("select sno,company_code,company_name,status,CONVERT(varchar,created_on,105)as created_on,created_by, CONVERT(varchar,modified_on,105)as modified_on, modified_by from master_company where del_status=0").then(function (datas) {
     let miu=datas['recordset'];
        res.send(miu)
-  },function(err){if(err) return 'error incoming'})
+  }, )
 }); 
 
 app.get('/deptshow',async(req,res)=>{
@@ -941,7 +965,7 @@ app.get('/deptshow',async(req,res)=>{
   user.query("select sno,dept_name,plant_code,sap_code,CONVERT(varchar,created_on,105)as created_on,creted_by,CONVERT(varchar,modified_on,105)as modified_on,modified_by,del_status,active_status from dept where del_status=0").then(function (datas) {
     let miu=datas['recordset'];
        res.send(miu)
-  },function(err){if(err) return 'error incoming'})
+  }, )
 });
 
 app.get('/lineshow',async(req,res)=>{
@@ -949,7 +973,7 @@ app.get('/lineshow',async(req,res)=>{
   user.query("select sno,plant_name,dept_name,line_name,per_subarea,CONVERT(varchar,created_on,105)as created_on,CONVERT(varchar,modified_on,105)as modified_on,modified_by,del_status,active_status from line where del_status=0").then(function (datas) {
     let miu=datas['recordset'];
        res.send(miu)
-  },function(err){if(err) return 'error incoming'})
+  }, )
 });
 
 app.get('/plantshow',async(req,res)=>{
@@ -957,7 +981,7 @@ app.get('/plantshow',async(req,res)=>{
   user.query("select sno,plant_code,plant_name,del_status,pl,addr,locatn,plant_sign,personal_area,payroll_area,CONVERT(varchar,created_on,105)as created_on,CONVERT(varchar,modified_on,105)as modified_on from plant where del_status=0").then(function (datas) {
     let miu=datas['recordset'];
        res.send(miu)
-  },function(err){if(err) return 'error incoming'})
+  }, )
 });
 
 app.get('/oprshow',async(req,res)=>{
@@ -965,7 +989,7 @@ app.get('/oprshow',async(req,res)=>{
   user.query("select sno,plant_code,opr_desc,skill_level,critical_opr,CONVERT(varchar,created_on,105)as created_on,CONVERT(varchar,modified_on,105)as modified_on,modified_by,del_status,active_status from operation where del_status=0").then(function (datas) {
     let miu=datas['recordset'];
        res.send(miu)
-  },function(err){if(err) return 'error incoming'})
+  }, )
 });
 
 app.get('/desigshow',async(req,res)=>{
@@ -973,7 +997,7 @@ app.get('/desigshow',async(req,res)=>{
   user.query("select * from desigination where del_status=0").then(function (datas) {
     let miu=datas['recordset'];
        res.send(miu);
-  },function(err){if(err) return 'error incoming'})
+  }, )
 });
 
 app.get('/bankshow',async(req,res)=>{
@@ -981,35 +1005,35 @@ app.get('/bankshow',async(req,res)=>{
   user.query("select sno,bank_name,CONVERT(varchar,created_on,105)as created_on,CONVERT(varchar,modified_on,105)as modified_on,modified_by,active_status,del_status from bank where del_status=0").then(function (datas) {
     let miu=datas['recordset'];
        res.send(miu);
-  },function(err){if(err) return 'error incoming'})
+  }, )
 });
 app.get('/dropdown',async(req,res)=>{
   var user = await getpool();
   user.query("select  company_code from master_company where del_status=0").then(function (datas) {
     let miu=datas['recordset'];
        res.send(miu)
-  },function(err){if(err) return 'error incoming'})
+  }, )
 });
 app.get('/compnamedown',async(req,res)=>{
   var user = await getpool();
   user.query("select  company_name from master_company where del_status=0").then(function (datas) {
     let miu=datas['recordset'];
        res.send(miu)
-  },function(err){if(err) return 'error incoming'})
+  }, )
 });
 app.get('/depdown',async(req,res)=>{
   var user = await getpool();
   user.query("select  dept_name from dept where del_status=0").then(function (datas) {
     let miu=datas['recordset'];
        res.send(miu)
-  },function(err){if(err) return 'error incoming'})
+  }, )
 });
 app.get('/desigdown',async(req,res)=>{
   var user = await getpool();
   user.query("select  desig_name from desigination where del_status=0").then(function (datas) {
     let miu=datas['recordset'];
        res.send(miu)  
-  },function(err){if(err) return 'error incoming'})
+  }, )
 });
 
 
