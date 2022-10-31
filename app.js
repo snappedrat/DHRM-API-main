@@ -117,13 +117,14 @@ app.post('/gethr', async(req,res)=>{
 );
 
 app.post('/gethrappr', async(req,res)=>{
-  var user = await getpool()
   var user_name = req.body.username;
-  user.query("select Is_HRAppr, plant_code, Emp_name from employees where User_Name = '"+user_name+"'").then(function(datas){
-    console.log('test', datas);
-    res.send(datas['recordset'])
-  },function(err){if(err) return 'error incoming'} )
-}
+
+  var user = await db.poolPromise
+  var result = await user.request()
+      .query("select employees.Emp_name,employees.plant_code, employees.Is_HR, employees.Is_HRAppr, employees.User_Name,employees.department, department.dept_name, plant.plant_name from employees left join department on employees.department = department.dept_slno left join plant on plant.plant_code = employees.plant_code where employees.User_Name = '"+user_name+"' ")
+    res.send(result['recordset'])
+  console.log(result['recordset'])
+},   function(err){if(err) return 'error incoming'}
 );
 
 app.post('/getplantcode', async(req,res)=>{
@@ -163,6 +164,7 @@ app.post('/basicforms', async(req,res,err)=>{
     var dob = req.body.bd;
     var height = req.body.height;
     var weight = req.body.weight;
+ 
     var dose1 = req.body.dd1;
     var dose2 = req.body.dd2;
     var gender = req.body.gender;
@@ -184,6 +186,7 @@ app.post('/basicforms', async(req,res,err)=>{
     var martial = req.body.mar;
     var phy_disable = req.body.pd;
     var mobilenumber = req.body.mobilenumber
+    var company = req.body.company
     var fullname = fname+' '+lname
     console.log(req.body)
 
@@ -194,9 +197,9 @@ app.post('/basicforms', async(req,res,err)=>{
     // console.log('====================================');
     // console.log("update trainee_apln set permanent_address = '"+permanent+"' ,present_address = '"+present+"' ,first_name = '"+fname+"' ,last_name = '"+lname+"',fathername = '"+father+"', aadhar_no = '"+aadhar+"', birthdate = '"+dob+"' ,height = '"+height+"',weight = '"+weight+"' ,dose1_dt = '"+dose1+"',dose2_dt = '"+dose2+"' ,gender = '"+gender+"',nationality = '"+nation+"',religion = '"+religion+"', city = '"+city+"', state_name = '"+state+"', birth_place = '"+bp+"',   marital_status = '"+martial+"',physical_disability = '"+phy_disable+"' where mobile_no1 = '"+mobilenumber+"' ");
     // console.log('====================================');
-    console.log("update trainee_apln set "+title_col+" fullname = '"+fullname+"', fullname = '' permanent_address = '"+permanent+"' ,present_address = '"+permanent+"' ,first_name = '"+fname+"' ,last_name = '"+lname+"',fathername = '"+father+"', aadhar_no = '"+aadhar+"', birthdate = '"+dob+"' ,height = '"+height+"',weight = '"+weight+"' , blood_group = '" +bg+"' , dose1_dt = '"+dose1+"',dose2_dt = '"+dose2+"' ,gender = '"+gender+"',nationality = '"+nation+"',religion = '"+religion+"',  city = '"+city+"', state_name = '"+state+"', birth_place = '"+bp+"', pincode = '"+pc+"', ident_mark1 = '"+idm1+"', ident_mark2 = '"+idm2+"',  marital_status = '"+martial+"',physical_disability = '"+phy_disable+"' where mobile_no1 = '"+mobilenumber+"' ")
+    console.log("update trainee_apln set "+title_col+" fullname = '"+fullname+"', fullname = '' permanent_address = '"+permanent+"' ,present_address = '"+permanent+"' ,first_name = '"+fname+"' ,last_name = '"+lname+"',fathername = '"+father+"', aadhar_no = '"+aadhar+"', birthdate = '"+dob+"' ,height = '"+height+"',weight = '"+weight+"' , blood_group = '" +bg+"' , dose1_dt = '"+dose1+"',dose2_dt = '"+dose2+"' ,gender = '"+gender+"',nationality = '"+nation+"',religion = '"+religion+"',  city = '"+city+"', state_name = '"+state+"', birth_place = '"+bp+"', pincode = '"+pc+"', ident_mark1 = '"+idm1+"', ident_mark2 = '"+idm2+"',  marital_status = '"+martial+"',physical_disability = '"+phy_disable+"' where mobile_no1 = '"+mobilenumber+"'  and company_code = (select company_code from master_company where company_name = '"+company+"') ")
 
-    user.query("update trainee_apln set "+title_col+" fullname = '"+fullname+"', permanent_address = '"+permanent+"' ,present_address = '"+permanent+"' ,first_name = '"+fname+"' ,last_name = '"+lname+"',fathername = '"+father+"', aadhar_no = '"+aadhar+"', birthdate = '"+dob+"' ,height = '"+height+"',weight = '"+weight+"' ,  blood_group = '" +bg+"' , dose1_dt = '"+dose1+"',dose2_dt = '"+dose2+"' ,gender = '"+gender+"',nationality = '"+nation+"',religion = '"+religion+"',  city = '"+city+"', state_name = '"+state+"', birth_place = '"+bp+"', pincode = '"+pc+"', ident_mark1 = '"+idm1+"', ident_mark2 = '"+idm2+"',  marital_status = '"+martial+"',physical_disability = '"+phy_disable+"' where mobile_no1 = '"+mobilenumber+"' ").then(function (datas) {
+    user.query("update trainee_apln set "+title_col+" fullname = '"+fullname+"', permanent_address = '"+permanent+"' ,present_address = '"+permanent+"' ,first_name = '"+fname+"' ,last_name = '"+lname+"',fathername = '"+father+"', aadhar_no = '"+aadhar+"', birthdate = '"+dob+"' ,height = '"+height+"',weight = '"+weight+"' ,  blood_group = '" +bg+"' , dose1_dt = '"+dose1+"',dose2_dt = '"+dose2+"' ,gender = '"+gender+"',nationality = '"+nation+"',religion = '"+religion+"',  city = '"+city+"', state_name = '"+state+"', birth_place = '"+bp+"', pincode = '"+pc+"', ident_mark1 = '"+idm1+"', ident_mark2 = '"+idm2+"',  marital_status = '"+martial+"',physical_disability = '"+phy_disable+"' where mobile_no1 = '"+mobilenumber+"'  and company_code = (select company_code from master_company where company_name = '"+company+"')  ").then(function (datas) {
         res.send(datas['recordset']);
     },  )
 
@@ -217,8 +220,9 @@ app.post('/bankforms',async(req,res)=>{
     var ifsc = req.body.ifsc;
     var bankName = req.body.bankName;
     var mobileNumber = req.body.mobilenumber
+    var company = req.body.company
     
-    user.query("update trainee_apln set bank_account_number = '"+account+"', ifsc_code = '"+ifsc+"', bank_name = '"+bankName+"' where mobile_no1 = '"+mobileNumber+"'").then(function (datas) {
+    user.query("update trainee_apln set bank_account_number = '"+account+"', ifsc_code = '"+ifsc+"', bank_name = '"+bankName+"' where mobile_no1 = '"+mobileNumber+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ").then(function (datas) {
       console.log("bank",req.body)
         res.send(datas);
     },function(err){if(err) return 'error incoming'} )
@@ -247,44 +251,45 @@ app.post('/traineeformdata', async(req,res)=>
 {
 
   var plantname = req.body.plant
-  var companycode = req.body.company
+  var companyname = req.body.company
   var mobileNumber = req.body.mobileNumber;
+  var count = [];
+
   var pass = req.body.pass;
   var status = {}
-
+  console.log(req.body)
   var pool =await db.poolPromise
-  var result =await pool.request()
-    .query("select * from trainee_apln where mobile_no1 = '"+mobileNumber+"' ");
-    if(result['recordset'].length > 0)
-      {
-        if(result['recordset'][0]?.apln_status == 'PENDING' ||result['recordset'][0]?.apln_status == 'SUBMITTED' ||result['recordset'][0]?.apln_status == 'APPROVED')
-        {
-        status.status = 'registered';
-        res.send(status);
-        }
-        else if((result['recordset'][0]?.apln_status == 'NEW INCOMPLETE'))
-          {
-            status.status = 'incomplete';
-            res.send(status);
-          }
-      }
-    else if(result['recordset'].length == 0)
-    {
-      var result2 =await pool.request()
-      result2.query("insert into trainee_apln(apln_slno,mobile_no1, plant_code, created_dt, for_quality, temp_password, apln_status) values((select max(apln_slno) from trainee_apln)+1,'"+mobileNumber+"' ,(select plant_code from plant where plant_name = '"+plantname+"'), CAST(getdate() AS date), 0, '"+pass+"', 'NEW INCOMPLETE')");
-      status.status = 'newform';
-      res.send(status);
-    }
-   
-  // user.query("insert into trainee_apln(apln_slno,mobile_no1, plant_code, created_dt, for_quality, temp_password, apln_status) values((select max(apln_slno) from trainee_apln)+1,'"+mobileNumber+"' ,(select plant_code from plant where plant_name = '"+plantname+"'), CAST(getdate() AS date), 0, '"+pass+"', 'PENDING')").then(function(datas){
-  //   let miu = datas['recordset']
-  //   res.send(miu)
-  //   console.log(req.body)
-  // })
-  // user.query("insert into trainee_apln_career(career_slno, apln_slno) values((select max(career_slno) from trainee_apln_career),(select max(apln_slno) from trainee_apln)+1)")
-  // user.query("insert into trainee_apln_family(family_slno, apln_slno) values((select max(family_slno) from trainee_apln_family)+1,(select max(apln_slno) from trainee_apln))")
-  // user.query("insert into trainee_apln_qualifn(qual_slno, apln_slno) values((select max(qual_slno) from trainee_apln_qualifn)+1,(select max(apln_slno) from trainee_apln))")
 
+  var result = await pool.request()
+
+    .query("select * from trainee_apln where mobile_no1 = '"+mobileNumber+"' and company_code = (select company_code from master_company where company_name = '"+companyname+"') ");
+  console.log("record from db",result['recordset'].length)
+  
+    if(result['recordset'].length == 0 )
+      {
+        console.log("adding form......")
+        console.log("insert into trainee_apln (mobile_no1, plant_code, created_dt, for_quality, temp_password, apln_status, company_code) values('"+mobileNumber+"' ,(select plant_code from plant where plant_name = '"+plantname+"'), CAST(getdate() AS date), 0, '"+pass+"', 'NEW INCOMPLETE', (select company_code from master_company where company_name = '"+companyname+"'))")
+        var result2 =await pool.request()
+        result2.query("insert into trainee_apln (mobile_no1, plant_code, created_dt, for_quality, temp_password, apln_status, company_code) values('"+mobileNumber+"' ,(select plant_code from plant where plant_name = '"+plantname+"'), CAST(getdate() AS date), 0, '"+pass+"', 'NEW INCOMPLETE', (select company_code from master_company where company_name = '"+companyname+"'))");
+        status.status = 'newform';
+        res.send(status);  
+      }
+    else if(result['recordset'].length > 0)
+    {
+
+      if(result['recordset'][0]?.apln_status == 'PENDING' ||result['recordset'][0]?.apln_status == 'SUBMITTED' ||result['recordset'][0]?.apln_status == 'APPROVED'||result['recordset'][0]?.apln_status == 'REJECTED'||result['recordset'][0]?.apln_status == 'APPOINTED')
+      {
+      console.log("alreadyyyy.......")
+      status.status = 'registered';
+      res.send(status);
+      }
+      else if((result['recordset'][0]?.apln_status == 'NEW INCOMPLETE'))
+        {
+          status.status = 'incomplete';
+          res.send(status);
+        }
+    }
+  
 });
 
 app.post('/emergency',async(req,res)=>{
@@ -293,8 +298,9 @@ app.post('/emergency',async(req,res)=>{
     var contactNumber = req.body.contactNumber;
     var relations = req.body.relations;
     var mobilenumber = req.body.mobilenumber;
+    var company = req.body.company
     
-    user.query("update trainee_apln set emergency_name='"+contactName+"',mobile_no2='"+contactNumber+"',emergency_rel='"+relations+"' where mobile_no1 = '"+mobilenumber+"' ").then(function(datas){
+    user.query("update trainee_apln set emergency_name='"+contactName+"',mobile_no2='"+contactNumber+"',emergency_rel='"+relations+"' where mobile_no1 = '"+mobilenumber+"'  and company_code = (select company_code from master_company where company_name = '"+company+"') ").then(function(datas){
       console.log("emer",req.body)
         res.send(datas['recordset']);
     }, function(err){if(err) return 'error incoming'})
@@ -402,6 +408,7 @@ app.post('/edu',async(req,res)=>{
   var user = await getpool() 
   var details = req.body;
 
+  console.log(details)
   var pool = await db.poolPromise
   var result = await pool.request()
       .query("select * from trainee_apln_qualifn where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"')")
@@ -507,8 +514,10 @@ app.post('/others',async(req,res)=>{
     var com = req.body.com;
     var extra = req.body.extra;
     var mobilenumber = req.body.mobilenumber;
-    console.log("update trainee_apln set any_empl_rane='"+known+"',prev_rane_empl='"+work+"',existing_empl_name='"+names+"',existing_empl_company='"+place+"',prev_rane_exp='"+com+"',extra_curricular='"+extra+"' where mobile_no1 = '"+mobilenumber+"'  ")
-    user.query("update trainee_apln set any_empl_rane='"+known+"',prev_rane_empl='"+work+"',existing_empl_name='"+names+"',existing_empl_company='"+place+"',prev_rane_exp='"+com+"',extra_curricular='"+extra+"' where mobile_no1 = '"+mobilenumber+"'  ").then(function (datas) {
+    var company = req.body.company
+
+    console.log("update trainee_apln set any_empl_rane='"+known+"',prev_rane_empl='"+work+"',existing_empl_name='"+names+"',existing_empl_company='"+place+"',prev_rane_exp='"+com+"',extra_curricular='"+extra+"' where mobile_no1 = '"+mobilenumber+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ")
+    user.query("update trainee_apln set any_empl_rane='"+known+"',prev_rane_empl='"+work+"',existing_empl_name='"+names+"',existing_empl_company='"+place+"',prev_rane_exp='"+com+"',extra_curricular='"+extra+"' where mobile_no1 = '"+mobilenumber+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ").then(function (datas) {
       console.log("other",req.body)
         res.send(datas['recordset']);
     console.log(req.body);
@@ -523,7 +532,7 @@ app.post('/filter', async(req,res)=>{
   var plantcode = req.body.plantcode
   console.log(req.body)
   console.log("select created_dt, first_name, fathername, birthdate, mobile_no1, aadhar_no, apln_status from trainee_apln where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND plant_code = '"+plantcode+"' ")
-  user.query("select created_dt, fullname, fathername, birthdate, mobile_no1, aadhar_no, apln_status from trainee_apln where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND plant_code = '"+plantcode+"' ").then(function(datas){
+  user.query("select t.created_dt, t.fullname, t.fathername, t.birthdate, t.mobile_no1, t.aadhar_no, t.apln_status, m.company_name from trainee_apln as t left join master_company as m on t.company_code = m.company_code where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND plant_code = '"+plantcode+"' ").then(function(datas){
     res.send(datas['recordset'])
     console.log(datas['recordset'])
   },function(err){if(err) return 'error incoming'} )
@@ -541,7 +550,7 @@ app.post('/searchfilter', async(req,res)=>
   colvalue = colvalue.trim()
 
   console.log("----------select created_dt, first_name, fathername, birthdate, mobile_no1, aadhar_no, apln_status from trainee_apln where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND "+colname+"= '"+colvalue+"' "  )
-  user.query("select created_dt, fullname, fathername, birthdate, mobile_no1, aadhar_no, apln_status from trainee_apln where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND "+colname+"= '"+colvalue+"' AND plant_code = '"+plantcode+"' ").then(function(datas){
+  user.query("select t.created_dt, t.fullname, t.fathername, t.birthdate, t.mobile_no1, t.aadhar_no, t.apln_status, m.company_name from trainee_apln as t left join master_company as m on t.company_code = m.company_code where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND "+colname+"= '"+colvalue+"' AND plant_code = '"+plantcode+"' ").then(function(datas){
     res.send(datas['recordset'])
   }, function(err){if(err) return 'error incoming'})
 })
@@ -551,7 +560,7 @@ app.post('/filterforapproval', async(req,res)=>{
   var status = req.body.status
   var plantcode = req.body.plantcode
 
-  user.query("select created_dt, fullname, fathername, birthdate, mobile_no1,trainee_idno, aadhar_no, apln_status from trainee_apln where apln_status = '"+status+"'AND plant_code = '"+plantcode+"' ").then(function(datas){
+  user.query("select t.created_dt, t.fullname, t.fathername, t.birthdate, t.mobile_no1,t.trainee_idno, t.aadhar_no, t.apln_status, m.company_name from trainee_apln as t left join master_company as m on t.company_code = m.company_code where apln_status = '"+status+"'AND plant_code = '"+plantcode+"' ").then(function(datas){
     res.send(datas['recordset'])
   }, )
 })
@@ -650,8 +659,9 @@ app.post('/getdataforid', async(req,res)=>{
 app.post('/getdatabasic', async(req,res)=>{
   var user = await getpool()
   var mobile = req.body.mobile
-  console.log(mobile)
-  user.query("select * from trainee_apln where mobile_no1 = '"+mobile+"' ").then(function(datas){
+  var company = req.body.company
+  console.log(req.body)
+  user.query("select * from trainee_apln where mobile_no1 = '"+mobile+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ").then(function(datas){
 
     res.send(datas['recordset'])
   }, function(err){if(err) return 'error incoming'})
@@ -660,8 +670,10 @@ app.post('/getdatabasic', async(req,res)=>{
 app.post('/getdatafamily', async(req,res)=>{
   var user = await getpool()
   var mobile = req.body.mobile
-  console.log(mobile)
-  user.query("select * from trainee_apln_family where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+mobile+"') ").then(function(datas1){
+  var company = req.body.company
+
+  console.log(req.body)
+  user.query("select * from trainee_apln_family where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+mobile+"'  and company_code = (select company_code from master_company where company_name = '"+company+"'))  ").then(function(datas1){
     console.log("one", datas1['recordset']);
     res.send(datas1['recordset'])
   },function(err){if(err) return 'error incoming'} )
@@ -670,8 +682,9 @@ app.post('/getdatafamily', async(req,res)=>{
 app.post('/getdatacareer', async(req,res)=>{
   var user = await getpool()
   var mobile = req.body.mobile
+  var company = req.body.company
   console.log(mobile)
-  user.query("select * from trainee_apln_career where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+mobile+"') ").then(function(datas1){
+  user.query("select * from trainee_apln_career where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+mobile+"'  and company_code = (select company_code from master_company where company_name = '"+company+"')) ").then(function(datas1){
     console.log("one", datas1['recordset']);
     res.send(datas1['recordset'])
   },function(err){if(err) return 'error incoming'} )
@@ -680,8 +693,10 @@ app.post('/getdatacareer', async(req,res)=>{
 app.post('/getdataqualfn', async(req,res)=>{
   var user = await getpool()
   var mobile = req.body.mobile
+  var company = req.body.company
+
   console.log(mobile)
-  user.query("select * from trainee_apln_qualifn where apln_slno = (select apln_slno from trainee_apln where mobile_no1 ='"+mobile+"') ").then(function(datas1){
+  user.query("select * from trainee_apln_qualifn where apln_slno = (select apln_slno from trainee_apln where mobile_no1 ='"+mobile+"'  and company_code = (select company_code from master_company where company_name = '"+company+"')) ").then(function(datas1){
     console.log("one", datas1['recordset']);
     res.send(datas1['recordset'])
   },function(err){if(err) return 'error incoming'} )
@@ -690,7 +705,9 @@ app.post('/getdataqualfn', async(req,res)=>{
 app.post('/getfiles' , async(req,res)=>{
   var user = await getpool()
   var mobile = req.body.mobile
-  user.query("select other_files7 from trainee_apln where mobile_no1 = '72002929101' ").then(function(datas){
+  var company = req.body.company
+
+  user.query("select other_files7 from trainee_apln where mobile_no1 = '"+mobile+"' ").then(function(datas){
     console.log('filenames', datas['recordset'])
     res.send(datas['recordset'])
   }, function(err){if(err) return 'error incoming'})

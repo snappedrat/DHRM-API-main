@@ -6,12 +6,12 @@ exports.dbConfig = {
     'server': '14.99.10.243',
     // 'server': '172.16.53.5',
 
-
-    options: {
+    options: 
+    {
     port: 1433,
     enableArithAbort: false,
     encrypt: false,
-    database: 'DHRM_PRD_DB_BKP',
+    database: 'DHRM_PRD_DB',
     
     instance:'MSSQLSERVER',
     rowCollectionOnDone: true,
