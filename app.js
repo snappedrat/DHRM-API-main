@@ -1,6 +1,7 @@
 const express = require('express')
     , cors = require('cors');
 const jwt = require('jsonwebtoken');
+const jwt_decode = require('jwt-decode')
 // const authorize = require('./auth');
 const app = express();
 const request = require('request');
@@ -34,15 +35,11 @@ app.post("/image", upload , async(req, res) => {
   
   var user = await getpool()
     res.send("images sucess")
-    // console.log('====================================');
-    // console.log(req.file.originalname);
-    // console.log('====================================');
+
     var name = req.file.path
     var mobile = req.body.mobile
     var fileno = req.body.fileno
-    console.log(req.body)
-    console.log('====================================');
-    console.log("update trainee_apln set other_files"+fileno+" = '"+name+"' where mobile_no1= '"+mobile+"' ")
+
     user.query("update trainee_apln set other_files"+fileno+" = '"+name+"' where mobile_no1= '"+mobile+"' ",  )
     console.log('====================================');
     console.log(req.file);
@@ -65,8 +62,10 @@ async function getpool() {
     const result = await pool.request();
     return result;
   }
+
 app.post('/logins', async(request, response)=> {
-  try{
+
+  console.log(request.body)
     let User_Name =request.body.User_Name;
     let Password =request.body.Password;
 
@@ -98,10 +97,7 @@ app.post('/logins', async(request, response)=> {
         this.glob = 0;
         response.send([{"message":"Failure"}]);
     }
-  }catch(err){
-    console.log(err)
-    response.send({"message":"Failure"})
-  }
+
 
 });
 
@@ -711,6 +707,50 @@ app.post('/getfiles' , async(req,res)=>{
     console.log('filenames', datas['recordset'])
     res.send(datas['recordset'])
   }, function(err){if(err) return 'error incoming'})
+})
+
+app.post('/traineelogin', async(req, res)=>{
+    console.log(req.body)
+
+    let secret = 'boooooo'
+
+    var User_Name = req.body.username
+    var Password = req.body.pass
+    var pool =await db.poolPromise
+    var result = await pool.request()
+      .input('trainee_idno', User_Name)
+      .input('pass', Password)
+      .query("select * from trainee_apln where trainee_idno=@trainee_idno and temp_password=@pass and apln_status = 'APPROVED' ")
+    
+    var result2 = await pool.request()
+      .input('trainee_idno', User_Name)
+      .query("select * from trainee_apln where trainee_idno=@trainee_idno and apln_status ='APPROVED' ")
+
+    var result3 = await pool.request()
+      .input('trainee_idno', User_Name)
+      .query("select * from trainee_apln where trainee_idno=@trainee_idno and apln_status <> 'APPROVED' ")
+
+    if(result['recordset'].length > 0)
+    {
+      let token = jwt.sign(User_Name, secret)
+      res.send({'token': token, 'status': 'success' })
+    }
+    else
+    {
+      
+      if(result2['recordset'].length == 0 && result['recordset'].length == 0)
+      {
+        res.send({'status': 'wrong_user'})
+      }
+      else if(result3['recordset'].length > 0)
+      {
+        res.send({'status': 'wrong_apln'})
+      }
+      else
+      {
+        res.send({'status': 'wrong_pass'})
+      }
+    }
 })
 
 

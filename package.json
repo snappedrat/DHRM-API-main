@@ -17,6 +17,7 @@
     "express": "^4.17.3",
     "express-jwt": "^7.7.5",
     "jsonwebtoken": "^8.5.1",
+    "jwt-decode": "^3.1.2",
     "morgan": "^1.10.0",
     "mssql": "^8.0.2",
     "multer": "^1.4.5-lts.1",
