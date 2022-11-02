@@ -106,6 +106,51 @@ app.post('/logins', async(request, response)=> {
 
 });
 
+app.post('/traineelogin', async(req, res)=>{
+  console.log(req.body)
+
+  let secret = 'boooooo'
+
+  var User_Name = req.body.username
+  var Password = req.body.pass
+  var pool =await db.poolPromise
+  var result = await pool.request()
+    .input('trainee_idno', User_Name)
+    .input('pass', Password)
+    .query("select * from trainee_apln where trainee_idno=@trainee_idno and temp_password=@pass and apln_status = 'APPROVED' ")
+  
+  var result2 = await pool.request()
+    .input('trainee_idno', User_Name)
+    .query("select * from trainee_apln where trainee_idno=@trainee_idno and apln_status ='APPROVED' ")
+
+  var result3 = await pool.request()
+    .input('trainee_idno', User_Name)
+    .query("select * from trainee_apln where trainee_idno=@trainee_idno and apln_status <> 'APPROVED' ")
+
+  if(result['recordset'].length > 0)
+  {
+    let token = jwt.sign(User_Name, secret)
+    res.send({'token': token, 'status': 'success' })
+  }
+  else
+  {
+    
+    if(result2['recordset'].length == 0 && result['recordset'].length == 0)
+    {
+      res.send({'status': 'wrong_user'})
+    }
+    else if(result3['recordset'].length > 0)
+    {
+      res.send({'status': 'wrong_apln'})
+    }
+    else
+    {
+      res.send({'status': 'wrong_pass'})
+    }
+  }
+})
+
+
 app.post('/gethr', async(req,res)=>{
   var user = await getpool()
 
@@ -157,7 +202,7 @@ app.post('/getpincode', async(req,res)=>{
 
 app.get('/getaadhar', async(req,res)=>{
   var user = await getpool()
-  user.query("select aadhar_no from trainee_apln").then(function(datas){
+  user.query("select mobile_no1, aadhar_no from trainee_apln").then(function(datas){
     res.send(datas['recordset'])
   })
 })
@@ -545,7 +590,6 @@ app.post('/filter', async(req,res)=>{
   console.log("select created_dt, first_name, fathername, birthdate, mobile_no1, aadhar_no, apln_status from trainee_apln where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND plant_code = '"+plantcode+"' ")
   user.query("select t.created_dt, t.fullname, t.fathername, t.birthdate, t.mobile_no1, t.aadhar_no, t.apln_status, m.company_name from trainee_apln as t left join master_company as m on t.company_code = m.company_code where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND plant_code = '"+plantcode+"' ").then(function(datas){
     res.send(datas['recordset'])
-    console.log(datas['recordset'])
   },function(err){if(err) return 'error incoming'} )
 })
 
@@ -620,6 +664,7 @@ app.post('/approved', async(req,res)=>{
   console.log(mob)
   user.query("update trainee_apln set apln_status = 'APPROVED' where mobile_no1 = '"+mob+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ").then(function(datas){
     console.log("approved : ",datas)
+    res.send(datas)
   },function(err){if(err) return 'error incoming'} )
 })
 
@@ -631,6 +676,7 @@ app.post('/rejected', async(req,res)=>{
   console.log(mob)
   user.query("update trainee_apln set apln_status = 'REJECTED' where mobile_no1 = '"+mob+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ").then(function(datas){
     console.log(datas)
+    res.send(datas)
   },function(err){if(err) return 'error incoming'} )
 })
 
@@ -645,10 +691,9 @@ app.post('/getdataforid', async(req,res)=>{
   console.log("select addr from plant where plant_code = (select plant_code from trainee_apln where mobile_no1 = '"+mobile+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ) ")
   console.log(mobile)
   user.query("select fullname,fathername, trainee_idno,dept_slno, permanent_address, emergency_name, emergency_rel, other_files6 from trainee_apln where mobile_no1 = '"+mobile+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ").then(function(datas1){
-   
     object = datas1['recordset']
-    object[0].addr = result['recordset'][0].addr
-    console.log("one", object);
+    if(datas1['recordset'].length !=0)
+      object[0].addr = result['recordset'][0].addr
     res.send(object)
   },function(err){if(err) return 'error incoming'} )
 })
@@ -658,9 +703,22 @@ app.post('/getdatabasic', async(req,res)=>{
   var mobile = req.body.mobile
   var company = req.body.company
   console.log(req.body)
-  user.query("select * from trainee_apln where mobile_no1 = '"+mobile+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ").then(function(datas){
 
-    res.send(datas['recordset'])
+  var r = await db.poolPromise
+  var result2 = await r.request()
+    .query("select plant_name from plant where plant_code = (select plant_code from trainee_apln where mobile_no1 = '"+mobile+"' and company_code = (select company_code from master_company where company_name = '"+company+"'))")
+  console.log("select * from trainee_apln where mobile_no1 = '"+mobile+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ")
+  user.query("select * from trainee_apln where mobile_no1 = '"+mobile+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ").then(function(datas){
+    object = datas['recordset']
+
+    if(datas['recordset'].length !=0)
+    {    object[0].company_name = company
+
+      object[0].plant_name = result2['recordset'][0].plant_name
+
+    }
+
+    res.send(object)
   }, function(err){if(err) return 'error incoming'})
 })
 
