@@ -611,6 +611,7 @@ app.post('/searchfilter', async(req,res)=>
 })
 
 app.post('/filterforapproval', async(req,res)=>{
+
   var user = await getpool();
   var status = req.body.status
   var plantcode = req.body.plantcode
@@ -619,6 +620,7 @@ app.post('/filterforapproval', async(req,res)=>{
     res.send(datas['recordset'])
   }, )
 })
+
 
 app.post('/submitted', async(req,res)=>{
   var mob = req.body.mobile
@@ -756,6 +758,25 @@ app.post('/getdataqualfn', async(req,res)=>{
     res.send(datas1['recordset'])
   },function(err){if(err) return 'error incoming'} )
 })
+
+app.post('/getQuestions',async(req,res)=>{
+
+  var module = req.body.module
+
+  var pool = await db.poolPromise
+  console.log("select question, correct_answer from question_bank2 where module_name = '"+module+"' ")
+  let result = await pool.request()
+    .query("select question , correct_answer from question_bank2 where module_name = '"+module+"' ")
+  res.send(result['recordset'])
+})
+
+app.get('/getModules', async(req,res)=>{
+  var pool = await db.poolPromise
+  let result = await pool.request()
+    .query('select module_name from trg_modules')
+  res.send(result['recordset'])
+})
+
 
 
 app.post('/user',async(req,res)=>{
