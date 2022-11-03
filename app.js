@@ -759,25 +759,43 @@ app.post('/getdataqualfn', async(req,res)=>{
   },function(err){if(err) return 'error incoming'} )
 })
 
-app.post('/getQuestions',async(req,res)=>{
-
+app.post('/getQuestions',async(req,res)=>
+{
   var module = req.body.module
+  var username = req.body.username
 
   var pool = await db.poolPromise
-  console.log("select question, correct_answer from question_bank2 where module_name = '"+module+"' ")
+  console.log("select question, correct_answer from question_bank2 where module_name = '"+module+"'  ")
   let result = await pool.request()
-    .query("select question , correct_answer from question_bank2 where module_name = '"+module+"' ")
+    .query("select question , correct_answer from question_bank2 where module_name = '"+module+"' and plant_code = (select plant_code from trainee_apln where trainee_idno = '"+username+"')  ")
+  
   res.send(result['recordset'])
 })
 
-app.get('/getModules', async(req,res)=>{
+app.post('/getModules', async(req,res)=>{
+
+  let username = req.body.username
+
   var pool = await db.poolPromise
   let result = await pool.request()
-    .query('select module_name from trg_modules')
+    .query("select module_name from trg_modules where plant_code = (select plant_code from trainee_apln where trainee_idno = '"+username+"')")
   res.send(result['recordset'])
 })
 
+app.post('/getTest', async(req,res)=>{
 
+  let username = req.body.username
+  let module = req.body.module
+
+  var pool = await db.poolPromise
+  let result = await pool.request()
+    .query("select * from ontraining_evalation where trainee_idno = '"+username+"' and module_name = '"+module+"' ")
+  
+  if(result['recordset'].length > 0)
+    res.send({'test':'post-test'})
+  else
+    res.send({'test':'pre-test'})
+})
 
 app.post('/user',async(req,res)=>{
     var user = await getpool();
