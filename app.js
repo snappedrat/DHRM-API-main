@@ -398,7 +398,7 @@ app.post('/lang', async(req,res)=>
   user.query("update trainee_apln set lang5_name = '"+ lang5.language+"' , lang5_speak = '"+ lang5.speak +"', lang5_read = '"+ lang5.read +"', lang5_write = '"+ lang5.write +"', lang5_understand = '"+ lang5.understand +"', lang5_mothertounge = '"+ lang5.mothertongue +"' where mobile_no1 = '"+ lang1.mobile+"'  and company_code = (select company_code from master_company where company_name = '"+lang1.company+"') ")
   user.query("update trainee_apln set lang6_name = '"+ lang6.language+"' , lang6_speak = '"+ lang6.speak +"', lang6_read = '"+ lang6.read +"', lang6_write = '"+ lang6.write +"', lang6_understand = '"+ lang6.understand +"', lang6_mothertounge = '"+ lang6.mothertongue +"' where mobile_no1 = '"+ lang1.mobile+"'  and company_code = (select company_code from master_company where company_name = '"+lang1.company+"') ")
 }
-  console.log(details[0])
+  console.log(req.body)
 }, function(err){if(err) return 'error incoming'})
 
 
@@ -769,7 +769,7 @@ app.post('/getQuestions',async(req,res)=>
   var pool = await db.poolPromise
   console.log("select question, correct_answer from question_bank2 where module_name = '"+module+"' and plant_code = (select plant_code from trainee_apln where trainee_idno = '"+username+"') ")
   let result = await pool.request()
-    .query("select question , correct_answer from question_bank2 where module_name = '"+module+"' and plant_code = (select plant_code from trainee_apln where trainee_idno = '"+username+"')  ")
+    .query("select * from question_bank2 where module_name = '"+module+"' and plant_code = (select plant_code from trainee_apln where trainee_idno = '"+username+"') order by qslno ")
   
   res.send(result['recordset'])
 })
@@ -779,10 +779,10 @@ app.post('/getModules', async(req,res)=>{
   let username = req.body.username
 
   var pool = await db.poolPromise
-  console.log("select module_name, priorityval from trg_modules where plant_code = (select plant_code from trainee_apln where trainee_idno = '"+username+"') order by priorityval ")
+  console.log("select * from trg_modules where plant_code = (select plant_code from trainee_apln where trainee_idno = '"+username+"') order by priorityval ")
   let result = await pool.request()
 
-    .query("select module_name, priorityval from trg_modules where plant_code = (select plant_code from trainee_apln where trainee_idno = '"+username+"') order by priorityval ")
+    .query("select* from trg_modules where plant_code = (select plant_code from trainee_apln where trainee_idno = '"+username+"') order by priorityval ")
   res.send(result['recordset'])
 })
 
@@ -808,7 +808,7 @@ app.post('/Qualified', async(req,res)=>{
 
   let username = req.body.username;
   let m = req.body.module;
-  let pass_mark = 8
+  let pass_mark
 
   let module = m.split('.')[1]
 
@@ -828,20 +828,27 @@ app.post('/Qualified', async(req,res)=>{
     }
     else if(result['recordset'].length > 0)
     {
+      var pass_criteria = await pool.request()
+        .query("select pass_criteria from trg_modules where module_name = '"+module+"' and plant_code = (select plant_code from trainee_apln where trainee_idno = '"+username+"') ")
+      pass_mark = pass_criteria['recordset'][0].pass_criteria
+      console.log(pass_mark)
       var score = await pool.request()
         .query("select sum(posttraining_score) as sum from ontraining_evalation where trainee_idno = '"+username+"' and module_name = '"+module+"'")
+
       if(score['recordset'][0].sum == null) 
         res.send({'message':'post-test'})
+
       else if(score['recordset'][0].sum > pass_mark)
         res.send({'message':'passed'})
+
       else
-        res.send({'message':'falied'})
+        res.send({'message':'failed'})
     }
   }
 
   else if(index > 1)
   {
-    console.log("first module...............")
+    console.log("next module...............")
     if(result['recordset'].length == 0)
     {
       var prev_module = await pool.request()
@@ -851,6 +858,13 @@ app.post('/Qualified', async(req,res)=>{
       
       var prev_score = await pool.request()
         .query("select sum(posttraining_score) as sum from ontraining_evalation where trainee_idno = '"+username+"' and module_name = '"+prev_module['recordset'][0].module_name+"'")
+
+      var prev_pass_criteria = await pool.request()
+        .query("select pass_criteria from trg_modules where module_name = '"+prev_module['recordset'][0].module_name+"' and plant_code = (select plant_code from trainee_apln where trainee_idno = '"+username+"') ")
+
+      pass_mark = prev_pass_criteria['recordset'][0].pass_criteria
+      console.log(pass_mark)
+
       if(prev_score['recordset'][0].sum == null || prev_score['recordset'][0].sum < pass_mark)
       {
         res.send({'message':'not qualified'})
@@ -864,6 +878,13 @@ app.post('/Qualified', async(req,res)=>{
     {
       var score = await pool.request()
         .query("select sum(posttraining_score) as sum from ontraining_evalation where trainee_idno = '"+username+"' and module_name = '"+module+"'")
+
+      var pass_criteria = await pool.request()
+        .query("select pass_criteria from trg_modules where module_name = '"+module+"' and plant_code = (select plant_code from trainee_apln where trainee_idno = '"+username+"') ")
+
+      pass_mark = pass_criteria['recordset'][0].pass_criteria
+      console.log(pass_mark)
+
       if(score['recordset'][0].sum == null) 
         res.send({'message':'post-test'})
       else if(score['recordset'][0].sum > pass_mark)
@@ -873,6 +894,52 @@ app.post('/Qualified', async(req,res)=>{
     }
   }
 
+})
+
+app.post('/pretest', async(req,res)=>{
+
+  details = req.body
+  var username = req.body[0].username
+  var apln_slno = username.split('/')[2]
+  var module = req.body[0].module
+  module = module.split('.')[1]
+  console.log(details)
+
+  var pool = await db.poolPromise
+  var result =  await pool.request()
+    .input('username', username)
+    .input('module', module)
+    .query("select * from question_bank2 where module_name = @module and plant_code = (select plant_code from trainee_apln where trainee_idno = @username) order by qslno")
+
+    for(i = 1;i< details.length;i++)
+  {
+    console.log("insert into ontraining_evalation(trainee_idno , module_name , question, question_type, correct_answer, image_filename, plant_code, pretraining_date, pretraining_result, pretraining_score, pretrainingstat, priorityval , pretraining_pf, pretraining_percent,trainee_apln_slno, qslno) values('"+details[0].username+"','"+module+"','"+result['recordset'][i-1]?.question+"','"+result['recordset'][i-1]?.question_type+"','"+result['recordset'][i-1]?.correct_answer+"','"+result['recordset'][i-1]?.image_filename+"','"+result['recordset'][i-1]?.plant_code+"',CURRENT_TIMESTAMP,'"+details[i].result+"','"+details[i].score+"','SUBMITTED','"+details[0].priorityval+"','"+details[0].pf+"','"+details[0].percent+"', '"+apln_slno+"', '"+details[i].slno+"' )")
+    console.log(details[i])
+    var insert_data = await pool.request()
+     .query("insert into ontraining_evalation(trainee_idno , module_name , question, question_type, correct_answer, image_filename, plant_code, pretraining_date, pretraining_result, pretraining_score, pretrainingstat, priorityval , pretraining_pf, pretraining_percent,trainee_apln_slno, qslno) values('"+details[0].username+"','"+module+"','"+result['recordset'][i-1].question+"','"+result['recordset'][i-1].question_type+"','"+result['recordset'][i-1].correct_answer+"','"+result['recordset'][i-1].image_filename+"','"+result['recordset'][i-1].plant_code+"',CURRENT_TIMESTAMP,'"+details[i].result+"','"+details[i].score+"','SUBMITTED','"+details[0].priorityval+"','"+details[0].pf+"','"+details[0].percent+"', '"+apln_slno+"', '"+details[i].slno+"' )")
+
+  }
+  res.send({'message':'success'})
+})
+
+app.post('/posttest', async(req,res)=>
+{
+  details = req.body
+  var username = req.body[0].username
+  var apln_slno = username.split('.')[2]
+  var module = req.body[0].module
+  module = module.split('.')[1]
+  console.log(details)
+  var pool = await db.poolPromise
+  var i = 1
+  console.log("update ontraining_evalation set posttraining_date = CURRENT_TIMESTAMP, posttraining_result = '"+details[i].result+"' , posttraining_score = '"+details[i].score+"' , posttrainingstat = 'SUBMITTED', posttraining_pf = '"+details[0].pf+"', posttraining_percent = '"+details[0].percent+"' where qslno = '"+details[i].slno+"' ")
+
+  for(var i = 1; i < details.length; i++)
+  {
+    var result =  await pool.request()
+    .query("update ontraining_evalation set posttraining_date = CURRENT_TIMESTAMP, posttraining_result = '"+details[i].result+"' , posttraining_score = '"+details[i].score+"' , posttrainingstat = 'SUBMITTED', posttraining_pf = '"+details[0].pf+"', posttraining_percent = '"+details[0].percent+"' where qslno = '"+details[i].slno+"' ")
+  }
+  res.send({'message':'success'})
 })
 
 app.post('/user',async(req,res)=>{
