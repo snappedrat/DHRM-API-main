@@ -780,9 +780,16 @@ app.post('/getModules', async(req,res)=>{
 
   var pool = await db.poolPromise
   console.log("select * from trg_modules where plant_code = (select plant_code from trainee_apln where trainee_idno = '"+username+"') order by priorityval ")
-  let result = await pool.request()
-
+  if(isNaN(parseInt(username)))
+  {
+    var result = await pool.request()
     .query("select* from trg_modules where plant_code = (select plant_code from trainee_apln where trainee_idno = '"+username+"') order by priorityval ")
+  }
+  else
+  {
+    var result = await pool.request()
+    .query("select* from trg_modules where plant_code = '"+username+"' order by priorityval ") 
+  }
   res.send(result['recordset'])
 })
 
@@ -890,7 +897,7 @@ app.post('/Qualified', async(req,res)=>{
       else if(score['recordset'][0].sum > pass_mark)
         res.send({'message':'passed', 'marks':score['recordset'][0].sum})
       else
-        res.send({'message':'failed', 'marks':score['recordset'][0].sum})
+        res.send({'message':'failed', 'marks':score['recordset'][0].sum , 'pass' : pass_mark})
     }
   }
 
@@ -913,10 +920,10 @@ app.post('/pretest', async(req,res)=>{
 
     for(i = 1;i< details.length;i++)
   {
-    console.log("insert into ontraining_evalation(trainee_idno , module_name , question, question_type, correct_answer, image_filename, plant_code, pretraining_date, pretraining_result, pretraining_score, pretrainingstat, priorityval , pretraining_pf, pretraining_percent,trainee_apln_slno, qslno) values('"+details[0].username+"','"+module+"','"+result['recordset'][i-1]?.question+"','"+result['recordset'][i-1]?.question_type+"','"+result['recordset'][i-1]?.correct_answer+"','"+result['recordset'][i-1]?.image_filename+"','"+result['recordset'][i-1]?.plant_code+"',CURRENT_TIMESTAMP,'"+details[i].result+"','"+details[i].score+"','SUBMITTED','"+details[0].priorityval+"','"+details[0].pf+"','"+details[0].percent+"', '"+apln_slno+"', '"+details[i].slno+"' )")
+    console.log("insert into ontraining_evalation(trainee_idno , module_name , question, question_type, correct_answer, image_filename, plant_code, pretraining_date, pretraining_result, pretraining_score, pretrainingstat, priorityval , pretraining_pf, pretraining_percent,trainee_apln_slno, qslno) values('"+details[0].username+"','"+module+"',N'"+result['recordset'][i-1]?.question+"','"+result['recordset'][i-1]?.question_type+"','"+result['recordset'][i-1]?.correct_answer+"','"+result['recordset'][i-1]?.image_filename+"','"+result['recordset'][i-1]?.plant_code+"',CURRENT_TIMESTAMP,'"+details[i].result+"','"+details[i].score+"','SUBMITTED','"+details[0].priorityval+"','"+details[0].pf+"','"+details[0].percent+"', '"+apln_slno+"', '"+details[i].slno+"' )")
     console.log(details[i])
     var insert_data = await pool.request()
-     .query("insert into ontraining_evalation(trainee_idno , module_name , question, question_type, correct_answer, image_filename, plant_code, pretraining_date, pretraining_result, pretraining_score, pretrainingstat, priorityval , pretraining_pf, pretraining_percent,trainee_apln_slno, qslno) values('"+details[0].username+"','"+module+"','"+result['recordset'][i-1].question+"','"+result['recordset'][i-1].question_type+"','"+result['recordset'][i-1].correct_answer+"','"+result['recordset'][i-1].image_filename+"','"+result['recordset'][i-1].plant_code+"',CURRENT_TIMESTAMP,'"+details[i].result+"','"+details[i].score+"','SUBMITTED','"+details[0].priorityval+"','"+details[0].pf+"','"+details[0].percent+"', '"+apln_slno+"', '"+details[i].slno+"' )")
+     .query("insert into ontraining_evalation(trainee_idno , module_name , question, question_type, correct_answer, image_filename, plant_code, pretraining_date, pretraining_result, pretraining_score, pretrainingstat, priorityval , pretraining_pf, pretraining_percent,trainee_apln_slno, qslno) values('"+details[0].username+"','"+module+"',N'"+result['recordset'][i-1].question+"','"+result['recordset'][i-1].question_type+"','"+result['recordset'][i-1].correct_answer+"','"+result['recordset'][i-1].image_filename+"','"+result['recordset'][i-1].plant_code+"',CURRENT_TIMESTAMP,'"+details[i].result+"','"+details[i].score+"','SUBMITTED','"+details[0].priorityval+"','"+details[0].pf+"','"+details[0].percent+"', '"+apln_slno+"', '"+details[i].slno+"' )")
 
   }
   res.send({'message':'success'})
