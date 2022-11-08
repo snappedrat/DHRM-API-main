@@ -646,7 +646,6 @@ app.post('/submitted', async(req,res)=>{
   res.send(result3)
 })
 
-
 app.post('/pending', async(req,res)=>{
   var user = await getpool()
   var mob = req.body.mobile
