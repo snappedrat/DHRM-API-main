@@ -33,7 +33,7 @@ app.use('/uploads',express.static('uploads'))
 app.post("/image", upload , async(req, res) => {
   
   var user = await getpool()
-    res.send("images sucess")
+    res.send({'Message':req.body,"file": req.file})
 
     var name = req.file.path
     var mobile = req.body.mobile
@@ -44,12 +44,8 @@ app.post("/image", upload , async(req, res) => {
     console.log('====================================');
     console.log("update trainee_apln set other_files"+fileno+" = '"+name+"' where mobile_no1= '"+mobile+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ")
     user.query("update trainee_apln set other_files"+fileno+" = '"+name+"' where mobile_no1= '"+mobile+"' and company_code = (select company_code from master_company where company_name = '"+company+"')  "  )
-    console.log('====================================');
-    console.log(req.file);
-    console.log('====================================');
-    console.log("yoooooooooooooo");
-});
 
+});
 
 app.use(morgan('dev'));
 const corsOptions = {
@@ -587,7 +583,7 @@ app.post('/filter', async(req,res)=>{
   var todate = req.body.todate
   var plantcode = req.body.plantcode
   console.log(req.body)
-  console.log("select created_dt, first_name, fathername, birthdate, mobile_no1, aadhar_no, apln_status from trainee_apln where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND plant_code = '"+plantcode+"' ")
+  console.log("select created_dt, first_name, fathername, birthdate, mobile_no1, aadhar_no, apln_status from trainee_apln where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+  +"') AND plant_code = '"+plantcode+"' ")
   user.query("select t.created_dt, t.fullname, t.fathername, t.birthdate, t.mobile_no1, t.aadhar_no, t.apln_status, m.company_name from trainee_apln as t left join master_company as m on t.company_code = m.company_code where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND plant_code = '"+plantcode+"' ").then(function(datas){
     res.send(datas['recordset'])
   },function(err){if(err) return 'error incoming'} )
@@ -698,6 +694,8 @@ app.post('/getdataforid', async(req,res)=>{
     res.send(object)
   },function(err){if(err) return 'error incoming'} )
 })
+
+
 
 app.post('/getdatabasic', async(req,res)=>{
   var user = await getpool()
@@ -945,6 +943,31 @@ app.post('/posttest', async(req,res)=>
     var result =  await pool.request()
     .query("update ontraining_evalation set posttraining_date = CURRENT_TIMESTAMP, posttraining_result = '"+details[i].result+"' , posttraining_score = '"+details[i].score+"' , posttrainingstat = 'SUBMITTED', posttraining_pf = '"+details[0].pf+"', posttraining_percent = '"+details[0].percent+"' where qslno = '"+details[i].slno+"' ")
   }
+  res.send({'message':'success'})
+})
+
+app.post('/questionbank' , async(req,res)=>
+{
+  console.log("rrr",req.body)
+
+  var details = req.body
+
+  var pool = await db.poolPromise
+  for(var i = 1; i < details.length ; i++)
+  {
+    let image = details[i].file == undefined ? 'NULL' : details[i].file
+    var result = await pool.request()
+    .query("insert into question_bank2(module_name, question, question_type, correct_answer, image_filename, plant_code) values('"+details[0].module.split('.')[1]+"', '"+details[i].question+"' , 'O', '"+details[i].answer+"', '"+image+"', '"+details[0].plantcode+"')")
+  }
+
+  var result2 = await pool.request()
+    .query("select top("+details.length+") image_filename from question_bank2 order by qslno desc ")
+  res.send(result2['recordset'])
+})
+
+app.post('/questionbankupload', upload , async(req,res)=>
+{
+  console.log("rrr",req.file)
   res.send({'message':'success'})
 })
 
