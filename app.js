@@ -923,6 +923,10 @@ app.post('/pretest', async(req,res)=>{
      .query("insert into ontraining_evalation(trainee_idno , module_name , question, question_type, correct_answer, image_filename, plant_code, pretraining_date, pretraining_result, pretraining_score, pretrainingstat, priorityval , pretraining_pf, pretraining_percent,trainee_apln_slno, qslno) values('"+details[0].username+"','"+module+"',N'"+result['recordset'][i-1].question+"','"+result['recordset'][i-1].question_type+"','"+result['recordset'][i-1].correct_answer+"','"+result['recordset'][i-1].image_filename+"','"+result['recordset'][i-1].plant_code+"',CURRENT_TIMESTAMP,'"+details[i].result+"','"+details[i].score+"','SUBMITTED','"+details[0].priorityval+"','"+details[0].pf+"','"+details[0].percent+"', '"+apln_slno+"', '"+details[i].slno+"' )")
 
   }
+
+  var training = await pool.request()
+  .query("update trainee_apln set test_status = 'in_training' where apln_slno = '"+apln_slno+"' ")
+
   res.send({'message':'success'})
 })
 
@@ -969,6 +973,63 @@ app.post('/questionbankupload', upload , async(req,res)=>
 {
   console.log("rrr",req.file)
   res.send({'message':'success'})
+})
+
+app.post('/getTrainee', async(req,res)=>
+{
+
+  var plantcode = req.body.plantcode
+
+  var pool = await db.poolPromise
+  var result =await pool.request()
+    .query("select fullname ,trainee_idno from trainee_apln where plant_code = '"+plantcode+"' ")
+
+res.send(result['recordset'])  
+})
+
+app.post('/getOfflineModule', async(req,res)=>
+{
+  var plantcode = req.body.plantcode
+
+  var pool = await db.poolPromise
+  var result =await pool.request()
+    .query("select * from trg_modules where plant_code = '"+plantcode+"' and category = 'OFFLINE' ")
+
+  res.send(result['recordset'])
+
+})
+
+app.post('/offlineUpload', async(req,res)=>
+{
+  var test = req.body.test
+  var module = req.body.module.split('.')[1]
+  var username = req.body.trainee.split('-')[1]
+  var apln_slno = req.body.trainee.split('/')
+  apln_slno = apln_slno.pop() 
+  username = username.trim()
+  var file = req.body.file
+  var score = req.body.score
+  var priorityval = req.body.priorityval
+  var percent = req.body.percent
+  var pf = req.body.pf
+
+
+  var pool = await db.poolPromise
+  if(test == 'pre-test')
+  {
+  console.log("insert into ontraining_evalation(trainee_idno, module_name , plant_code ,pretraining_date, pretraining_score, upload_file, pretrainingstat, priorityval, pretraining_pf, pretraining_percent, exam_attempt, trainee_apln_slno) values('"+username+"','"+module+"',(select plant_code from trainee_apln where trainee_idno = '"+username+"'),CURRENT_TIMESTAMP,'"+score+"','"+file+"','SUBMITTED','"+priorityval+"','"+pf+"','"+percent+"',1,'"+apln_slno+"' )")
+  var insert_data = await pool.request()
+    .query("insert into ontraining_evalation(trainee_idno, module_name , plant_code ,pretraining_date, pretraining_score, uploadfile, pretrainingstat, priorityval, pretraining_pf, pretraining_percent, examattempt, trainee_apln_slno) values('"+username+"','"+module+"',(select plant_code from trainee_apln where trainee_idno = '"+username+"'),CURRENT_TIMESTAMP,'"+score+"','"+file+"','SUBMITTED','"+priorityval+"','"+pf+"','"+percent+"',1,'"+apln_slno+"' )")
+  res.send({'message': 'success'})
+  }
+
+  else if(test == 'post-test')
+  {
+    var update_data = await pool.request()
+    .query("update ontraining_evalation set posttraining_date = CURRENT_TIMESTAMP, posttraining_score = '"+score+"' , posttrainingstat = 'SUBMITTED', posttraining_pf = '"+pf+"', posttraining_percent = '"+percent+"' where qslno = '"+details[i].slno+"' where trainee_idno = '"+username+"' and module_name = '"+module+"' ")
+    res.send({'message': 'success'})
+  }
+
 })
 
 app.post('/user',async(req,res)=>{
