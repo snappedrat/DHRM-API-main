@@ -14,6 +14,7 @@
     "body-parser": "^1.19.2",
     "cors": "^2.8.5",
     "cucumber": "^6.0.7",
+    "dotenv": "^16.0.3",
     "express": "^4.17.3",
     "express-jwt": "^7.7.5",
     "jsonwebtoken": "^8.5.1",

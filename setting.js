@@ -1,19 +1,19 @@
 const { NULL } = require("mysql/lib/protocol/constants/types");
+require('dotenv').config()
 
 exports.dbConfig = {
-    'user': 'superuser',
-    'password': 'superuser123',
-    // 'server': '14.99.10.243',
-    'server': '172.16.53.5',
+    'user': process.env.DB_USER,
+    'password': process.env.DB_PASS,
+    'server': process.env.DB_SERVER,
 
     options: 
     {
     port: 1433,
     enableArithAbort: false,
     encrypt: false,
-    database: 'DHRM_PRD_DB',
+    database: process.env.DB_DB,
     
-    instance:'MSSQLSERVER',
+    instance: process.env.DB_INSTANCE,
     rowCollectionOnDone: true,
     useColumnNames: false,  
     trustServerCertificate: false
