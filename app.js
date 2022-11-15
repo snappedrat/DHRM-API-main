@@ -776,7 +776,7 @@ app.post('/getModules', async(req,res)=>{
   let username = req.body.username
 
   var pool = await db.poolPromise
-  console.log("select * from trg_modules where plant_code = (select plant_code from trainee_apln where trainee_idno = '"+username+"') order by priorityval ")
+  console.log("select * from trg_modules where plant_code = (select plant_code from trainee_apln where trainee_idno = '"+username+"') and del_status = 'N' order by priorityval ")
   if(isNaN(parseInt(username)))
   {
     var result = await pool.request()
@@ -785,7 +785,7 @@ app.post('/getModules', async(req,res)=>{
   else
   {
     var result = await pool.request()
-    .query("select* from trg_modules where plant_code = '"+username+"' order by priorityval ") 
+    .query("select* from trg_modules where plant_code = '"+username+"' and del_status= 'N' order by priorityval ") 
   }
   res.send(result['recordset'])
 })
@@ -993,7 +993,7 @@ app.post('/getOfflineModule', async(req,res)=>
 
   var pool = await db.poolPromise
   var result =await pool.request()
-    .query("select * from trg_modules where plant_code = '"+plantcode+"' and category = 'OFFLINE' ")
+    .query("select * from trg_modules where plant_code = '"+plantcode+"' and category = 'OFFLINE' and del_status = 'N' ")
 
   res.send(result['recordset'])
 
@@ -1030,6 +1030,41 @@ app.post('/offlineUpload', async(req,res)=>
     res.send({'message': 'success'})
   }
 
+})
+
+app.post('/addmodule' , async(req,res)=>
+{
+
+  var module_name = req.body.module_name
+  var pass_criteria = req.body.pass_criteria
+  var total_marks = req.body.total_marks
+  var pass_percent = req.body.pass_percent
+  var category = req.body.category
+  var priorityval = req.body.priorityval
+  var plantcode = req.body.plantcode
+
+
+
+  var pool =await db.poolPromise
+  var result = await pool.request()
+    .query("select * from trg_modules where priorityval = '"+priorityval+"' and del_status = 'N' ")
+  if(result['recordset'].length > 0)
+    res.send({'message': 'already'})
+  else
+    {
+      var user = await pool.request()
+        .query("insert into trg_modules values('"+module_name+"', "+total_marks+","+pass_criteria+", "+pass_percent+", '"+category+"', 'N', "+priorityval+", 0, '"+plantcode+"'  )")
+        res.send({'message': 'inserted'})
+    }
+})
+
+app.post('/deletemodule', async(req,res)=>
+{
+  var priorityval = req.body.priorityval
+  var pool = await db.poolPromise
+  var result = await pool.request()
+    .query("update trg_modules set del_status = 'Y' where priorityval = "+priorityval+" ")
+  res.send({'message': 'success'})
 })
 
 app.post('/user',async(req,res)=>{
@@ -1209,6 +1244,7 @@ app.post('/bankdel',async(req,res)=>{
        res.send(datas);
   }, )
 });
+
 
 app.post('/useredit',async(req,res)=>{
   var user = await getpool();
