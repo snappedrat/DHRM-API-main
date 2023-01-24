@@ -114,7 +114,7 @@ app.post('/traineelogin', async(req, res)=>{
     .input('trainee_idno', User_Name)
     .input('pass', Password)
     .query("select apln_slno from trainee_apln where trainee_idno=@trainee_idno and temp_password=@pass and apln_status = 'APPROVED' ")
-  
+    console.log("select apln_slno from trainee_apln where trainee_idno='"+User_Name+"' and temp_password='"+Password+"' and apln_status = 'APPROVED' ")
   var result2 = await pool.request()
     .input('trainee_idno', User_Name)
     .query("select apln_slno from trainee_apln where trainee_idno=@trainee_idno and apln_status ='APPROVED' ")
