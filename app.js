@@ -39,10 +39,6 @@ app.post("/image", upload , async(req, res) => {
     var mobile = req.body.mobile
     var company = req.body.company
     var fileno = req.body.fileno
-
-    console.log(req.body)
-    console.log('====================================');
-    console.log("  update trainee_apln set other_files"+fileno+" = '"+name+"' where mobile_no1= '"+mobile+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ")
     user.query("  update trainee_apln set other_files"+fileno+" = '"+name+"' where mobile_no1= '"+mobile+"' and company_code = (select company_code from master_company where company_name = '"+company+"')  "  )
 
 });
@@ -1052,8 +1048,6 @@ app.post('/addmodule' , async(req,res)=>
   var priorityval = req.body.priorityval
   var plantcode = req.body.plantcode
 
-
-
   var pool =await db.poolPromise
   var result = await pool.request()
     .query("select * from trg_modules where priorityval = '"+priorityval+"' and del_status = 'N' ")
@@ -1076,7 +1070,7 @@ app.post('/deletemodule', async(req,res)=>
   res.send({'message': 'success'})
 })
 
-app.post('/  updatemodule', async(req,res)=>{
+app.post('/updatemodule', async(req,res)=>{
 
 
   var module_name = req.body.module_name
@@ -1130,34 +1124,64 @@ app.post('/traineeAnswers', async(req,res)=>{
 })
 
 
-app.post('/user',async(req,res)=>{
+app.post('/companyadd',async(req,res)=>{
     var user = await getpool();
-    var Code = req.body.Code;
-    var name = req.body.Name;
-    var active_status = req.body.active_status;
+    var Code = req.body.company_code;
+    var name = req.body.company_name;
+    var active_status = req.body.status;
     var created_by = req.body.created_by;
     console.log(req.body)
     var stat = true;
+    
+    console.log("SELECT company_name FROM master_company WHERE company_code = "+Code+"")
 
-    user.query("SELECT TOP 1 company_name FROM master_company WHERE company_code = "+Code+"")
+    user.query("SELECT company_name FROM master_company WHERE company_code = "+Code+"")
         .then(function (x){
        if(x.recordset.length!==0){
-           console.log("Record Exists");
-           console.log(stat);
-           res.send(stat);
+           res.send({message: 'already'});
        }
        else
        {
-
+          console.log("insert into [dbo].[master_company](company_code,company_name,status,del_status,created_on,created_by) values("+Code+",'"+name+"','"+active_status+"',0,CURRENT_TIMESTAMP,'"+created_by+"')")
            user.query("insert into [dbo].[master_company](company_code,company_name,status,del_status,created_on,created_by) values("+Code+",'"+name+"','"+active_status+"',0,CURRENT_TIMESTAMP,'"+created_by+"')")
                .then(function (datas) {
-                   console.log("Record Inserted code="+Code);
-                   stat = false;
-                   res.send(stat);
-               })
+                   res.send({message: 'success'});
+                  })
        }
     }, );
 });
+
+app.get('/companyshow',async(req,res)=>{
+  var user = await getpool();
+  user.query("select * from master_company where del_status=0").then(function (datas) {
+    let miu=datas['recordset'];
+    console.log(miu)
+       res.send(miu)
+  }, )
+}); 
+
+app.post('/companyedit',async(req,res)=>{
+  var user = await getpool();
+  var company_code = req.body.company_code;
+  var name = req.body.Name;
+  var active_status = req.body.status;
+  var modified_by = req.body.modified_by;
+  
+  user.query("update master_company set company_name= '"+name+"',status= '"+active_status+"',modified_on= CURRENT_TIMESTAMP, modified_by ='"+modified_by+"' where company_code= '"+company_code+"' ").then(function (datas) {
+     res.send(datas);
+  }, )
+});
+
+app.post('/companydel',async(req,res)=>{
+  var user = await getpool();
+ var company_code = req.body.user;
+  console.log(req.body)
+  user.query("update master_company SET del_status = 1,modified_on=CURRENT_TIMESTAMP WHERE company_code= '"+company_code+"' ").then(function (datas) {
+       res.send(datas);
+  }, )
+});
+
+
 
 app.post('/desig',async(req,res)=>{
   var user = await getpool();
@@ -1258,15 +1282,7 @@ app.post('/opr',async(req,res)=>{
   }, )
 });
 
-app.post('/userdel',async(req,res)=>{
-  var user = await getpool();
- var sno = req.body.user;
-  console.log(req.body)
-  user.query("  update master_company SET del_status = 1,modified_on=CURRENT_TIMESTAMP WHERE sno="+sno).then(function (datas) {
-     console.log()
-       res.send(datas);
-  }, )
-});
+
 
 app.post('/desigdel',async(req,res)=>{
   var user = await getpool();
@@ -1309,20 +1325,7 @@ app.post('/bankdel',async(req,res)=>{
 });
 
 
-app.post('/useredit',async(req,res)=>{
-  var user = await getpool();
-  var sno = req.body.sno;
-  var name = req.body.Name;
-  var active_status = req.body.active_status;
-  var modified_by = req.body.modified_by;
-  console.log(req.body)
-    console.log(sno,name,active_status)
-  
-  user.query("  update master_company set company_name= '"+name+"',status= '"+active_status+"',modified_on= CURRENT_TIMESTAMP, modified_by ='"+modified_by+"' where sno=" +sno).then(function (datas) {
-     console.log()
-     res.send(datas);
-  }, )
-});
+
 
 app.post('/lineedit',async(req,res)=>{
   var user = await getpool();
@@ -1393,13 +1396,7 @@ app.post('/bankedit',async(req,res)=>{
   }, )
 });
 
-app.get('/usershow',async(req,res)=>{
-  var user = await getpool();
-  user.query("select sno,company_code,company_name,status,CONVERT(varchar,created_on,105)as created_on,created_by, CONVERT(varchar,modified_on,105)as modified_on, modified_by from master_company where del_status=0").then(function (datas) {
-    let miu=datas['recordset'];
-       res.send(miu)
-  }, )
-}); 
+
 
 app.get('/deptshow',async(req,res)=>{
   var user = await getpool();
@@ -1476,6 +1473,416 @@ app.get('/desigdown',async(req,res)=>{
        res.send(miu)  
   }, )
 });
+
+
+app.post('/addplant' , async(req,res)=>
+{
+  try{
+      var plant_code = req.body.module_name
+      var plant_name = req.body.plant_name
+      var pl = req.body.pl
+      var address = req.body.address
+      var location = req.body.location
+      var personal_area = req.body.personal_area
+      var payroll_area = req.body.payroll_area
+      var plant_sign = req.body.plant_sign
+      var company_code = req.body.company_code
+
+      var pool =await db.poolPromise
+      var result = await pool.request()
+        .query("select * from plant where plant_code = '"+plant_code+"' and del_status = '1' ")
+      if(result['recordset'].length > 0)
+        res.send({'message': 'already'})
+      else
+        {
+          result = await pool.request()
+        .query("select * from master_company where company_code = '"+company_code+"' and del_status = '1' ")
+      if(result['recordset'].length > 0)
+        res.send({'message': 'nocompanycode'})
+        else{
+          result = await pool.request()
+                              .input("plant_code", plant_code)
+                              .input("plant_name", plant_name)
+                              .input("pl", pl)
+                              .input("address", address)
+                              .input("location", location)
+                              .input("personal_area", personal_area)
+                              .input("payroll_area", payroll_area)
+                              .input("plant_sign", plant_sign)
+                              .input("company_code", company_code)
+                              .query("Insert into plant(@plant_code, @plant_name, 1, @pl, @address, @location, @plant_sign, @personal_area, @payroll_area, @company_code)")
+            res.send({'message': 'inserted'})
+        }
+        }
+  }catch(err){
+    console.log(err);
+    res.send({"message":'failure'})
+  }
+})
+
+app.post('/deleteplant', async(req,res)=>
+{
+  try{
+  var plant_code = req.body.plant_code
+  var pool = await db.poolPromise
+  var result = await pool.request()
+    .query("  update plant set del_status = '0' where plant_code = "+plant_code+" ")
+  res.send({'message': 'success'})
+  }catch(err){
+    console.log(err)
+    res.send({"message":"failure"})
+  }
+
+  
+})
+
+app.post('/updateplant', async(req,res)=>{
+  try{
+
+    var plant_code = req.body.module_name
+    var plant_name = req.body.plant_name
+    var pl = req.body.pl
+    var address = req.body.address
+    var location = req.body.location
+    var personal_area = req.body.personal_area
+    var payroll_area = req.body.payroll_area
+    var modified_by = req.body.modified_by
+    var company_code = req.body.company_code
+    var active_status = req.body.active_status
+
+    var pool =await db.poolPromise
+    var result = await pool.request()
+      .query("select * from plant where plant_code = '"+plant_code+"' and del_status = 1 ")
+    if(result['recordset'].length > 0)
+      res.send({'message': 'already'})
+    else
+      {
+        var user = await pool.request()
+          .query("  update plant set plant_code = '"+plant_code+"' , plant_name='"+plant_name+"', pl = '"+pl+"', addr = '"+address+"', locatn = '"+location+"', personal_area = '"+personal_area+"', payroll_area = '"+payroll_area+"', company_code = '"+company_code+" where  plant_code='"+plant_code+"'")
+          res.send({'message': 'updated'})
+      }
+  }catch(err){
+    console.log(err)
+    res.send({"message":"failure"})
+  }
+})
+
+app.post('/getplant', async(req,res)=>{
+  try{
+  var pool = await db.poolPromise
+  var result = await pool.request()
+    .query("select * from plant where del_status = 1") 
+  res.send(result['recordset'])
+  }catch(err){
+    console.log(err)
+    res.send({"message":"failure"})
+  }
+})
+
+
+
+
+app.post('/adddepartment' , async(req,res)=>
+{
+  try{
+      var plant_code = req.body.module_name
+      var department_name = req.body.department_name
+      var sap_code = req.body.sap_code
+
+      var pool =await db.poolPromise
+      result = await pool.request()
+                          .input("plant_code", plant_code)
+                          .input("department_name", department_name)
+                          .input("sap_code", sap_code)
+                          .query("Insert into department(@department_name, @plant_code, 1, @sap_code)")
+        res.send({'message': 'inserted'})
+        
+        
+  }catch(err){
+    console.log(err);
+    res.send({"message":'failure'})
+  }
+})
+
+app.post('/deletedepartment', async(req,res)=>
+{
+  try{
+  var dept_slno = req.body.dept_slno
+  var pool = await db.poolPromise
+  var result = await pool.request()
+    .query("update department set del_status = '0' where dept_slno = "+dept_slno+" ")
+  res.send({'message': 'success'})
+  }catch(err){
+    console.log(err)
+    res.send({"message":"failure"})
+  }
+
+  
+})
+
+app.post('/updatedepartment', async(req,res)=>{
+  try{
+
+    var plant_code = req.body.module_name
+    var department_name = req.body.department_name
+    var sap_code = req.body.sap_code
+    var dept_slno = req.body.dept_slno
+
+    var pool =await db.poolPromise
+    var user = await pool.request()
+      .query("  update department set plant_code = '"+plant_code+"' , dept_name='"+department_name+"', sap_code = '"+sap_code+" where  dept_slno='"+dept_slno+"'")
+      res.send({'message': 'updated'})
+  }catch(err){
+    console.log(err)
+    res.send({"message":"failure"})
+  }
+})
+
+app.post('/getdepartment', async(req,res)=>{
+  try{
+  var pool = await db.poolPromise
+  var result = await pool.request()
+    .query("select * from department where del_status = 1") 
+  res.send(result['recordset'])
+  }catch(err){
+    console.log(err)
+    res.send({"message":"failure"})
+  }
+})
+
+
+
+app.post('/addline' , async(req,res)=>
+{
+  try{
+      var line_code = req.body.line_code
+      var line_name = req.body.line_name
+      var shop_code = req.body.sap_code
+      var module_code = req.body.active_status
+      var plant_code = req.body.plant_code
+      var personal_subarea = req.body.personal_subarea
+      var created_by = req.body.created_by
+
+
+      var pool =await db.poolPromise
+      var result = pool.request()
+                        .input("line_code", line_code)
+                        .query("select * from mst_line where line_code=@line_code")
+      if (result['recordset'].length > 0)
+      res.send({'message': 'already'})
+    else
+      {
+      result = await pool.request()
+                          .input("plant_code", plant_code)
+                          .input("line_code", line_code)
+                          .input("shop_code", shop_code)
+                          .input("created_by", created_by)
+                          .input("line_name", line_name)
+                          .input("module_code", module_code)
+                          .input("personal_subarea", personal_subarea)
+                          .query("Insert into mst_line(@line_code, @line_name, @shop_code, @module_code, 'Y', @plant_code,  @created_by, CURRENT_TIMESTAMP,null,null, @personal_subarea)")
+        res.send({'message': 'inserted'})
+      }
+        
+        
+  }catch(err){
+    console.log(err);
+    res.send({"message":'failure'})
+  }
+})
+
+app.post('/deleteline', async(req,res)=>
+{
+  try{
+  var line_code = req.body.line_code
+  var pool = await db.poolPromise
+  var result = await pool.request()
+    .query("update mst_line set del_status = 'N' where line_code = "+line_code+" ")
+  res.send({'message': 'success'})
+  }catch(err){
+    console.log(err)
+    res.send({"message":"failure"})
+  }
+
+  
+})
+
+app.post('/updateline', async(req,res)=>{
+  try{
+
+    var line_code = req.body.line_code
+    var line_name = req.body.line_name
+    var shop_code = req.body.sap_code
+    var module_code = req.body.active_status
+    var plant_code = req.body.plant_code
+    var personal_subarea = req.body.personal_subarea
+    var modified_by = req.body.modified_by
+
+    var pool =await db.poolPromise
+    var user = await pool.request()
+      .query("  update mst_line set plant_code = '"+plant_code+"' , line_name='"+line_name+"' , shop_code='"+shop_code+"' , module_code='"+module_code+"' , personal_subarea='"+personal_subarea+"', line_code = '"+line_code+"', modified_by = '"+modified_by+"', modified_on = CURRENT_TIMESTAMP where  line_code='"+line_code+"'")
+      res.send({'message': 'updated'})
+  }catch(err){
+    console.log(err)
+    res.send({"message":"failure"})
+  }
+})
+
+app.post('/getline', async(req,res)=>{
+  try{
+  var pool = await db.poolPromise
+  var result = await pool.request()
+    .query("select * from mst_line where del_status = 'Y'") 
+  res.send(result['recordset'])
+  }catch(err){
+    console.log(err)
+    res.send({"message":"failure"})
+  }
+})
+
+
+app.post('/adddesignation' , async(req,res)=>
+{
+  try{
+      var plant_code = req.body.module_name
+      var desig_name = req.body.desig_name
+
+      var pool =await db.poolPromise
+      result = await pool.request()
+                          .input("plant_code", plant_code)
+                          .input("desig_name", desig_name)
+                          .query("Insert into designation(@desig_name, @plant_code, 1)")
+        res.send({'message': 'inserted'})
+        
+        
+  }catch(err){
+    console.log(err);
+    res.send({"message":'failure'})
+  }
+})
+
+app.post('/deletedesignation', async(req,res)=>
+{
+  try{
+  var slno = req.body.slno
+  var pool = await db.poolPromise
+  var result = await pool.request()
+    .query("update designation set del_status = '0' where slno = "+slno+" ")
+  res.send({'message': 'success'})
+  }catch(err){
+    console.log(err)
+    res.send({"message":"failure"})
+  }
+
+  
+})
+
+app.post('/updatedesignation', async(req,res)=>{
+  try{
+
+    var plant_code = req.body.module_name
+    var desig_name = req.body.desig_name
+    var slno = req.body.slno
+
+    var pool =await db.poolPromise
+    var user = await pool.request()
+      .query("  update designation set plant_code = '"+plant_code+"' , desig_name='"+desig_name+" where  slno='"+slno+"'")
+      res.send({'message': 'updated'})
+  }catch(err){
+    console.log(err)
+    res.send({"message":"failure"})
+  }
+})
+
+app.post('/getdesignation', async(req,res)=>{
+  try{
+  var pool = await db.poolPromise
+  var result = await pool.request()
+    .query("select * from designation where del_status = 1") 
+  res.send(result['recordset'])
+  }catch(err){
+    console.log(err)
+    res.send({"message":"failure"})
+  }
+})
+
+
+app.post('/addbank' , async(req,res)=>
+{
+  try{
+      var bank_code = req.body.bank_code
+      var bank_name = req.body.bank_name
+      var active_status = req.body.active_status
+      var created_by = req.body.created_by
+
+      var pool =await db.poolPromise
+      var result = pool.request()
+                        .input("line_code", bank_code)
+                        .query("select * from bank where bank_code=@bank_code")
+      if (result['recordset'].length > 0)
+      res.send({'message': 'already'})
+    else
+      {
+      result = await pool.request()
+                          .input("bank_code", bank_code)
+                          .input("bank_name", bank_name)
+                          .input("active_status", active_status)
+                          .input("created_by", created_by)
+                          .query("Insert into bank(@bank_name, @bank_code, 1)")
+        res.send({'message': 'inserted'})
+      }
+        
+        
+  }catch(err){
+    console.log(err);
+    res.send({"message":'failure'})
+  }
+})
+
+app.post('/deletebank', async(req,res)=>
+{
+  try{
+  var slno = req.body.slno
+  var pool = await db.poolPromise
+  var result = await pool.request()
+    .query("update bank set del_status = '0' where slno = "+slno+" ")
+  res.send({'message': 'success'})
+  }catch(err){
+    console.log(err)
+    res.send({"message":"failure"})
+  }
+
+  
+})
+
+app.post('/updatebank', async(req,res)=>{
+  try{
+
+    var bank_code = req.body.bank_code
+    var bank_name = req.body.bank_name
+    var slno = req.body.slno
+
+    var pool =await db.poolPromise
+    var user = await pool.request()
+      .query("  update designation set bank_code = '"+bank_code+"' , bank_name='"+bank_name+" where  slno='"+slno+"'")
+      res.send({'message': 'updated'})
+  }catch(err){
+    console.log(err)
+    res.send({"message":"failure"})
+  }
+})
+
+app.post('/getbank', async(req,res)=>{
+  try{
+  var pool = await db.poolPromise
+  var result = await pool.request()
+    .query("select * from bank where del_status = 1") 
+  res.send(result['recordset'])
+  }catch(err){
+    console.log(err)
+    res.send({"message":"failure"})
+  }
+})
 
 
 module.exports = app;
