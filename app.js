@@ -281,6 +281,29 @@ app.post('/plantcodelist', async(req,res)=>
   }, )
 }) ;
 
+app.post('/getall', async(req,res)=>
+{
+  var pool =await db.poolPromise
+  var plantcode = req.body.plantcode
+
+    var result = await pool.request()
+    .query("select desig_name from designation where plant_code = (select plant_code from plant where plant_name = '"+plantcode+"' )")
+
+    var result2 = await pool.request()
+    .query("select dept_name from department where plant_code = (select plant_code from plant where plant_name = '"+plantcode+"' ) ")
+
+    var result3 = await pool.request()
+    .query("select line_name from mst_line where plant_code = (select plant_code from plant where plant_name = '"+plantcode+"' ) ")
+  
+    var object = []
+    object[0] = result['recordset']
+    object[1] = result2['recordset']
+    object[2] = result3['recordset']
+
+    
+  res.send(object)
+}) ;
+
 app.post('/companycodelist', async(req,res)=>
 {
   var user = await getpool();
@@ -1072,7 +1095,8 @@ app.post('/deletemodule', async(req,res)=>
 
 app.post('/updatemodule', async(req,res)=>{
 
-
+  var slno = req.body.sno
+  slno = slno+1
   var module_name = req.body.module_name
   var pass_criteria = req.body.pass_criteria
   var total_marks = req.body.total_marks
@@ -1082,16 +1106,16 @@ app.post('/updatemodule', async(req,res)=>{
   var plantcode = req.body.plantcode
 
   var pool =await db.poolPromise
-  var result = await pool.request()
-    .query("select * from trg_modules where priorityval = '"+priorityval+"' and del_status = 'N' ")
-  if(result['recordset'].length > 0)
-    res.send({'message': 'already'})
-  else
-    {
+  // var result = await pool.request()
+  //   .query("select * from trg_modules where priorityval = '"+priorityval+"' and del_status = 'N' ")
+  // if(result['recordset'].length > 0)
+  //   res.send({'message': 'already'})
+  // else
+  //   {
       var user = await pool.request()
-        .query("  update trg_modules set module_name = '"+module_name+"' , pass_criteria='"+pass_criteria+"', total_marks = '"+total_marks+"', pass_percent = '"+pass_percent+"', category = '"+category+"', priorityval = '"+priorityval+"' where  ")
-        res.send({'message': 'inserted'})
-    }
+        .query("update trg_modules set module_name = '"+module_name+"' , pass_criteria='"+pass_criteria+"', total_marks = '"+total_marks+"', pass_percent = '"+pass_percent+"', category = '"+category+"', priorityval = '"+priorityval+"' where slno = '"+slno+"' ")
+        res.send({'message': 'updated'})
+    // }
 })
 
 app.post('/testSummary', async(req,res)=>{
@@ -1142,8 +1166,8 @@ app.post('/companyadd',async(req,res)=>{
        }
        else
        {
-          console.log("insert into [dbo].[master_company](company_code,company_name,status,del_status,created_on,created_by) values("+Code+",'"+name+"','"+active_status+"',0,CURRENT_TIMESTAMP,'"+created_by+"')")
-           user.query("insert into [dbo].[master_company](company_code,company_name,status,del_status,created_on,created_by) values("+Code+",'"+name+"','"+active_status+"',0,CURRENT_TIMESTAMP,'"+created_by+"')")
+          console.log("insert into [dbo].[master_company](company_code,company_name,del_status,created_on,created_by) values("+Code+",'"+name+"',0,CURRENT_TIMESTAMP,'"+created_by+"')")
+           user.query("insert into [dbo].[master_company](company_code,company_name,del_status,created_on,created_by) values("+Code+",'"+name+"',0,CURRENT_TIMESTAMP,'"+created_by+"')")
                .then(function (datas) {
                    res.send({message: 'success'});
                   })
@@ -1163,21 +1187,20 @@ app.get('/companyshow',async(req,res)=>{
 app.post('/companyedit',async(req,res)=>{
   var user = await getpool();
   var company_code = req.body.company_code;
-  var name = req.body.Name;
-  var active_status = req.body.status;
+  var name = req.body.company_name;
   var modified_by = req.body.modified_by;
-  
-  user.query("update master_company set company_name= '"+name+"',status= '"+active_status+"',modified_on= CURRENT_TIMESTAMP, modified_by ='"+modified_by+"' where company_code= '"+company_code+"' ").then(function (datas) {
-     res.send(datas);
-  }, )
+
+  user.query("update master_company set company_name= '"+name+"',modified_on= CURRENT_TIMESTAMP, modified_by ='"+modified_by+"' where company_code= '"+company_code+"' ").then(function (datas) {
+      res.send({message: 'success'})
+    }, )
 });
 
 app.post('/companydel',async(req,res)=>{
   var user = await getpool();
- var company_code = req.body.user;
-  console.log(req.body)
-  user.query("update master_company SET del_status = 1,modified_on=CURRENT_TIMESTAMP WHERE company_code= '"+company_code+"' ").then(function (datas) {
-       res.send(datas);
+ var company_code = req.body.company_code;
+
+ user.query("update master_company SET del_status = 1,modified_on=CURRENT_TIMESTAMP WHERE company_code= '"+company_code+"' ").then(function (datas) {
+       res.send({message: 'success'});
   }, )
 });
 
@@ -1477,8 +1500,8 @@ app.get('/desigdown',async(req,res)=>{
 
 app.post('/addplant' , async(req,res)=>
 {
-  try{
-      var plant_code = req.body.module_name
+  // try{
+      var plant_code = req.body.plant_code
       var plant_name = req.body.plant_name
       var pl = req.body.pl
       var address = req.body.address
@@ -1490,16 +1513,19 @@ app.post('/addplant' , async(req,res)=>
 
       var pool =await db.poolPromise
       var result = await pool.request()
-        .query("select * from plant where plant_code = '"+plant_code+"' and del_status = '1' ")
+        .query("select * from plant where plant_code = '"+plant_code+"' and del_status = '0' ")
+        console.log("select * from plant where plant_code = '"+plant_code+"' and del_status = '0' ")
+
       if(result['recordset'].length > 0)
         res.send({'message': 'already'})
       else
         {
           result = await pool.request()
-        .query("select * from master_company where company_code = '"+company_code+"' and del_status = '1' ")
-      if(result['recordset'].length > 0)
+        .query("select * from master_company where company_code = '"+company_code+"' and del_status = '0' ")
+      if(result['recordset'].length == 0)
         res.send({'message': 'nocompanycode'})
         else{
+          console.log("Insert into plant values('"+plant_code+"', '"+plant_name+"', 0, '"+pl+"', '"+address+"', '"+location+"', '"+plant_sign+"', '"+personal_area+"', '"+payroll_area+"', '"+company_code+"')")
           result = await pool.request()
                               .input("plant_code", plant_code)
                               .input("plant_name", plant_name)
@@ -1510,14 +1536,14 @@ app.post('/addplant' , async(req,res)=>
                               .input("payroll_area", payroll_area)
                               .input("plant_sign", plant_sign)
                               .input("company_code", company_code)
-                              .query("Insert into plant(@plant_code, @plant_name, 1, @pl, @address, @location, @plant_sign, @personal_area, @payroll_area, @company_code)")
+                              .query("Insert into plant values(@plant_code, @plant_name, 0, @pl, @address, @location, @plant_sign, @personal_area, @payroll_area, @company_code)")
             res.send({'message': 'inserted'})
         }
         }
-  }catch(err){
-    console.log(err);
-    res.send({"message":'failure'})
-  }
+  // }catch(err){
+  //   console.log(err);
+  //   res.send({"message":'failure'})
+  // }
 })
 
 app.post('/deleteplant', async(req,res)=>
@@ -1526,7 +1552,7 @@ app.post('/deleteplant', async(req,res)=>
   var plant_code = req.body.plant_code
   var pool = await db.poolPromise
   var result = await pool.request()
-    .query("  update plant set del_status = '0' where plant_code = "+plant_code+" ")
+    .query("update plant set del_status = '1' where plant_code = "+plant_code+" ")
   res.send({'message': 'success'})
   }catch(err){
     console.log(err)
@@ -1539,28 +1565,21 @@ app.post('/deleteplant', async(req,res)=>
 app.post('/updateplant', async(req,res)=>{
   try{
 
-    var plant_code = req.body.module_name
+    var plant_code = req.body.plant_code
     var plant_name = req.body.plant_name
     var pl = req.body.pl
-    var address = req.body.address
-    var location = req.body.location
+    var address = req.body.addr
+    var location = req.body.locatn
     var personal_area = req.body.personal_area
     var payroll_area = req.body.payroll_area
-    var modified_by = req.body.modified_by
     var company_code = req.body.company_code
-    var active_status = req.body.active_status
 
     var pool =await db.poolPromise
-    var result = await pool.request()
-      .query("select * from plant where plant_code = '"+plant_code+"' and del_status = 1 ")
-    if(result['recordset'].length > 0)
-      res.send({'message': 'already'})
-    else
-      {
+    console.log("update plant set plant_code = '"+plant_code+"' , plant_name='"+plant_name+"', pl = '"+pl+"', addr = '"+address+"', locatn = '"+location+"', personal_area = "+personal_area+", payroll_area = "+payroll_area+", company_code = '"+company_code+"' where  plant_code='"+plant_code+"'")
         var user = await pool.request()
-          .query("  update plant set plant_code = '"+plant_code+"' , plant_name='"+plant_name+"', pl = '"+pl+"', addr = '"+address+"', locatn = '"+location+"', personal_area = '"+personal_area+"', payroll_area = '"+payroll_area+"', company_code = '"+company_code+" where  plant_code='"+plant_code+"'")
+
+          .query("update plant set plant_code = '"+plant_code+"' , plant_name='"+plant_name+"', pl = '"+pl+"', addr = '"+address+"', locatn = '"+location+"', personal_area = "+personal_area+", payroll_area = "+payroll_area+", company_code = '"+company_code+"' where  plant_code='"+plant_code+"'")
           res.send({'message': 'updated'})
-      }
   }catch(err){
     console.log(err)
     res.send({"message":"failure"})
@@ -1571,7 +1590,7 @@ app.post('/getplant', async(req,res)=>{
   try{
   var pool = await db.poolPromise
   var result = await pool.request()
-    .query("select * from plant where del_status = 1") 
+    .query("select * from plant where del_status = 0") 
   res.send(result['recordset'])
   }catch(err){
     console.log(err)
@@ -1812,25 +1831,21 @@ app.post('/addbank' , async(req,res)=>
   try{
       var bank_code = req.body.bank_code
       var bank_name = req.body.bank_name
-      var active_status = req.body.active_status
-      var created_by = req.body.created_by
 
       var pool =await db.poolPromise
       var result = pool.request()
-                        .input("line_code", bank_code)
+                        .input("bank_code", bank_code)
                         .query("select * from bank where bank_code=@bank_code")
-      if (result['recordset'].length > 0)
-      res.send({'message': 'already'})
-    else
-      {
+    //   if (result['recordset'].length > 0)
+    //   res.send({'message': 'already'})
+    // else
+    //   {
       result = await pool.request()
                           .input("bank_code", bank_code)
                           .input("bank_name", bank_name)
-                          .input("active_status", active_status)
-                          .input("created_by", created_by)
-                          .query("Insert into bank(@bank_name, @bank_code, 1)")
+                          .query("Insert into bank values(@bank_name, @bank_code, 1)")
         res.send({'message': 'inserted'})
-      }
+      // }
         
         
   }catch(err){
@@ -1842,10 +1857,13 @@ app.post('/addbank' , async(req,res)=>
 app.post('/deletebank', async(req,res)=>
 {
   try{
-  var slno = req.body.slno
+    console.log(req.body)
+  var slno = req.body.Slno
   var pool = await db.poolPromise
+  console.log("update bank set del_status = '0' where slno = "+slno+" ")
   var result = await pool.request()
     .query("update bank set del_status = '0' where slno = "+slno+" ")
+
   res.send({'message': 'success'})
   }catch(err){
     console.log(err)
@@ -1860,11 +1878,13 @@ app.post('/updatebank', async(req,res)=>{
 
     var bank_code = req.body.bank_code
     var bank_name = req.body.bank_name
-    var slno = req.body.slno
+    var slno = req.body.Slno+1
 
     var pool =await db.poolPromise
+    console.log("update bank set bank_code = '"+bank_code+"' , bank_name='"+bank_name+"' where  slno= "+slno+" ")
+
     var user = await pool.request()
-      .query("  update designation set bank_code = '"+bank_code+"' , bank_name='"+bank_name+" where  slno='"+slno+"'")
+      .query("update bank set bank_code = '"+bank_code+"' , bank_name='"+bank_name+"' where  slno="+slno+" ")
       res.send({'message': 'updated'})
   }catch(err){
     console.log(err)
@@ -1884,5 +1904,285 @@ app.post('/getbank', async(req,res)=>{
   }
 })
 
+
+app.post('/addoperations' , async(req,res)=>
+{
+  try{
+      var oprn_desc = req.body.oprn_desc
+      var plant_code = req.body.plant_code
+      var skill_level = req.body.skill_level
+      var critical_oprn = req.body.critical_oprn
+
+      if (critical_oprn=="NO"){
+        critical_oprn=0;
+      }
+      else{
+        critical_oprn=1;
+      }
+
+      var pool =await db.poolPromise
+      
+      result = await pool.request()
+                          .input("plant_code", plant_code)
+                          .input("oprn_desc", oprn_desc)
+                          .input("skill_level", skill_level)
+                          .input("critical_oprn", critical_oprn)
+                          .query("Insert into operations values(@plant_code, @oprn_desc,'N', 0, @skill_level, @critical_oprn)")
+        res.send({'message': 'inserted'})
+        
+        
+  }catch(err){
+    console.log(err);
+    res.send({"message":'failure'})
+  }
+})
+
+app.post('/deleteoperation', async(req,res)=>
+{
+  try{
+  var oprn_slno = req.body.oprn_slno
+  var pool = await db.poolPromise
+  var result = await pool.request()
+    .query("update operations set del_status = 'Y' where oprn_slno = "+oprn_slno+" ")
+  res.send({'message': 'success'})
+  }catch(err){
+    console.log(err)
+    res.send({"message":"failure"})
+  }
+
+  
+})
+
+app.post('/updateoperation', async(req,res)=>{
+  try{
+
+    var oprn_desc = req.body.oprn_desc
+    var plant_code = req.body.plant_code
+    var skill_level = req.body.skill_level
+    var critical_oprn = req.body.critical_oprn
+    var oprn_slno = req.body.oprn_slno
+
+    var pool =await db.poolPromise
+    var user = await pool.request()
+      .query("  update operations set plant_code = '"+plant_code+"' , oprn_desc='"+oprn_desc+"' , skill_level='"+skill_level+"' , critical_oprn='"+critical_oprn +" where  oprn_slno='"+oprn_slno+"'")
+      res.send({'message': 'updated'})
+  }catch(err){
+    console.log(err)
+    res.send({"message":"failure"})
+  }
+})
+
+app.post('/getoperations', async(req,res)=>{
+  try{
+  var pool = await db.poolPromise
+  var result = await pool.request()
+    .query("select * from operations where del_status = 'N'") 
+  res.send(result['recordset'])
+  }catch(err){
+    console.log(err)
+    res.send({"message":"failure"})
+  }
+})
+
+
+app.post('/addemployee' , async(req,res)=>
+{
+  try{
+      var gen_id = req.body.gen_id
+      var emp_name = req.body.emp_name
+      var department = req.body.department
+      var designation = req.body.designation
+      var mail_id = req.body.mail_id
+      var mobile_no = req.body.mobile_no
+      var user_name = req.body.user_name
+      var password = req.body.password
+      var is_hr = req.body.is_hr
+      var is_hrappr = req.body.is_hrappr
+      var is_trainer = req.body.is_trainer
+      var is_supervisor = req.body.is_supervisor
+      var is_reportingauth = req.body.is_reportingauth
+      var is_tou = req.body.is_tou
+      var plant_code = req.body.plant_code
+      var line_code = req.body.line_code
+
+      var pool =await db.poolPromise
+      
+      result = await pool.request()
+                          .input("gen_id", gen_id)
+                          .input("emp_name", emp_name)
+                          .input("department", department)
+                          .input("designation", designation)
+                          .input("mail_id", mail_id)
+                          .input("mobile_no", mobile_no)
+                          .input("user_name", user_name)
+                          .input("password", password)
+                          .input("is_hr", is_hr)
+                          .input("is_hrappr", is_hrappr)
+                          .input("is_trainer", is_trainer)
+                          .input("is_supervisor", is_supervisor)
+                          .input("is_reportingauth", is_reportingauth)
+                          .input("is_tou", is_tou)
+                          .input("plant_code", plant_code)
+                          .input("line_code", line_code)
+                          .query("Insert into employees values(@gen_id, @emp_name,@department, @designation, @mail_id, @mobile_no, @user_name, @password,0,0,0,@is_supervisor,0,@plant_code,0,'N', @is_hr,@is_trainer,@is_hrappr, @is_reportingauth, @is_tou, @line_code)")
+        res.send({'message': 'inserted'})
+        
+        
+  }catch(err){
+    console.log(err);
+    res.send({"message":'failure'})
+  }
+})
+
+app.post('/deleteemployee', async(req,res)=>
+{
+  try{
+  var empl_slno = req.body.empl_slno
+  var pool = await db.poolPromise
+  var result = await pool.request()
+    .query("update employees set del_status = 'Y' where empl_slno = "+empl_slno+" ")
+  res.send({'message': 'success'})
+  }catch(err){
+    console.log(err)
+    res.send({"message":"failure"})
+  }
+
+  
+})
+
+app.post('/updateemployee', async(req,res)=>{
+  try{
+    var empl_slno = req.body.empl_slno
+    var gen_id = req.body.gen_id
+    var emp_name = req.body.emp_name
+    var department = req.body.department
+    var designation = req.body.designation
+    var mail_id = req.body.mail_id
+    var mobile_no = req.body.mobile_no
+    var user_name = req.body.user_name
+    var password = req.body.password
+    var is_hr = req.body.is_hr
+    var is_hrappr = req.body.is_hrappr
+    var is_trainer = req.body.is_trainer
+    var is_supervisor = req.body.is_supervisor
+    var is_reportingauth = req.body.is_reportingauth
+    var is_tou = req.body.is_tou
+    var plant_code = req.body.plant_code
+    var line_code = req.body.line_code
+    var pool =await db.poolPromise
+    var user = await pool.request()
+      .query("  update employees set plant_code = '"+plant_code+"' , gen_id='"+gen_id+"' , line_code='"+line_code+"' , is_tou='"+is_tou+"' , is_reportingauth='"+is_reportingauth+"' , is_supervisor='"+is_supervisor+"' , is_trainer='"+is_trainer+"' , is_hrappr='"+is_hrappr+"' , is_hr='"+is_hr+"' , password='"+password+"' , user_name='"+user_name+"' , mobile_no='"+mobile_no+"' , mail_id='"+mail_id+"' , designation='"+designation+"' , emp_name='"+emp_name+"' , department='"+department +" where  empl_slno='"+empl_slno+"'")
+      res.send({'message': 'updated'})
+  }catch(err){
+    console.log(err)
+    res.send({"message":"failure"})
+  }
+})
+
+app.post('/getemployee', async(req,res)=>{
+  try{
+  var pool = await db.poolPromise
+  var result = await pool.request()
+    .query("select * from employees where del_status = 'N'") 
+  res.send(result['recordset'])
+  }catch(err){
+    console.log(err)
+    res.send({"message":"failure"})
+  }
+})
+
+
+
+app.post('/addshift' , async(req,res)=>
+{
+  try{
+      var shift_desc = req.body.shift_desc
+      var in_tm_min = req.body.in_tm_min
+      var act_tm_from = req.body.act_tm_from
+      var in_tm_max = req.body.in_tm_max
+      var act_tm_to = req.body.act_tm_to
+      var type = req.body.type
+      var shift_group = req.body.shift_group
+      var plant_id = req.body.plant_id
+      var security_shift = req.body.security_shift
+      var plant_code = req.body.plant_code
+      var plant_desc = req.body.plant_desc
+
+      var pool =await db.poolPromise
+      
+      result = await pool.request()
+                          .input("shift_desc", shift_desc)
+                          .input("in_tm_min", in_tm_min)
+                          .input("act_tm_from", act_tm_from)
+                          .input("in_tm_max", in_tm_max)
+                          .input("act_tm_to", act_tm_to)
+                          .input("type", type)
+                          .input("shift_group", shift_group)
+                          .input("plant_id", plant_id)
+                          .input("security_shift", security_shift)
+                          .input("plant_code", plant_code)
+                          .input("plant_desc", plant_desc)
+                          .query("Insert into mst_defaultshift values(@shift_desc, @in_tm_min,@act_tm_from, @in_tm_max, @act_tm_to, @type, @shift_group, @plant_id,@security_shift,@plant_code, @plant_desc, 'N')")
+        res.send({'message': 'inserted'})
+        
+        
+  }catch(err){
+    console.log(err);
+    res.send({"message":'failure'})
+  }
+})
+
+app.post('/deleteshift', async(req,res)=>
+{
+  try{
+  var shift_id = req.body.shift_id
+  var pool = await db.poolPromise
+  var result = await pool.request()
+    .query("update mst_defaultshift set del_status = 'Y' where shift_id = "+shift_id+" ")
+  res.send({'message': 'success'})
+  }catch(err){
+    console.log(err)
+    res.send({"message":"failure"})
+  }
+
+  
+})
+
+app.post('/updateshift', async(req,res)=>{
+  try{
+    var shift_desc = req.body.shift_desc
+    var in_tm_min = req.body.in_tm_min
+    var act_tm_from = req.body.act_tm_from
+    var in_tm_max = req.body.in_tm_max
+    var act_tm_to = req.body.act_tm_to
+    var type = req.body.type
+    var shift_group = req.body.shift_group
+    var plant_id = req.body.plant_id
+    var security_shift = req.body.security_shift
+    var plant_code = req.body.plant_code
+    var plant_desc = req.body.plant_desc
+    var shift_id = req.body.shift_id
+
+    var pool =await db.poolPromise
+    var user = await pool.request()
+      .query("  update mst_defaultshift set plant_code = '"+plant_code+"' , shift_desc='"+shift_desc+"' , in_tm_min='"+in_tm_min+"' , act_tm_from='"+act_tm_from+"' , in_tm_max='"+in_tm_max+"' , act_tm_to='"+act_tm_to+"' , type='"+type+"' , shift_group='"+shift_group+"' , plant_id='"+plant_id+"' , security_shift='"+security_shift+"' , plant_desc='"+plant_desc+" where  shift_id='"+shift_id+"'")
+      res.send({'message': 'updated'})
+  }catch(err){
+    console.log(err)
+    res.send({"message":"failure"})
+  }
+})
+
+app.post('/getshift', async(req,res)=>{
+  try{
+  var pool = await db.poolPromise
+  var result = await pool.request()
+    .query("select * from mst_defaultshift where del_status = 'N'") 
+  res.send(result['recordset'])
+  }catch(err){
+    console.log(err)
+    res.send({"message":"failure"})
+  }
+})
 
 module.exports = app;
