@@ -285,7 +285,7 @@ app.post('/getall', async(req,res)=>
 {
   var pool =await db.poolPromise
   var plantcode = req.body.plantcode
-
+  console.log(req.body)
     var result = await pool.request()
     .query("select desig_name from designation where plant_code = (select plant_code from plant where plant_name = '"+plantcode+"' )")
 
@@ -1205,262 +1205,6 @@ app.post('/companydel',async(req,res)=>{
 });
 
 
-
-app.post('/desig',async(req,res)=>{
-  var user = await getpool();
-  var desig_name = req.body.desig_name;
-  var company_code = req.body.company_code;
-  console.log(req.body)
-  user.query("insert into desigination(company_code,desig_name,del_status) values('"+company_code+"','"+desig_name+"',0)").then(function (datas) {
-     console.log()
-       res.send(datas);
-  },function(err){if(err) return 'error incoming'} )
-});
-
-app.post('/bank',async(req,res)=>{
-  var user = await getpool();
-  var bank_name = req.body.bank_name;
-  var active_status = req.body.active_status;
-  console.log(req.body)
-  user.query("insert into bank(bank_name,active_status,del_status,created_on) values('"+bank_name+"','"+active_status+"',0,CURRENT_TIMESTAMP)").then(function (datas) {
-     console.log()
-       res.send(datas);
-  }, )
-});
-
-app.post('/line',async(req,res)=>{
-  var user = await getpool();
-  var dept_name = req.body.dept_name;
-  var line_name = req.body.line_name;
-  var per_subarea= req.body.per_subarea;
-  var active_status = req.body.active_status;
-  console.log(req.body)
-  user.query("insert into line(plant_name,dept_name,line_name,per_subarea,active_status,created_on,del_status) values('VARANAVASI','"+dept_name+"','"+line_name+"','"+per_subarea+"','"+active_status+"',CURRENT_TIMESTAMP,0)").then(function (datas) {
-     console.log()
-       res.send(datas);
-  },function(err){if(err) return 'error incoming'} )
-});
-
-app.post('/plant',async(req,res)=>{
-  var user = await getpool();
-  var plant_code = req.body.plant_code;
-  var pl = req.body.pl;
-  var plant_name = req.body.plant_name;
-  var address=req.body.address;
-  var location = req.body.aocation;
-  var plant_sign = req.body.plant_sign;
-  var personal_area= req.body.personal;
-  var payroll_area = req.body.payroll;
-  var created_by = req.body.created_by;
-  console.log(req.body)
-  user.query("insert into [dbo].[plant] (company_code,plant_code,plant_name,del_status,pl,addr,locatn,plant_sign,personal_area,payroll_area,created_on,created_by) values('a','"+plant_code+"','"+plant_name+"',0,'"+pl+"','"+address+"','"+location+"','"+plant_sign+"',"+personal_area+","+payroll_area+",CURRENT_TIMESTAMP,'admin')  SET ANSI_WARNINGS ON").then(function (datas) {
-     console.log()
-       res.send(datas);
-  }, function(err){if(err) return 'error incoming'})
-});
-
-app.post('/excelline',async(req,res)=>{
-  var user = await getpool();
-  var details = req.body.details;
-  let append="";
-  for(var i=0;i<details.length;i++)
-  {
-        append+="('"+'VARANAVASI'+"','"+details[i].DEPTNAME+"','"+details[i].LineName+"','"+details[i].PersonalSubAreas+"','"+"1'"+","+"CURRENT_TIMESTAMP"+","+"'0'"+"),"
-  }
- append=append.slice(0,append.length-1);
-  var line_name = req.body.line_name;
-  var per_subarea= req.body.per_subarea;
-  var active_status = req.body.active_status;
-  console.log("insert into line(plant_name,dept_name,line_name,per_subarea,active_status,created_on,del_status) values"+append)
-  var query="insert into line(plant_name,dept_name,line_name,per_subarea,active_status,created_on,del_status) values"+append;
-  user.query(query).then(function (datas) {
-    let miu=datas['recordset'];
-    res.send(miu)
-  }) 
-});
-
-app.post('/dept',async(req,res)=>{
-  var user = await getpool();
-  var dept_name = req.body.dept_name;
-  var plant_code = req.body.plant_code;
-  var sap_code = req.body.sap_code;
-  var active_status = req.body.active_status;
-  console.log(req.body)
-  user.query("insert into dept(dept_name,plant_code,sap_code,active_status,del_status,created_on) values('"+dept_name+"','"+plant_code+"','"+sap_code+"',"+active_status+",0,CURRENT_TIMESTAMP)").then(function (datas) {
-     console.log()
-       res.send(datas);
-  }, )
-});
-
-app.post('/opr',async(req,res)=>{
-  var user = await getpool();
-  var opr_desc = req.body.opr_desc;
-  var skill_level = req.body.skill_level;
-  var critical_opr = req.body.critical_opr;
-  var active_status = req.body.active_status;
-  console.log(req.body)
-  user.query("insert into operation(plant_code,opr_desc,skill_level,critical_opr,active_status,del_status,created_on) values(1150,'"+opr_desc+"','"+skill_level+"','"+critical_opr+"',"+active_status+",0,CURRENT_TIMESTAMP)").then(function (datas) {
-     console.log()
-       res.send(datas);
-  }, )
-});
-
-
-
-app.post('/desigdel',async(req,res)=>{
-  var user = await getpool();
- var sno = req.body.user;
-  console.log(req.body)
-  user.query("  update desigination SET del_status = 1,modified_on=CURRENT_TIMESTAMP WHERE sno="+sno).then(function (datas) {
-     console.log()
-       res.send(datas);
-  }, )
-});
-
-app.post('/deptdel',async(req,res)=>{
-  var user = await getpool();
- var sno = req.body.user;
-  console.log(req.body)
-  user.query("  update dept SET del_status = 1,modified_on=CURRENT_TIMESTAMP WHERE sno="+sno).then(function (datas) {
-     console.log()
-       res.send(datas);
-  }, )
-});
-
-app.post('/oprdel',async(req,res)=>{
-  var user = await getpool();
- var sno = req.body.user;
-  console.log(req.body)
-  user.query("  update operation SET del_status = 1,modified_on=CURRENT_TIMESTAMP WHERE sno="+sno).then(function (datas) {
-     console.log()
-       res.send(datas);
-  }, )
-});
-
-app.post('/bankdel',async(req,res)=>{
-  var user = await getpool();
- var sno = req.body.user;
-  console.log(req.body)
-  user.query("  update  bank SET del_status = 1,modified_on=CURRENT_TIMESTAMP WHERE sno="+sno).then(function (datas) {
-     console.log()
-       res.send(datas);
-  }, )
-});
-
-
-
-
-app.post('/lineedit',async(req,res)=>{
-  var user = await getpool();
-  var sno = req.body.sno;
-  var plant_name= req.body.plant_name;
-  var dept_name = req.body.dept_name;
-  var line_name = req.body.line_name;
-  var per_subarea= req.body.per_subarea;
-  var active_status = req.body.active_status;
-  console.log(req.body)
-  user.query("  update line set plant_name='VARANAVASI',dept_name= '"+dept_name+"',line_name='"+line_name+"',per_subarea='"+per_subarea+"',active_status= '"+active_status+"',modified_on=CURRENT_TIMESTAMP where sno=" +sno).then(function (datas) {
-     console.log()
-     res.send(datas);
-  }, )
-});
-
-app.post('/deptedit',async(req,res)=>{
-  var user = await getpool();
-  var sno = req.body.sno;
-  var plant_code= req.body.plant_code;
-  var sap_code= req.body.sap_code;
-  var active_status = req.body.active_status;
-  console.log(req.body)
-  user.query("  update dept set plant_code='"+plant_code+"',sap_code='"+sap_code+"',active_status= '"+active_status+"',modified_on=CURRENT_TIMESTAMP where sno=" +sno).then(function (datas) {
-     console.log()
-     res.send(datas);
-  }, )
-});
-
-app.post('/opredit',async(req,res)=>{
-  var user = await getpool();
-  var sno = req.body.sno;
-  var opr_desc= req.body.opr_desc;
-  var skill_level= req.body.skill_level;
-  var critical_opr= req.body.critical_opr;
-  var active_status = req.body.active_status;
-  console.log(req.body)
-  user.query("  update operation set opr_desc='"+opr_desc+"',skill_level='"+skill_level+"',critical_opr='"+critical_opr+"',active_status= '"+active_status+"',modified_on=CURRENT_TIMESTAMP where sno=" +sno).then(function (datas) {
-     console.log()
-     res.send(datas);
-
-  }, )
-});
-
-app.post('/desigedit',async(req,res)=>{
-  var user = await getpool();
-  var sno = req.body.sno;
-  var desig_name = req.body.desig_name;
-  var status = req.body.status;
-  console.log(req.body)
-  user.query("  update desigination set desig_name= '"+desig_name+"',del_status= '"+status+"'where sno="+sno).then(function (datas) {
-     console.log()
-     res.send(datas);
-  }, )
-});
-
-app.post('/bankedit',async(req,res)=>{
-  var user = await getpool();
-  var sno = req.body.sno;
-  var bank_name = req.body.bank_name;
-  var active_status = req.body.active_status;
-  var modified_on = req.body.modified_on;
-  console.log(req.body)
-  console.log()
-  user.query("  update bank set bank_name='"+bank_name+"',active_status='"+active_status+"',modified_on=CURRENT_TIMESTAMP where sno="+sno).then(function (datas) {
-     console.log()
-     res.send(datas);
-  }, )
-});
-
-
-
-app.get('/deptshow',async(req,res)=>{
-  var user = await getpool();
-  user.query("select sno,dept_name,plant_code,sap_code,CONVERT(varchar,created_on,105)as created_on,creted_by,CONVERT(varchar,modified_on,105)as modified_on,modified_by,del_status,active_status from dept where del_status=0").then(function (datas) {
-    let miu=datas['recordset'];
-       res.send(miu)
-  }, )
-});
-
-app.get('/lineshow',async(req,res)=>{
-  var user = await getpool();
-  user.query("select sno,plant_name,dept_name,line_name,per_subarea,CONVERT(varchar,created_on,105)as created_on,CONVERT(varchar,modified_on,105)as modified_on,modified_by,del_status,active_status from line where del_status=0").then(function (datas) {
-    let miu=datas['recordset'];
-       res.send(miu)
-  }, )
-});
-
-app.get('/plantshow',async(req,res)=>{
-  var user = await getpool();
-  user.query("select sno,plant_code,plant_name,del_status,pl,addr,locatn,plant_sign,personal_area,payroll_area,CONVERT(varchar,created_on,105)as created_on,CONVERT(varchar,modified_on,105)as modified_on from plant where del_status=0").then(function (datas) {
-    let miu=datas['recordset'];
-       res.send(miu)
-  }, )
-});
-
-app.get('/oprshow',async(req,res)=>{
-  var user = await getpool();
-  user.query("select sno,plant_code,opr_desc,skill_level,critical_opr,CONVERT(varchar,created_on,105)as created_on,CONVERT(varchar,modified_on,105)as modified_on,modified_by,del_status,active_status from operation where del_status=0").then(function (datas) {
-    let miu=datas['recordset'];
-       res.send(miu)
-  }, )
-});
-
-app.get('/desigshow',async(req,res)=>{
-  var user = await getpool();
-  user.query("select * from desigination where del_status=0").then(function (datas) {
-    let miu=datas['recordset'];
-       res.send(miu);
-  }, )
-});
-
 app.get('/bankshow',async(req,res)=>{
   var user = await getpool();
   user.query("select sno,bank_name,CONVERT(varchar,created_on,105)as created_on,CONVERT(varchar,modified_on,105)as modified_on,modified_by,active_status,del_status from bank where del_status=0").then(function (datas) {
@@ -1591,6 +1335,7 @@ app.post('/getplant', async(req,res)=>{
   var pool = await db.poolPromise
   var result = await pool.request()
     .query("select * from plant where del_status = 0") 
+  console.log(result['recordset'])
   res.send(result['recordset'])
   }catch(err){
     console.log(err)
@@ -1604,16 +1349,21 @@ app.post('/getplant', async(req,res)=>{
 app.post('/adddepartment' , async(req,res)=>
 {
   try{
-      var plant_code = req.body.module_name
-      var department_name = req.body.department_name
+      var plant_name = req.body.plant_name
+      var department_name = req.body.dept_name
       var sap_code = req.body.sap_code
-
       var pool =await db.poolPromise
+
+      var result = await pool.request()
+        .query("select plant_code from plant where plant_name = '"+plant_name+"'")
+      console.log(result)
+      var plant_code = result['recordset'][0].plant_code
+
       result = await pool.request()
                           .input("plant_code", plant_code)
                           .input("department_name", department_name)
                           .input("sap_code", sap_code)
-                          .query("Insert into department(@department_name, @plant_code, 1, @sap_code)")
+                          .query("Insert into department values(@department_name, @plant_code, 1, @sap_code)")
         res.send({'message': 'inserted'})
         
         
@@ -1626,8 +1376,10 @@ app.post('/adddepartment' , async(req,res)=>
 app.post('/deletedepartment', async(req,res)=>
 {
   try{
-  var dept_slno = req.body.dept_slno
+  var dept_slno = req.body.slno
   var pool = await db.poolPromise
+  console.log("update department set del_status = '0' where dept_slno = "+dept_slno+" ")
+
   var result = await pool.request()
     .query("update department set del_status = '0' where dept_slno = "+dept_slno+" ")
   res.send({'message': 'success'})
@@ -1642,14 +1394,17 @@ app.post('/deletedepartment', async(req,res)=>
 app.post('/updatedepartment', async(req,res)=>{
   try{
 
-    var plant_code = req.body.module_name
-    var department_name = req.body.department_name
+    var plant_name = req.body.plant_name
+    var department_name = req.body.dept_name
     var sap_code = req.body.sap_code
-    var dept_slno = req.body.dept_slno
+    var dept_slno = req.body.slno
 
     var pool =await db.poolPromise
+    var result = await pool.request()
+    .query("select plant_code from plant where plant_name = '"+plant_name+"'")
+    var plant_code = result['recordset'][0].plant_code
     var user = await pool.request()
-      .query("  update department set plant_code = '"+plant_code+"' , dept_name='"+department_name+"', sap_code = '"+sap_code+" where  dept_slno='"+dept_slno+"'")
+      .query("update department set plant_code = '"+plant_code+"' , dept_name='"+department_name+"', sap_code = '"+sap_code+"' where  dept_slno='"+dept_slno+"'")
       res.send({'message': 'updated'})
   }catch(err){
     console.log(err)
@@ -1661,7 +1416,8 @@ app.post('/getdepartment', async(req,res)=>{
   try{
   var pool = await db.poolPromise
   var result = await pool.request()
-    .query("select * from department where del_status = 1") 
+    .query("select department.dept_slno, department.dept_name, department.plant_code,department.sap_code, plant.plant_name from department left outer join plant on department.plant_code = plant.plant_code where department.del_status=1") 
+
   res.send(result['recordset'])
   }catch(err){
     console.log(err)
@@ -1669,40 +1425,43 @@ app.post('/getdepartment', async(req,res)=>{
   }
 })
 
-
+app.post('/plantcode', async(req,res)=>{
+  console.log(req.body)
+    var pool= await db.poolPromise
+    var result =await pool.request()
+      .query("select plant_name from plant where plant_code = '"+req.body.plantcode+"' ")
+    res.send(result['recordset'])
+})
 
 app.post('/addline' , async(req,res)=>
 {
   try{
-      var line_code = req.body.line_code
-      var line_name = req.body.line_name
-      var shop_code = req.body.sap_code
-      var module_code = req.body.active_status
-      var plant_code = req.body.plant_code
+      var line_name = req.body.Line_Name
+      var dept_name = req.body.dept_name
       var personal_subarea = req.body.personal_subarea
       var created_by = req.body.created_by
 
 
       var pool =await db.poolPromise
-      var result = pool.request()
-                        .input("line_code", line_code)
-                        .query("select * from mst_line where line_code=@line_code")
-      if (result['recordset'].length > 0)
-      res.send({'message': 'already'})
-    else
-      {
-      result = await pool.request()
+
+      var result3 =await pool.request()
+      .query("select dept_slno from department where dept_name = '"+dept_name+"' ")
+      var module_code = result3['recordset'][0].dept_slno
+
+      var result2 =await pool.request()
+       .query("select plant_code from plant where plant_name = '"+req.body.plant_name+"' ")
+      var plant_code = result2['recordset'][0].plant_code
+
+      console.log(plant_code, req.body.plant_code)
+      var result = await pool.request()
                           .input("plant_code", plant_code)
-                          .input("line_code", line_code)
-                          .input("shop_code", shop_code)
+                          // .input("shop_code", shop_code)
                           .input("created_by", created_by)
                           .input("line_name", line_name)
                           .input("module_code", module_code)
                           .input("personal_subarea", personal_subarea)
-                          .query("Insert into mst_line(@line_code, @line_name, @shop_code, @module_code, 'Y', @plant_code,  @created_by, CURRENT_TIMESTAMP,null,null, @personal_subarea)")
+                          .query("Insert into mst_line values( @line_name, 1, @module_code, 'N', @plant_code,  @created_by, CURRENT_TIMESTAMP,null,null, @personal_subarea)")
         res.send({'message': 'inserted'})
-      }
-        
         
   }catch(err){
     console.log(err);
@@ -1713,33 +1472,42 @@ app.post('/addline' , async(req,res)=>
 app.post('/deleteline', async(req,res)=>
 {
   try{
-  var line_code = req.body.line_code
+  var line_code = req.body.slno
   var pool = await db.poolPromise
+  console.log("update mst_line set del_status = 'Y' where line_code = "+line_code+" ")
   var result = await pool.request()
-    .query("update mst_line set del_status = 'N' where line_code = "+line_code+" ")
+    .query("update mst_line set del_status = 'Y' where line_code = "+line_code+" ")
   res.send({'message': 'success'})
   }catch(err){
     console.log(err)
     res.send({"message":"failure"})
   }
-
-  
 })
 
 app.post('/updateline', async(req,res)=>{
   try{
 
-    var line_code = req.body.line_code
-    var line_name = req.body.line_name
-    var shop_code = req.body.sap_code
-    var module_code = req.body.active_status
-    var plant_code = req.body.plant_code
+    var line_code = req.body.Line_code
+    var line_name = req.body.Line_Name
+    var dept_name = req.body.dept_name
+    var plant_name = req.body.plant_name
     var personal_subarea = req.body.personal_subarea
     var modified_by = req.body.modified_by
 
     var pool =await db.poolPromise
+
+    var result3 =await pool.request()
+    .query("select dept_slno from department where dept_name = '"+dept_name+"' ")
+    var module_code = result3['recordset'][0].dept_slno
+
+    var result2 =await pool.request()
+     .query("select plant_code from plant where plant_name = '"+plant_name+"' ")
+    var plant_code = result2['recordset'][0].plant_code
+    
+    console.log("  update mst_line set plant_code = '"+plant_code+"' , line_name='"+line_name+"' , shop_code=1 , module_code='"+module_code+"' , personal_subarea='"+personal_subarea+"', modified_by = '"+modified_by+"', modified_on = CURRENT_TIMESTAMP where  line_code='"+line_code+"'")
+
     var user = await pool.request()
-      .query("  update mst_line set plant_code = '"+plant_code+"' , line_name='"+line_name+"' , shop_code='"+shop_code+"' , module_code='"+module_code+"' , personal_subarea='"+personal_subarea+"', line_code = '"+line_code+"', modified_by = '"+modified_by+"', modified_on = CURRENT_TIMESTAMP where  line_code='"+line_code+"'")
+      .query("  update mst_line set plant_code = '"+plant_code+"' , line_name='"+line_name+"' , shop_code=1 , module_code='"+module_code+"' , personal_subarea='"+personal_subarea+"', modified_by = '"+modified_by+"', modified_on = CURRENT_TIMESTAMP where  line_code='"+line_code+"'")
       res.send({'message': 'updated'})
   }catch(err){
     console.log(err)
@@ -1751,7 +1519,8 @@ app.post('/getline', async(req,res)=>{
   try{
   var pool = await db.poolPromise
   var result = await pool.request()
-    .query("select * from mst_line where del_status = 'Y'") 
+  .query("select mst_line.Line_code,plant.plant_name, department.dept_name, mst_line.Line_Name, mst_line.personal_subarea, mst_line.created_on, mst_line.Created_By, mst_line.modified_on, mst_line.modified_by from mst_line join plant on mst_line.plant_code = plant.plant_code join department on mst_line.Module_code = department.dept_slno where mst_line.plant_code = '"+req.body.plantcode+"' and mst_line.del_status = 'N' ")
+  console.log("select mst_line.Line_Name, mst_line.Line_code, plant.plant_name ,mst_line.personal_subarea, mst_line.created_on, mst_line.Created_By, mst_line.modified_on, mst_line.modified_by from mst_line join plant on Mst_Line.Plant_code = plant.plant_code where mst_line.del_status = 'N' and Mst_Line.Plant_code = '"+req.body.plantcode+"' ")
   res.send(result['recordset'])
   }catch(err){
     console.log(err)
@@ -1763,14 +1532,20 @@ app.post('/getline', async(req,res)=>{
 app.post('/adddesignation' , async(req,res)=>
 {
   try{
-      var plant_code = req.body.module_name
+      var plant_name = req.body.plant_name
       var desig_name = req.body.desig_name
 
       var pool =await db.poolPromise
+
+      var result = await pool.request()
+        .query("select plant_code from plant where plant_name = '"+plant_name+"'")
+      console.log(result)
+      var plant_code = result['recordset'][0].plant_code
+
       result = await pool.request()
                           .input("plant_code", plant_code)
                           .input("desig_name", desig_name)
-                          .query("Insert into designation(@desig_name, @plant_code, 1)")
+                          .query("Insert into designation values(@desig_name, @plant_code, 1)")
         res.send({'message': 'inserted'})
         
         
@@ -1785,6 +1560,7 @@ app.post('/deletedesignation', async(req,res)=>
   try{
   var slno = req.body.slno
   var pool = await db.poolPromise
+
   var result = await pool.request()
     .query("update designation set del_status = '0' where slno = "+slno+" ")
   res.send({'message': 'success'})
@@ -1799,13 +1575,18 @@ app.post('/deletedesignation', async(req,res)=>
 app.post('/updatedesignation', async(req,res)=>{
   try{
 
-    var plant_code = req.body.module_name
+    var plant_name = req.body.plant_name
     var desig_name = req.body.desig_name
     var slno = req.body.slno
 
     var pool =await db.poolPromise
+
+    var result = await pool.request()
+    .query("select plant_code from plant where plant_name = '"+plant_name+"'")
+    var plant_code = result['recordset'][0].plant_code
+
     var user = await pool.request()
-      .query("  update designation set plant_code = '"+plant_code+"' , desig_name='"+desig_name+" where  slno='"+slno+"'")
+      .query("  update designation set plant_code = '"+plant_code+"' , desig_name='"+desig_name+"' where  slno='"+slno+"'")
       res.send({'message': 'updated'})
   }catch(err){
     console.log(err)
@@ -1817,7 +1598,7 @@ app.post('/getdesignation', async(req,res)=>{
   try{
   var pool = await db.poolPromise
   var result = await pool.request()
-    .query("select * from designation where del_status = 1") 
+    .query("select designation.slno, designation.desig_name, plant.plant_name from designation join plant on designation.plant_code = plant.plant_code where designation.del_status = 1") 
   res.send(result['recordset'])
   }catch(err){
     console.log(err)
@@ -1905,24 +1686,30 @@ app.post('/getbank', async(req,res)=>{
 })
 
 
-app.post('/addoperations' , async(req,res)=>
+app.post('/addoperation' , async(req,res)=>
 {
   try{
       var oprn_desc = req.body.oprn_desc
-      var plant_code = req.body.plant_code
+      var plant_name = req.body.plant_name
       var skill_level = req.body.skill_level
       var critical_oprn = req.body.critical_oprn
 
-      if (critical_oprn=="NO"){
-        critical_oprn=0;
+      if (critical_oprn== 'NO' ){
+        critical_oprn = 0;
       }
       else{
-        critical_oprn=1;
+        critical_oprn = 1;
       }
-
       var pool =await db.poolPromise
+
+      var result2 =await pool.request()
+      .query("select plant_code from plant where plant_name = '"+plant_name+"' ")
+     var plant_code = result2['recordset'][0].plant_code
+
+     console.log("Insert into operations values('"+plant_code+"', '"+req.body.oprn_desc+"','N', 0, '"+skill_level+"', '"+critical_oprn+"')")
+
       
-      result = await pool.request()
+      var result = await pool.request()
                           .input("plant_code", plant_code)
                           .input("oprn_desc", oprn_desc)
                           .input("skill_level", skill_level)
@@ -1940,7 +1727,7 @@ app.post('/addoperations' , async(req,res)=>
 app.post('/deleteoperation', async(req,res)=>
 {
   try{
-  var oprn_slno = req.body.oprn_slno
+  var oprn_slno = req.body.slno
   var pool = await db.poolPromise
   var result = await pool.request()
     .query("update operations set del_status = 'Y' where oprn_slno = "+oprn_slno+" ")
@@ -1957,14 +1744,28 @@ app.post('/updateoperation', async(req,res)=>{
   try{
 
     var oprn_desc = req.body.oprn_desc
-    var plant_code = req.body.plant_code
+    var plant_name = req.body.plant_name
     var skill_level = req.body.skill_level
     var critical_oprn = req.body.critical_oprn
     var oprn_slno = req.body.oprn_slno
 
+    if (critical_oprn== 'NO' ){
+      critical_oprn = 0;
+    }
+    else{
+      critical_oprn = 1;
+    }
+
     var pool =await db.poolPromise
+
+    var result2 =await pool.request()
+    .query("select plant_code from plant where plant_name = '"+plant_name+"' ")
+   var plant_code = result2['recordset'][0].plant_code
+
+      console.log(" update operations set plant_code = '"+plant_code+"' , oprn_desc='"+oprn_desc+"' , skill_level='"+skill_level+"' , critical_oprn='"+critical_oprn +"' where  oprn_slno='"+oprn_slno+"'")
+
     var user = await pool.request()
-      .query("  update operations set plant_code = '"+plant_code+"' , oprn_desc='"+oprn_desc+"' , skill_level='"+skill_level+"' , critical_oprn='"+critical_oprn +" where  oprn_slno='"+oprn_slno+"'")
+      .query(" update operations set plant_code = '"+plant_code+"' , oprn_desc='"+oprn_desc+"' , skill_level='"+skill_level+"' , critical_oprn='"+critical_oprn +"' where  oprn_slno='"+oprn_slno+"'")
       res.send({'message': 'updated'})
   }catch(err){
     console.log(err)
@@ -1972,11 +1773,11 @@ app.post('/updateoperation', async(req,res)=>{
   }
 })
 
-app.post('/getoperations', async(req,res)=>{
+app.post('/getoperation', async(req,res)=>{
   try{
   var pool = await db.poolPromise
   var result = await pool.request()
-    .query("select * from operations where del_status = 'N'") 
+    .query("select * from operations join plant on operations.plant_code = plant.plant_code  where operations.del_status = 'N'") 
   res.send(result['recordset'])
   }catch(err){
     console.log(err)
