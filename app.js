@@ -69,7 +69,6 @@ app.post('/logins', async(request, response)=> {
         .input('User_Name',User_Name)
         .input('Password',Password)
         .query("select * from employees where User_Name=@User_Name AND Password=@Password")
-    console.log(result);
     const result2 = await pool.request()
         .input('User_Name',User_Name)
         .query("select * from employees where User_Name=@User_Name")
@@ -161,7 +160,6 @@ app.post('/gethrappr', async(req,res)=>{
   var result = await user.request()
       .query("select employees.Emp_name,employees.plant_code, employees.Is_HR, employees.Is_HRAppr,employees.Is_Trainer,employees.Is_Trainee, employees.User_Name,employees.department, department.dept_name, plant.plant_name from employees left join department on employees.department = department.dept_slno left join plant on plant.plant_code = employees.plant_code where employees.User_Name = '"+user_name+"' ")
     res.send(result['recordset'])
-  console.log(result['recordset'])
 },   function(err){if(err) return 'error incoming'}
 );
 
@@ -284,8 +282,12 @@ app.post('/plantcodelist', async(req,res)=>
 app.post('/getall', async(req,res)=>
 {
   var pool =await db.poolPromise
-  var plantcode = req.body.plantcode
-  console.log(req.body)
+  if(req.body.plantcode.search(':')>=0)
+    var plantcode = req.body.plantcode.split(' ')[1]
+  else
+    var plantcode = req.body.plantcode
+
+  console.log(plantcode)
     var result = await pool.request()
     .query("select desig_name from designation where plant_code = (select plant_code from plant where plant_name = '"+plantcode+"' )")
 
@@ -299,7 +301,6 @@ app.post('/getall', async(req,res)=>
     object[0] = result['recordset']
     object[1] = result2['recordset']
     object[2] = result3['recordset']
-
     
   res.send(object)
 }) ;
@@ -1335,7 +1336,6 @@ app.post('/getplant', async(req,res)=>{
   var pool = await db.poolPromise
   var result = await pool.request()
     .query("select * from plant where del_status = 0") 
-  console.log(result['recordset'])
   res.send(result['recordset'])
   }catch(err){
     console.log(err)
@@ -1356,7 +1356,6 @@ app.post('/adddepartment' , async(req,res)=>
 
       var result = await pool.request()
         .query("select plant_code from plant where plant_name = '"+plant_name+"'")
-      console.log(result)
       var plant_code = result['recordset'][0].plant_code
 
       result = await pool.request()
@@ -1397,7 +1396,7 @@ app.post('/updatedepartment', async(req,res)=>{
     var plant_name = req.body.plant_name
     var department_name = req.body.dept_name
     var sap_code = req.body.sap_code
-    var dept_slno = req.body.slno
+    var dept_slno = req.body.dept_slno
 
     var pool =await db.poolPromise
     var result = await pool.request()
@@ -1539,7 +1538,6 @@ app.post('/adddesignation' , async(req,res)=>
 
       var result = await pool.request()
         .query("select plant_code from plant where plant_name = '"+plant_name+"'")
-      console.log(result)
       var plant_code = result['recordset'][0].plant_code
 
       result = await pool.request()
@@ -1789,46 +1787,69 @@ app.post('/getoperation', async(req,res)=>{
 app.post('/addemployee' , async(req,res)=>
 {
   try{
-      var gen_id = req.body.gen_id
-      var emp_name = req.body.emp_name
-      var department = req.body.department
-      var designation = req.body.designation
-      var mail_id = req.body.mail_id
-      var mobile_no = req.body.mobile_no
-      var user_name = req.body.user_name
-      var password = req.body.password
-      var is_hr = req.body.is_hr
-      var is_hrappr = req.body.is_hrappr
-      var is_trainer = req.body.is_trainer
-      var is_supervisor = req.body.is_supervisor
-      var is_reportingauth = req.body.is_reportingauth
-      var is_tou = req.body.is_tou
-      var plant_code = req.body.plant_code
-      var line_code = req.body.line_code
+    var gen_id = req.body.gen_id
+    var emp_name = req.body.Emp_Name
+    var department = req.body.dept_name
+    var designation = req.body.desig_name
+    var mail_id = req.body.Mail_Id
+    var mobile_no = req.body.Mobile_No
+    var user_name = req.body.User_Name
+    var password = req.body.Password
+    var is_hr = req.body.Is_HR
+    var is_hrappr = req.body.Is_HRAppr
+    var is_trainer = req.body.Is_Trainer
+    var is_supervisor = req.body.Is_Supervisor
+    var is_reportingauth = req.body.Is_ReportingAuth
+    var is_tou = req.body.Is_TOU
+    var plant_name = req.body.plant_name
+    var line = req.body.Line_Name
 
       var pool =await db.poolPromise
+
+      var result2 =await pool.request()
+      .query("select plant_code from plant where plant_name = '"+plant_name+"' ")
+     var plant_code = result2['recordset'][0].plant_code
+
+     var result3 =await pool.request()
+     .query("select line_code from mst_line where line_name = '"+line+"' ")
+    var line_code = result2['recordset'][0].line_code
+
+    var result3 =await pool.request()
+    .query("select dept_slno from department where dept_name = '"+department+"' ")
+    var dept_slno = result2['recordset'][0].dept_slno
+  
+    var result3 =await pool.request()
+    .query("select slno from designation where desig_name = '"+designation+"' ")
+    var slno = result2['recordset'][0].slno
+
+      var result = await pool.request()
+      .query("select user_name from employees where user_name = '"+user_name+"'")
       
+      if(result['recordset'].length > 0)
+        res.send({'message': 'already'})
+      else
+      {
       result = await pool.request()
-                          .input("gen_id", gen_id)
-                          .input("emp_name", emp_name)
-                          .input("department", department)
-                          .input("designation", designation)
-                          .input("mail_id", mail_id)
-                          .input("mobile_no", mobile_no)
-                          .input("user_name", user_name)
-                          .input("password", password)
-                          .input("is_hr", is_hr)
-                          .input("is_hrappr", is_hrappr)
-                          .input("is_trainer", is_trainer)
-                          .input("is_supervisor", is_supervisor)
-                          .input("is_reportingauth", is_reportingauth)
-                          .input("is_tou", is_tou)
-                          .input("plant_code", plant_code)
-                          .input("line_code", line_code)
-                          .query("Insert into employees values(@gen_id, @emp_name,@department, @designation, @mail_id, @mobile_no, @user_name, @password,0,0,0,@is_supervisor,0,@plant_code,0,'N', @is_hr,@is_trainer,@is_hrappr, @is_reportingauth, @is_tou, @line_code)")
-        res.send({'message': 'inserted'})
-        
-        
+        .input("gen_id", gen_id)
+        .input("emp_name", emp_name)
+        .input("department", dept_slno)
+        .input("designation", slno)
+        .input("mail_id", mail_id)
+        .input("mobile_no", mobile_no)
+        .input("user_name", user_name)
+        .input("password", password)
+        .input("is_hr", is_hr)
+        .input("is_hrappr", is_hrappr)
+        .input("is_trainer", is_trainer)
+        .input("is_supervisor", is_supervisor)
+        .input("is_reportingauth", is_reportingauth)
+        .input("is_tou", is_tou)
+        .input("plant_code", plant_code)
+        .input("line_code", line_code)
+        .query("Insert into employees values(@gen_id, @emp_name,@department, @designation, @mail_id, @mobile_no, @user_name, @password,0,0,0,@is_supervisor,0,@plant_code,0,'N', @is_hr,@is_trainer,@is_hrappr, @is_reportingauth, @is_tou, @line_code)")
+      res.send({'message': 'inserted'})
+      }
+
   }catch(err){
     console.log(err);
     res.send({"message":'failure'})
@@ -1853,26 +1874,52 @@ app.post('/deleteemployee', async(req,res)=>
 
 app.post('/updateemployee', async(req,res)=>{
   try{
-    var empl_slno = req.body.empl_slno
+
+
+    console.log("--------",req.body)
+
     var gen_id = req.body.gen_id
-    var emp_name = req.body.emp_name
-    var department = req.body.department
-    var designation = req.body.designation
-    var mail_id = req.body.mail_id
-    var mobile_no = req.body.mobile_no
-    var user_name = req.body.user_name
-    var password = req.body.password
-    var is_hr = req.body.is_hr
-    var is_hrappr = req.body.is_hrappr
-    var is_trainer = req.body.is_trainer
-    var is_supervisor = req.body.is_supervisor
-    var is_reportingauth = req.body.is_reportingauth
-    var is_tou = req.body.is_tou
-    var plant_code = req.body.plant_code
-    var line_code = req.body.line_code
-    var pool =await db.poolPromise
+    var emp_name = req.body.Emp_Name
+    var department = req.body.dept_name
+    var designation = req.body.desig_name
+    var mail_id = req.body.Mail_Id
+    var mobile_no = req.body.Mobile_No
+    var user_name = req.body.User_Name
+    var password = req.body.Password
+    var is_hr = req.body.Is_HR
+    var is_hrappr = req.body.Is_HRAppr
+    var is_trainer = req.body.Is_Trainer
+    var is_supervisor = req.body.Is_Supervisor
+    var is_reportingauth = req.body.Is_ReportingAuth
+    var is_tou = req.body.Is_TOU
+    var plant_name = req.body.plant_name
+    var line = req.body.Line_Name
+
+
+  var pool =await db.poolPromise
+
+    var result2 =await pool.request()
+    .query("select plant_code from plant where plant_name = '"+plant_name+"' ")
+   var plant_code = result2['recordset'][0].plant_code
+
+   console.log("select line_code from mst_line where line_name = '"+line+"' ")
+
+   var result3 =await pool.request()
+   .query("select line_code from mst_line where line_name = '"+line+"' ")
+  var line_code = result3['recordset'][0].line_code
+
+  var result4 =await pool.request()
+  .query("select dept_slno from department where dept_name = '"+department+"' and plant_code = '"+plant_code+"' ")
+  var dept_slno = result4['recordset'][0].dept_slno
+
+  var result5 =await pool.request()
+  .query("select slno from designation where desig_name = '"+designation+"' ")
+  var slno = result5['recordset'][0].slno
+
+  console.log(plant_code, line_code, dept_slno, slno)
+
     var user = await pool.request()
-      .query("  update employees set plant_code = '"+plant_code+"' , gen_id='"+gen_id+"' , line_code='"+line_code+"' , is_tou='"+is_tou+"' , is_reportingauth='"+is_reportingauth+"' , is_supervisor='"+is_supervisor+"' , is_trainer='"+is_trainer+"' , is_hrappr='"+is_hrappr+"' , is_hr='"+is_hr+"' , password='"+password+"' , user_name='"+user_name+"' , mobile_no='"+mobile_no+"' , mail_id='"+mail_id+"' , designation='"+designation+"' , emp_name='"+emp_name+"' , department='"+department +" where  empl_slno='"+empl_slno+"'")
+      .query("  update employees set plant_code = '"+plant_code+"' , gen_id='"+gen_id+"' , line_code='"+line_code+"' , is_tou='"+is_tou+"' , is_reportingauth='"+is_reportingauth+"' , is_supervisor='"+is_supervisor+"' , is_trainer='"+is_trainer+"' , is_hrappr='"+is_hrappr+"' , is_hr='"+is_hr+"' , password='"+password+"' , user_name='"+user_name+"' , mobile_no='"+mobile_no+"' , mail_id='"+mail_id+"' , designation='"+slno+"' , emp_name='"+emp_name+"' , department='"+dept_slno +"' where  user_name='"+user_name+"'")
       res.send({'message': 'updated'})
   }catch(err){
     console.log(err)
@@ -1884,7 +1931,7 @@ app.post('/getemployee', async(req,res)=>{
   try{
   var pool = await db.poolPromise
   var result = await pool.request()
-    .query("select * from employees where del_status = 'N'") 
+    .query("select e.*,p.plant_name, l.Line_Name, d.dept_name, dd.desig_name  from employees as e join plant as p on e.plant_code = p.plant_code join mst_line as l on e.line_code = l.line_code  join department as d on e.Department = d.dept_slno join designation as dd on e.Designation = dd.slno where e.del_status = 'N'") 
   res.send(result['recordset'])
   }catch(err){
     console.log(err)
@@ -1904,7 +1951,6 @@ app.post('/addshift' , async(req,res)=>
       var act_tm_to = req.body.act_tm_to
       var type = req.body.type
       var shift_group = req.body.shift_group
-      var plant_id = req.body.plant_id
       var security_shift = req.body.security_shift
       var plant_code = req.body.plant_code
       var plant_desc = req.body.plant_desc
@@ -1919,11 +1965,10 @@ app.post('/addshift' , async(req,res)=>
                           .input("act_tm_to", act_tm_to)
                           .input("type", type)
                           .input("shift_group", shift_group)
-                          .input("plant_id", plant_id)
                           .input("security_shift", security_shift)
                           .input("plant_code", plant_code)
                           .input("plant_desc", plant_desc)
-                          .query("Insert into mst_defaultshift values(@shift_desc, @in_tm_min,@act_tm_from, @in_tm_max, @act_tm_to, @type, @shift_group, @plant_id,@security_shift,@plant_code, @plant_desc, 'N')")
+                          .query("Insert into mst_defaultshift values((SELECT max(shift_id) FROM mst_defaultshift) + 1, @shift_desc, @in_tm_min,@act_tm_from, @in_tm_max, @act_tm_to, @type, @shift_group, 1 ,@security_shift,@plant_code, @plant_desc, 'N')")
         res.send({'message': 'inserted'})
         
         
@@ -1936,7 +1981,7 @@ app.post('/addshift' , async(req,res)=>
 app.post('/deleteshift', async(req,res)=>
 {
   try{
-  var shift_id = req.body.shift_id
+  var shift_id = req.body.slno
   var pool = await db.poolPromise
   var result = await pool.request()
     .query("update mst_defaultshift set del_status = 'Y' where shift_id = "+shift_id+" ")
@@ -1966,7 +2011,7 @@ app.post('/updateshift', async(req,res)=>{
 
     var pool =await db.poolPromise
     var user = await pool.request()
-      .query("  update mst_defaultshift set plant_code = '"+plant_code+"' , shift_desc='"+shift_desc+"' , in_tm_min='"+in_tm_min+"' , act_tm_from='"+act_tm_from+"' , in_tm_max='"+in_tm_max+"' , act_tm_to='"+act_tm_to+"' , type='"+type+"' , shift_group='"+shift_group+"' , plant_id='"+plant_id+"' , security_shift='"+security_shift+"' , plant_desc='"+plant_desc+" where  shift_id='"+shift_id+"'")
+      .query("  update mst_defaultshift set plant_code = '"+plant_code+"' , shift_desc='"+shift_desc+"' , in_tm_min='"+in_tm_min+"' , act_tm_from='"+act_tm_from+"' , in_tm_max='"+in_tm_max+"' , act_tm_to='"+act_tm_to+"' , type='"+type+"' , shift_group='"+shift_group+"' , plant_id=2 , security_shift='"+security_shift+"' , plant_desc='"+plant_desc+"' where  shift_id='"+shift_id+"'")
       res.send({'message': 'updated'})
   }catch(err){
     console.log(err)
