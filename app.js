@@ -2078,5 +2078,98 @@ app.post('/evaluationdays', async(req,res)=>{
   }
 })
 
+app.post('/depttransfer', async(req, res)=>{
+  try
+  {
+    var pl = req.body.plantcode
+
+    var pool = await db.poolPromise
+    var result = await pool.request()
+      .query("select * from trainee_apln where apln_status = 'APPOINTED' and test_status = 'completed' and plant_code = '"+pl+"' and gen_id is not null ")
+    
+    res.send(result['recordset'])
+  }
+  catch(err)
+  {
+    console.log(err)
+    res.send({"message":"failure"})
+  }
+})
+
+app.post('/dept-line', async(req, res)=>{
+  try
+  {
+    var line = req.body.line_code
+    var dept = req.body.dept_slno
+
+    var pool = await db.poolPromise
+    var result = await pool.request()
+      .query("select dept_name from department where dept_slno ="+dept+" ")
+    var result1 = await pool.request()
+      .query("select line_name from mst_line where line_code ="+line+" ")
+    
+    var object = [];
+    object[0] = result['recordset'][0]
+    object[1] = result1['recordset'][0]
+
+    res.send(object)
+  }
+    catch(err)
+  {
+    console.log(err)
+    res.send({"message":"failure"})
+  }
+})
+
+app.post('/dept-line-report', async(req,res)=>
+{
+  var pool =await db.poolPromise
+
+  var plantcode = req.body.plantcode
+
+  console.log(plantcode)
+
+    var result = await pool.request()
+    .query("select emp_name from employees where plant_code = '"+plantcode+"' and is_ReportingAuth = 1 ")
+
+    var result2 = await pool.request()
+    .query("select dept_name from department where plant_code = '"+plantcode+"' and del_staus = 0 ")
+
+    var result3 = await pool.request()
+    .query("select line_name from mst_line where plant_code = '"+plantcode+"' and del_status = 'N'  ")
+  
+    var object = []
+    object[0] = result['recordset']
+    object[1] = result2['recordset']
+    object[2] = result3['recordset']
+    
+  res.send(object)
+}) ;
+
+app.post('/reporting', async(req, res)=>{
+
+  try{
+  var pool =await db.poolPromise
+  var gen_id = req.body.gen_id
+  var dept = req.body.changedepartment
+  var line = req.body.changeline
+  var RA = req.body.reportingto
+  var pl = req.body.plantcode
+
+  console.log("update trainee_apln set dept_slno = (select top 1 dept_slno from department where dept_name = '"+dept+"' and plant_code = '"+pl+"'), line_code = (select top 1 line_code from mst_line where line_name = '"+line+"' and plant_code = '"+pl+"'), reporting_to = 1 where gen_id ='"+gen_id+"'  ")
+
+
+  var result = await pool.request()
+    .query("update trainee_apln set dept_slno = (select top 1 dept_slno from department where dept_name = '"+dept+"' and plant_code = '"+pl+"'), line_code = (select top 1 line_code from mst_line where line_name = '"+line+"' and plant_code = '"+pl+"'), reporting_to = 1 where gen_id ='"+gen_id+"'  ")
+
+  res.send({message: 'success'})
+  }
+    catch(err)
+    {
+    console.log(err)
+    res.send({"message":"failure"})
+    }
+
+})
 
 module.exports = app;
