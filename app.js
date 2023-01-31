@@ -180,8 +180,8 @@ app.post('/getpincode', async(req,res)=>{
   let booln = pattern.test(pincode)
   if(booln == true)
   {
-    console.log('SELECT * FROM [DHRM_PRD_DB].[dbo].[pincodes] where pincode = '+pincode+'')
-    user.query('SELECT * FROM [DHRM_PRD_DB].[dbo].[pincodes] where pincode = '+pincode+' ').then(function(datas){
+    console.log('SELECT * FROM [dbo].[pincodes] where pincode = '+pincode+'')
+    user.query('SELECT * FROM [dbo].[pincodes] where pincode = '+pincode+' ').then(function(datas){
       res.send(datas['recordset'])
     })
   }
@@ -273,7 +273,7 @@ app.post('/plantcodelist', async(req,res)=>
 {
   var user = await getpool();
   var company_name = req.body.company_name
-  user.query("select plant_name from plant where company_code =  (select company_code from master_company where company_name = '"+company_name+"')  ").then(function(datas){
+  user.query("select plant_name from plant where company_code =  (select top 1 company_code from master_company where company_name = '"+company_name+"')  ").then(function(datas){
     miu = datas['recordset']
     res.send(miu)
   }, )
@@ -308,7 +308,7 @@ app.post('/getall', async(req,res)=>
 app.post('/companycodelist', async(req,res)=>
 {
   var user = await getpool();
-  user.query("select company_name from master_company").then(function(datas){
+  user.query("select company_name from master_company where del_status = 1 ").then(function(datas){
     miu = datas['recordset']
     res.send(miu)
   },function(err){if(err) return 'error incoming'} )
@@ -378,7 +378,7 @@ app.post('/emergency',async(req,res)=>{
 app.get('/getbanknames', async(req,res)=>{
 
   var user = await getpool()
-  user.query('SELECT TOP (1000)[bank_name] FROM [DHRM_PRD_DB].[dbo].[Bank]').then(function(datas){
+  user.query('SELECT TOP (1000)[bank_name] FROM [dbo].[Bank]').then(function(datas){
     res.send(datas['recordset'])
     })
 })
@@ -598,8 +598,8 @@ app.post('/filter', async(req,res)=>{
   var todate = req.body.todate
   var plantcode = req.body.plantcode
   console.log(req.body)
-  console.log("select created_dt, first_name, fathername, birthdate, mobile_no1, aadhar_no, apln_status from trainee_apln where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+  +"') AND plant_code = '"+plantcode+"' ")
-  user.query("select t.created_dt, t.fullname, t.fathername, t.birthdate, t.mobile_no1, t.aadhar_no, t.apln_status, m.company_name from trainee_apln as t left join master_company as m on t.company_code = m.company_code where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND plant_code = '"+plantcode+"' ").then(function(datas){
+  console.log("select t.created_dt, t.fullname, t.fathername, t.birthdate, t.mobile_no1, t.aadhar_no, t.apln_status, m.company_name from trainee_apln as t left join master_company as m on t.company_code = m.company_code where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND plant_code = '"+plantcode+"' ")
+    user.query("select t.created_dt, t.fullname, t.fathername, t.birthdate, t.mobile_no1, t.aadhar_no, t.apln_status, m.company_name from trainee_apln as t left join master_company as m on t.company_code = m.company_code where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND plant_code = '"+plantcode+"' ").then(function(datas){
     res.send(datas['recordset'])
   },function(err){if(err) return 'error incoming'} )
 })
@@ -962,7 +962,7 @@ app.post('/posttest', async(req,res)=>
   for(var i = 1; i < details.length; i++)
   {
     var result =  await pool.request()
-    .query("  update ontraining_evalation set posttraining_date = CURRENT_TIMESTAMP, posttraining_result = '"+details[i].result+"' , posttraining_score = '"+details[i].score+"' , posttrainingstat = 'SUBMITTED', posttraining_pf = '"+details[0].pf+"', posttraining_percent = '"+details[0].percent+"' where qslno = '"+details[i].slno+"' ")
+    .query("update ontraining_evalation set posttraining_date = CURRENT_TIMESTAMP, posttraining_result = '"+details[i].result+"' , posttraining_score = '"+details[i].score+"' , posttrainingstat = 'SUBMITTED', posttraining_pf = '"+details[0].pf+"', posttraining_percent = '"+details[0].percent+"' where qslno = '"+details[i].slno+"' ")
   }
 
   var summary = await pool.request()
@@ -973,8 +973,6 @@ app.post('/posttest', async(req,res)=>
 
 app.post('/questionbank' , async(req,res)=>
 {
-  console.log("rrr",req.body)
-
   var details = req.body
 
   var pool = await db.poolPromise
@@ -992,7 +990,6 @@ app.post('/questionbank' , async(req,res)=>
 
 app.post('/questionbankupload', upload , async(req,res)=>
 {
-  console.log("rrr",req.file)
   res.send({'message':'success'})
 })
 
@@ -1047,7 +1044,7 @@ app.post('/offlineUpload', async(req,res)=>
 
   else if(test == 'post-test')
   {
-    var   update_data = await pool.request()
+    var update_data = await pool.request()
     .query("  update ontraining_evalation set posttraining_date = CURRENT_TIMESTAMP, posttraining_score = '"+score+"' , posttrainingstat = 'SUBMITTED', posttraining_pf = '"+pf+"', posttraining_percent = '"+percent+"' where trainee_idno = '"+username+"' and module_name = '"+module+"' ")
     res.send({'message': 'success'})
   }
@@ -1415,7 +1412,7 @@ app.post('/getdepartment', async(req,res)=>{
   try{
   var pool = await db.poolPromise
   var result = await pool.request()
-    .query("select department.dept_slno, department.dept_name, department.plant_code,department.sap_code, plant.plant_name from department left outer join plant on department.plant_code = plant.plant_code where department.del_status=1") 
+    .query("select department.dept_slno, department.dept_name, department.plant_code,department.sap_code, plant.plant_name from department left outer join plant on department.plant_code = plant.plant_code where department.del_staus=1") 
 
   res.send(result['recordset'])
   }catch(err){
@@ -1518,7 +1515,7 @@ app.post('/getline', async(req,res)=>{
   try{
   var pool = await db.poolPromise
   var result = await pool.request()
-  .query("select mst_line.Line_code,plant.plant_name, department.dept_name, mst_line.Line_Name, mst_line.personal_subarea, mst_line.created_on, mst_line.Created_By, mst_line.modified_on, mst_line.modified_by from mst_line join plant on mst_line.plant_code = plant.plant_code join department on mst_line.Module_code = department.dept_slno where mst_line.plant_code = '"+req.body.plantcode+"' and mst_line.del_status = 'N' ")
+  .query("select mst_line.Line_code,plant.plant_name, department.dept_name, mst_line.Line_Name, mst_line.personal_subarea, mst_line.createddt, mst_line.Created_By, mst_line.modifieddt, mst_line.modifiedby from mst_line join plant on mst_line.plant_code = plant.plant_code join department on mst_line.Module_code = department.dept_slno where mst_line.plant_code = '"+req.body.plantcode+"' and mst_line.del_status = 'N' ")
   console.log("select mst_line.Line_Name, mst_line.Line_code, plant.plant_name ,mst_line.personal_subarea, mst_line.created_on, mst_line.Created_By, mst_line.modified_on, mst_line.modified_by from mst_line join plant on Mst_Line.Plant_code = plant.plant_code where mst_line.del_status = 'N' and Mst_Line.Plant_code = '"+req.body.plantcode+"' ")
   res.send(result['recordset'])
   }catch(err){
@@ -1611,20 +1608,22 @@ app.post('/addbank' , async(req,res)=>
       var bank_code = req.body.bank_code
       var bank_name = req.body.bank_name
 
+      console.log(req.body)
+
       var pool =await db.poolPromise
       var result = pool.request()
                         .input("bank_code", bank_code)
                         .query("select * from bank where bank_code=@bank_code")
-    //   if (result['recordset'].length > 0)
-    //   res.send({'message': 'already'})
-    // else
-    //   {
+      if (result['recordset']?.length > 0)
+      res.send({'message': 'already'})
+    else
+      {
       result = await pool.request()
                           .input("bank_code", bank_code)
                           .input("bank_name", bank_name)
                           .query("Insert into bank values(@bank_name, @bank_code, 1)")
         res.send({'message': 'inserted'})
-      // }
+      }
         
         
   }catch(err){
@@ -2030,5 +2029,54 @@ app.post('/getshift', async(req,res)=>{
     res.send({"message":"failure"})
   }
 })
+
+app.post('/evaluationdays', async(req,res)=>{
+  try
+  {
+  console.log(req.body);
+  var pool = await db.poolPromise
+  var start = req.body.status.split('-')[0]
+  var end = req.body.status.split('-')[1]
+  var id = req.body.id
+
+  if(id==2)
+      var count = end/90
+  else if(id==3)
+      var count = end/90 - 1
+  
+
+  console.log("WITH cte AS (SELECT apln_slno, COUNT(*) AS record_count FROM post_evaluation GROUP BY apln_slno) SELECT t.* FROM trainee_apln t INNER JOIN cte ON t.apln_slno = cte.apln_slno WHERE cte.record_count <='"+count+"' and DATEDIFF(day, TRY_PARSE(doj AS DATE USING 'en-US'), GETDATE()) < '"+end+"' and DATEDIFF(day, TRY_PARSE(doj AS DATE USING 'en-US'), GETDATE()) > '"+start+"' ") 
+
+  if(id==1)
+    {
+      var result = await pool.request()
+      .query("SELECT * FROM trainee_apln where DATEDIFF(day, TRY_PARSE(doj AS DATE USING 'en-US'), GETDATE()) > '"+start+"' and DATEDIFF(day, TRY_PARSE(doj AS DATE USING 'en-US'), GETDATE()) < '"+end+"' ") 
+    }
+  else if (id==2)
+  {
+    var result = await pool.request()
+    .query("WITH cte AS (SELECT apln_slno, COUNT(*) AS record_count FROM post_evaluation GROUP BY apln_slno) SELECT t.* FROM trainee_apln t INNER JOIN cte ON t.apln_slno = cte.apln_slno WHERE cte.record_count  = '"+count+"' and DATEDIFF(day, TRY_PARSE(doj AS DATE USING 'en-US'), GETDATE()) < '"+end+"' and DATEDIFF(day, TRY_PARSE(doj AS DATE USING 'en-US'), GETDATE()) > '"+start+"' ") 
+  }
+  else if (id==3 && end == 90 )
+  {
+    var result = await pool.request()
+    // .query("WITH cte AS (SELECT apln_slno, COUNT(*) AS record_count FROM post_evaluation GROUP BY apln_slno) SELECT t.* FROM trainee_apln t INNER JOIN cte ON t.apln_slno = cte.apln_slno WHERE cte.record_count  = '"+count+"' and DATEDIFF(day, TRY_PARSE(doj AS DATE USING 'en-US'), GETDATE()) < '"+end+"' and DATEDIFF(day, TRY_PARSE(doj AS DATE USING 'en-US'), GETDATE()) > '"+start+"' ") 
+        .query("select * from trainee_apln where  apln_status = 'APPROVED'  and doj > '2022-05-05' and test_status = 'completed' and apln_slno not in (select apln_slno from post_evaluation)")
+  }
+  else
+  {
+    var result = await pool.request()
+    .query("WITH cte AS (SELECT apln_slno, COUNT(*) AS record_count FROM post_evaluation GROUP BY apln_slno) SELECT t.* FROM trainee_apln t INNER JOIN cte ON t.apln_slno = cte.apln_slno WHERE cte.record_count  <= '"+count+"' and DATEDIFF(day, TRY_PARSE(doj AS DATE USING 'en-US'), GETDATE()) < '"+end+"' and DATEDIFF(day, TRY_PARSE(doj AS DATE USING 'en-US'), GETDATE()) > '"+start+"' ") 
+  }
+
+  res.send(result['recordset'])
+  }
+  catch(err)
+  {
+    console.log(err)
+    res.send({"message":"failure"})
+  }
+})
+
 
 module.exports = app;
