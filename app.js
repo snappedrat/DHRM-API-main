@@ -1412,7 +1412,7 @@ app.post('/getdepartment', async(req,res)=>{
   try{
   var pool = await db.poolPromise
   var result = await pool.request()
-    .query("select department.dept_slno, department.dept_name, department.plant_code,department.sap_code, plant.plant_name from department left outer join plant on department.plant_code = plant.plant_code where department.del_staus=1") 
+    .query("select department.dept_slno, department.dept_name, department.plant_code,department.sap_code, plant.plant_name from department join plant on department.plant_code = plant.plant_code where department.del_staus=1") 
 
   res.send(result['recordset'])
   }catch(err){
@@ -2033,6 +2033,7 @@ app.post('/getshift', async(req,res)=>{
 app.post('/evaluationdays', async(req,res)=>{
   try
   {
+    var count;
   console.log(req.body);
   var pool = await db.poolPromise
   var start = req.body.status.split('-')[0]
@@ -2040,33 +2041,47 @@ app.post('/evaluationdays', async(req,res)=>{
   var id = req.body.id
 
   if(id==2)
-      var count = end/90
-  else if(id==3)
-      var count = end/90 - 1
-  
-
-  console.log("WITH cte AS (SELECT apln_slno, COUNT(*) AS record_count FROM post_evaluation GROUP BY apln_slno) SELECT t.* FROM trainee_apln t INNER JOIN cte ON t.apln_slno = cte.apln_slno WHERE cte.record_count <='"+count+"' and DATEDIFF(day, TRY_PARSE(doj AS DATE USING 'en-US'), GETDATE()) < '"+end+"' and DATEDIFF(day, TRY_PARSE(doj AS DATE USING 'en-US'), GETDATE()) > '"+start+"' ") 
-
-  if(id==1)
-    {
-      var result = await pool.request()
-      .query("SELECT * FROM trainee_apln where DATEDIFF(day, TRY_PARSE(doj AS DATE USING 'en-US'), GETDATE()) > '"+start+"' and DATEDIFF(day, TRY_PARSE(doj AS DATE USING 'en-US'), GETDATE()) < '"+end+"' ") 
-    }
-  else if (id==2)
   {
-    var result = await pool.request()
-    .query("WITH cte AS (SELECT apln_slno, COUNT(*) AS record_count FROM post_evaluation GROUP BY apln_slno) SELECT t.* FROM trainee_apln t INNER JOIN cte ON t.apln_slno = cte.apln_slno WHERE cte.record_count  = '"+count+"' and DATEDIFF(day, TRY_PARSE(doj AS DATE USING 'en-US'), GETDATE()) < '"+end+"' and DATEDIFF(day, TRY_PARSE(doj AS DATE USING 'en-US'), GETDATE()) > '"+start+"' ") 
+    if(end == 60)
+      count = 1
+    else if(end == 120)
+      count = 2
+    else if(end == 180)
+      count = 3
+    else if(end == 270)
+      count = 4
   }
-  else if (id==3 && end == 90 )
+  else if(id==3 | id==1)
+  {
+  {
+    if(end == 60)
+      count = 0
+    else if(end == 120)
+      count = 1
+    else if(end == 180)
+      count = 2
+    else if(end == 270)
+      count = 3
+  }
+  }
+
+  console.log("WITH cte AS (SELECT apln_slno, COUNT(*) AS record_count FROM post_evaluation GROUP BY apln_slno) SELECT t.*,DATEDIFF(day, TRY_PARSE(doj AS DATE USING 'en-US'), GETDATE()) as diff FROM trainee_apln t INNER JOIN cte ON t.apln_slno = cte.apln_slno WHERE cte.record_count ='"+count+"' and DATEDIFF(day, TRY_PARSE(doj AS DATE USING 'en-US'), GETDATE()) < '"+end+"' and DATEDIFF(day, TRY_PARSE(doj AS DATE USING 'en-US'), GETDATE()) > '"+start+"' and apln_status = 'APPOINTED' ") 
+     console.log("select *,DATEDIFF(day, TRY_PARSE(doj AS DATE USING 'en-US'), GETDATE()) as diff from trainee_apln where  apln_status = 'APPOINTED'  and doj > '2022-09-05' and test_status = 'completed' and apln_slno not in (select apln_slno from post_evaluation)")
+
+  if (id==2)
   {
     var result = await pool.request()
-    // .query("WITH cte AS (SELECT apln_slno, COUNT(*) AS record_count FROM post_evaluation GROUP BY apln_slno) SELECT t.* FROM trainee_apln t INNER JOIN cte ON t.apln_slno = cte.apln_slno WHERE cte.record_count  = '"+count+"' and DATEDIFF(day, TRY_PARSE(doj AS DATE USING 'en-US'), GETDATE()) < '"+end+"' and DATEDIFF(day, TRY_PARSE(doj AS DATE USING 'en-US'), GETDATE()) > '"+start+"' ") 
-        .query("select * from trainee_apln where  apln_status = 'APPROVED'  and doj > '2022-05-05' and test_status = 'completed' and apln_slno not in (select apln_slno from post_evaluation)")
+    .query("WITH cte AS (SELECT apln_slno, COUNT(*) AS record_count FROM post_evaluation GROUP BY apln_slno) SELECT t.*, DATEDIFF(day, TRY_PARSE(t.doj AS DATE USING 'en-US'), GETDATE()) as diff, d.dept_name, l.line_name FROM trainee_apln t INNER JOIN cte ON t.apln_slno = cte.apln_slno JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code WHERE cte.record_count  = '"+count+"' and DATEDIFF(day, TRY_PARSE(doj AS DATE USING 'en-US'), GETDATE()) < '"+end+"' and DATEDIFF(day, TRY_PARSE(doj AS DATE USING 'en-US'), GETDATE()) > '"+start+"' and apln_status = 'APPOINTED' ") 
+  }
+  else if ((id==3 && count == 0) | (id==1 && count == 0) )
+  {
+    var result = await pool.request()
+    .query("select t.*,DATEDIFF(day, TRY_PARSE(t.doj AS DATE USING 'en-US'), GETDATE()) as diff, d.dept_name, l.line_name from trainee_apln t JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code  where  apln_status = 'APPOINTED'  and doj > '2022-09-05' and test_status = 'completed' and apln_slno not in (select apln_slno from post_evaluation)")
   }
   else
   {
     var result = await pool.request()
-    .query("WITH cte AS (SELECT apln_slno, COUNT(*) AS record_count FROM post_evaluation GROUP BY apln_slno) SELECT t.* FROM trainee_apln t INNER JOIN cte ON t.apln_slno = cte.apln_slno WHERE cte.record_count  <= '"+count+"' and DATEDIFF(day, TRY_PARSE(doj AS DATE USING 'en-US'), GETDATE()) < '"+end+"' and DATEDIFF(day, TRY_PARSE(doj AS DATE USING 'en-US'), GETDATE()) > '"+start+"' ") 
+    .query("WITH cte AS (SELECT apln_slno, COUNT(*) AS record_count FROM post_evaluation GROUP BY apln_slno) SELECT t.*, DATEDIFF(day, TRY_PARSE(t.doj AS DATE USING 'en-US'), GETDATE()) as diff, d.dept_name, l.line_name FROM trainee_apln t INNER JOIN cte ON t.apln_slno = cte.apln_slno JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code WHERE cte.record_count  <= '"+count+"' and DATEDIFF(day, TRY_PARSE(doj AS DATE USING 'en-US'), GETDATE()) < '"+end+"' and DATEDIFF(day, TRY_PARSE(doj AS DATE USING 'en-US'), GETDATE()) > '"+start+"' and apln_status = 'APPOINTED' ") 
   }
 
   res.send(result['recordset'])
@@ -2086,6 +2101,23 @@ app.post('/depttransfer', async(req, res)=>{
     var pool = await db.poolPromise
     var result = await pool.request()
       .query("select * from trainee_apln where apln_status = 'APPOINTED' and test_status = 'completed' and plant_code = '"+pl+"' and gen_id is not null ")
+    
+    res.send(result['recordset'])
+  }
+  catch(err)
+  {
+    console.log(err)
+    res.send({"message":"failure"})
+  }
+})
+app.post('/onboard', async(req, res)=>{
+  try
+  {
+    var pl = req.body.plantcode
+
+    var pool = await db.poolPromise
+    var result = await pool.request()
+      .query("select * from trainee_apln where apln_status = 'APPROVED' and test_status = 'completed' and plant_code = '"+pl+"' ")
     
     res.send(result['recordset'])
   }
@@ -2171,5 +2203,88 @@ app.post('/reporting', async(req, res)=>{
     }
 
 })
+
+app.post('/getonboard', async(req,res)=>
+{
+  var pool =await db.poolPromise
+
+  var apln_slno = req.body.apln_slno
+
+  console.log("select * from trainee_apln where apln_slno = '"+apln_slno+"' ")
+
+  var details = await pool.request()
+    .query("select * from trainee_apln where apln_slno = '"+apln_slno+"' ")
+
+  var plantcode = details['recordset'][0].plant_code
+
+  console.log(plantcode)
+
+    var result = await pool.request()
+    .query("select desig_name from designation where plant_code = '"+plantcode+"' ")
+
+    var result2 = await pool.request()
+    .query("select dept_name from department where plant_code = '"+plantcode+"'  ")
+
+    var result3 = await pool.request()
+    .query("select line_name from mst_line where plant_code = '"+plantcode+"'  ")
+  
+    var result4 = await pool.request()
+    .query("select oprn_desc from operations where plant_code = '"+plantcode+"'  ")
+
+    var result5 = await pool.request()
+    .query("select emp_name from employees where plant_code = '"+plantcode+"' and is_ReportingAuth = 1 ")
+
+    var object = []
+    object[0] = details['recordset']
+    object[1] = result['recordset']
+    object[2] = result2['recordset']
+    object[3] = result3['recordset']
+    object[4] = result4['recordset']
+    object[5] = result5['recordset']
+
+  res.send(object)
+}) ;
+
+app.post('/get_eval_form', async(req,res)=>
+{
+  try{
+  var pool =await db.poolPromise
+
+  var apln_slno = req.body.apln_slno
+
+  console.log("select t.*, d.dept_name, l.line_name, ds.desig_name from trainee_apln t join department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code join designation ds on t.desig_slno = d.desig_slno where apln_slno = '"+apln_slno+"' ")
+
+  var details = await pool.request()
+    .query("select t.*, d.dept_name, l.line_name, ds.desig_name, p.new_level from trainee_apln t join department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code join designation ds on t.desig_slno = ds.slno join periodical_eval_level p on t.apln_slno = p.apln_slno where t.apln_slno = '"+apln_slno+"' ")
+
+    var result1 = await pool.request()
+    .query("select o.oprn_desc from periodical_eval_operations p join operations o on p.oprn_slno = o.oprn_slno where p.apln_slno = '"+apln_slno+"' ")
+
+  var plantcode = details['recordset'][0].plant_code
+
+  console.log(plantcode)
+
+    var result2 = await pool.request()
+    .query("select dept_name from department where plant_code = '"+plantcode+"'  ")
+
+    var result3 = await pool.request()
+    .query("select line_name from mst_line where plant_code = '"+plantcode+"'  ")
+  
+    var object = []
+    object[0] = details['recordset']
+    object[1] = result1['recordset']
+    object[2] = result2['recordset']
+    object[3] = result3['recordset']
+
+
+  res.send(object)
+  }
+  catch(err)
+  {
+    res.send({message:'failure'})
+    console.log(err)
+  }
+
+}) ;
 
 module.exports = app;
