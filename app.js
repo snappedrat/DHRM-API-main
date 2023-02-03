@@ -87,7 +87,7 @@ app.post('/logins', async(request, response)=> {
         }
         let token = jwt.sign(userData, secret, { expiresIn: '15s'})
 
-        response.status(200).json({"token": token, "message":"Success"});
+        response.status(200).json({"token": token, "message":"Success1"});
     }
     else if((result3['recordset'].length  > 0))
     {
@@ -98,7 +98,7 @@ app.post('/logins', async(request, response)=> {
       }
       let token = jwt.sign(userData, secret, { expiresIn: '15s'})
 
-      response.status(200).json({"token": token, "message":"Success"});
+      response.status(200).json({"token": token, "message":"Success2"});
 
       console.log("true");
   } 
@@ -177,11 +177,22 @@ app.post('/gethr', async(req,res)=>{
 );
 
 app.post('/gethrappr', async(req,res)=>{
-  var user_name = req.body.username;
 
-  var user = await db.poolPromise
-  var result = await user.request()
-      .query("select employees.gen_id, employees.Emp_name,employees.plant_code, employees.Is_HR, employees.Is_HRAppr,employees.Is_Trainer,employees.Is_Trainee, employees.User_Name,employees.department, department.dept_name, plant.plant_name from employees left join department on employees.department = department.dept_slno left join plant on plant.plant_code = employees.plant_code where employees.User_Name = '"+user_name+"' ")
+  var user_name = req.body.username;
+  var user = req.body.user;
+
+  var pool = await db.poolPromise;
+
+  if(user == 'emp')
+  {
+    var result = await pool.request()
+    .query("select employees.*, department.dept_name, plant.plant_name from employees left join department on employees.department = department.dept_slno left join plant on plant.plant_code = employees.plant_code where employees.User_Name = '"+user_name+"' ")
+  }
+  else if(user == 'trainee')
+  {
+  var result = await pool.request()
+      .query("select t.fullname, p.plant_name, d.dept_name from trainee_apln t left join department d on t.dept_slno = d.dept_slno left join plant p on p.plant_code = t.plant_code where t.apln_slno = '"+user_name+"' ")
+  }
     res.send(result['recordset'])
 },   function(err){if(err) return 'error incoming'}
 );
@@ -2137,11 +2148,20 @@ app.post('/onboard', async(req, res)=>{
   try
   {
     var pl = req.body.plantcode
+    var select = req.body.select
 
     var pool = await db.poolPromise
-    var result = await pool.request()
+    if(select == 'TRAINING COMPLETED')
+    {
+      var result = await pool.request()
       .query("select * from trainee_apln where apln_status = 'APPROVED' and test_status = 'completed' and plant_code = '"+pl+"' ")
-    
+    }
+    else
+    {
+      var result = await pool.request()
+      .query("select * from trainee_apln where apln_status = 'APPOINTED' and plant_code = '"+pl+"' ")
+    }
+
     res.send(result['recordset'])
   }
   catch(err)
@@ -2233,10 +2253,10 @@ app.post('/getonboard', async(req,res)=>
 
   var apln_slno = req.body.apln_slno
 
-  console.log("select * from trainee_apln where apln_slno = '"+apln_slno+"' ")
+  console.log("select t.*, d.dept_name, l.line_name, e.emp_name from trainee_apln t JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code join employees on t.reporting_to = e.empl_slno where apln_slno = '"+apln_slno+"' ")
 
   var details = await pool.request()
-    .query("select * from trainee_apln where apln_slno = '"+apln_slno+"' ")
+  .query("select t.*, d.dept_name, l.line_name, e.emp_name, ds.desig_name from trainee_apln t join designation ds on t.desig_slno = ds.slno JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code join employees e on t.reporting_to = e.empl_slno where apln_slno = '"+apln_slno+"' ")
 
   var plantcode = details['recordset'][0].plant_code
 
@@ -2428,6 +2448,8 @@ app.post('/eval_form_sup', async(req,res)=>
 
 app.post('/onboard_form', async(req, res)=>{
 
+  try{
+  var plantcode = req.body.plantcode
   var grade = req.body.grade
   var dept= req.body.department
   var doj= req.body.doj
@@ -2441,11 +2463,27 @@ app.post('/onboard_form', async(req, res)=>{
   var reporting_to= req.body.reportingto
   var work_contract= req.body.wcontract
   var designation= req.body.designation
+  var apln_slno = req.body.apln_slno
+
+  if(bio_id == 'true')
+    bio_id = 1
+  else
+    bio_id= 0
+
+  console.log("EXEC onboard @plantcode = '"+plantcode+"' ,  @grade = "+grade+" , @process_trained = '"+process_trained+"', @bio_id = "+bio_id+", @dept  = '"+dept+"', @doj = '"+doj+"', @active_status = '"+active_status+"', @line = '"+line+"', @bio_no = "+bio_no+", @uan = "+uan+", @gen_id  = '"+id+"', @reporting_to = '"+reporting_to+"', @designation = '"+designation+"' ")
+
 
   var pool = await db.poolPromise
   var result = await pool.request()
-    .query("update trainee_apln set  ")
+    .query("EXEC onboard @plantcode = '"+plantcode+"' ,  @grade = "+grade+" , @process_trained = '"+process_trained+"', @bio_id = "+bio_id+", @dept  = '"+dept+"', @doj = '"+doj+"', @active_status = '"+active_status+"', @line = '"+line+"', @bio_no = "+bio_no+", @uan = "+uan+", @gen_id  = '"+id+"', @reporting_to = '"+reporting_to+"', @designation = '"+designation+"', @apln_slno='"+apln_slno+"' ")
 
+  res.send({message : "success"})
+  }
+  catch(err)
+  {
+    res.send({message: "failure"})
+    console.log(err)
+  }
 })
 
 module.exports = app;
