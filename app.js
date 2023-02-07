@@ -446,7 +446,7 @@ app.post('/companycodelist', async(req,res)=>
     var pool = await db.poolPromise;
     var result = await pool.request()
 
-     .query("select company_name from master_company where del_status = 0 ")
+     .query("select sno, company_name, company_code from master_company where del_status = 0 ")
     res.send(result['recordset'])
   }
   catch(err)
