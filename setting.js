@@ -15,7 +15,7 @@ exports.dbConfig = {
     
     instance: process.env.DB_INSTANCE,
     rowCollectionOnDone: true,
-    useColumnNames: false,  
+    arrayRowMode: false,  
     trustServerCertificate: false
     }
     };
