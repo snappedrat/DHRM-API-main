@@ -62,19 +62,16 @@ async function getpool() {
   }
 app.post('/logins', async(request, response)=> {
   try{
-    let User_Name =request.body.User_Name;
-    let Password =request.body.Password;
+    var User_Name =request.body.User_Name;
+    var Password =request.body.Password;
 
     console.log(User_Name, Password)
     const pool = await db.poolPromise;
     const result = await pool.request()
         .input('User_Name',User_Name)
         .input('Password',Password)
-        .query("select * from employees where User_Name=@User_Name AND Password=@Password")
-    const result3 = await pool.request()
-        .input('User_Name',User_Name)
-        .input('Password',Password)
-        .query("select * from trainee_apln where apln_slno=@User_Name AND temp_password=@Password")
+        .query("select * from employees where User_Name='"+User_Name+"' AND Password=@Password")
+
     const result2 = await pool.request()
         .input('User_Name',User_Name)
         .query("select * from employees where User_Name=@User_Name")
@@ -89,21 +86,9 @@ app.post('/logins', async(request, response)=> {
         }
         let token = jwt.sign(userData, secret, { expiresIn: '15s'})
 
-        response.status(200).json({"token": token, "message":"Success1"});
+        response.status(200).json({"token": token, "message":"Success"});
     }
-    else if((result3['recordset'].length  > 0))
-    {
-      this.glob = 1;
-      var userData = {
-          "User_Name": User_Name,
-          "Password": Password
-      }
-      let token = jwt.sign(userData, secret, { expiresIn: '15s'})
 
-      response.status(200).json({"token": token, "message":"Success2"});
-
-      console.log("true");
-  } 
     else if((result['recordset'].length == 0)&&(result2['recordset'].length == 0) )
     {
         this.glob = 0;
@@ -121,6 +106,51 @@ app.post('/logins', async(request, response)=> {
   }
 
 });
+
+app.post('/ars-login', async(request,response)=>{
+  try
+  {
+    var pool = await db.poolPromise
+    var User_Name =request.body.User_Name;
+    var Password =request.body.Password;
+    const result = await pool.request()
+        .input('User_Name',User_Name)
+        .input('Password',Password)
+        .query("select * from trainee_apln where apln_slno=@User_Name AND temp_password=@Password")
+
+    const result2 = await pool.request()
+        .input('User_Name',User_Name)
+        .query("select * from trainee_apln where apln_slno=@User_Name")
+
+      if((result['recordset'].length  > 0))
+        {
+          this.glob = 1;
+          var userData = {
+              "User_Name": User_Name,
+              "Password": Password
+          }
+          let token = jwt.sign(userData, secret, { expiresIn: '15s'})
+    
+          response.status(200).json({"token": token, "message":"Success"});
+          } 
+      else if((result['recordset'].length == 0)&&(result2['recordset'].length == 0) )
+      {
+          this.glob = 0;
+          response.send([{"message":"User"}]);
+      }
+      else
+      {
+          this.glob = 0;
+          response.send([{"message":"Failure"}]);
+      }
+
+  }
+  catch(err)
+  {
+    console.log(err)
+    res.send({message:'failure'})
+  }
+})
 
 app.post('/traineelogin', async(req, res)=>{
   try
@@ -416,7 +446,7 @@ app.post('/companycodelist', async(req,res)=>
     var pool = await db.poolPromise;
     var result = await pool.request()
 
-     .query("select company_name from master_company where del_status = 1 ")
+     .query("select company_name from master_company where del_status = 0 ")
     res.send(result['recordset'])
   }
   catch(err)
@@ -2570,14 +2600,15 @@ app.post('/evaluationdays', async(req,res)=>{
     console.log(2)
     var result = await pool.request()
     .query("select t.*,DATEDIFF(day, TRY_PARSE(t.doj AS DATE USING 'en-US'), GETDATE()) as diff, d.dept_name, l.line_name from trainee_apln t JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code  where  apln_status = 'APPOINTED'  and doj > '2022-05-09' and test_status = 'completed' and apln_slno not in (select apln_slno from post_evaluation) and apln_status = 'APPOINTED' ")
-
   }
+
   else
   {
     console.log(3)
     var result = await pool.request()
     .query(" EXEC POST_EVALUATION_LIST_HR @start= "+start+" , @end = "+end+" , @count = "+count+" ")
   }
+  
   res.send(result['recordset'])
   console.log(result['recordset'].length)
   }
