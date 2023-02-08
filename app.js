@@ -165,7 +165,7 @@ app.post('/traineelogin', async(req, res)=>{
   var result = await pool.request()
     .input('trainee_idno', User_Name)
     .input('pass', Password)
-    .query("select apln_slno from trainee_apln where trainee_idno=@trainee_idno and temp_password=@pass and apln_status = 'APPROVED' ")
+    .query("select * from trainee_apln where trainee_idno=@trainee_idno and temp_password=@pass and apln_status = 'APPROVED' ")
     console.log("select apln_slno from trainee_apln where trainee_idno='"+User_Name+"' and temp_password='"+Password+"' and apln_status = 'APPROVED' ")
   var result2 = await pool.request()
     .input('trainee_idno', User_Name)
@@ -177,7 +177,7 @@ app.post('/traineelogin', async(req, res)=>{
 
   if(result['recordset'].length > 0)
   {
-    let token = jwt.sign(User_Name, secret)
+    let token = jwt.sign(result['recordset'][0], secret)
     res.send({'token': token, 'status': 'success' })
   }
   else
@@ -1398,7 +1398,7 @@ try
   var pool = await db.poolPromise
 
   var result =await pool.request()
-    .query("select fullname ,trainee_idno from trainee_apln where plant_code = '"+plantcode+"'  ")
+    .query("select fullname ,trainee_idno from trainee_apln where plant_code = '"+plantcode+"' ")
 
 res.send(result['recordset'])  
 
@@ -1421,6 +1421,10 @@ app.post('/get_test_status', async(req,res)=>
     var module_name = req.body.module_name
     console.log(req.body)
 
+    var r= await pool.request()
+    .input('module_name', module_name)
+    .query("select pass_criteria from trg_modules where module_name = @module_name")
+
     var result = await pool.request()
     .input('module_name', module_name)
     .input('idno', idno)
@@ -1435,6 +1439,10 @@ app.post('/get_test_status', async(req,res)=>
     if(result['recordset'][0].posttraining_score == null)
     {
       res.send({status:'post-test'})
+    }
+    else if(result['recordset'][0].posttraining_score < r['recordset'][0].pass_criteria)
+    {
+      res.send({status:'exam failed'})
     }
     else
     {
@@ -1483,6 +1491,16 @@ app.post('/offlineUpload', async(req,res)=>
   var pool = await db.poolPromise
   if(test == 'pre-test')
   {
+
+    var r = await pool.request()
+    .query("select module_name from trg_modules where plant_code = '"+plant_code+"' ")
+
+    if(r['recordset'][0].module_name == module)
+    {
+      var last = await pool.request()
+      .query("update trainee_apln set test_status = 'IN_TRAINING' where trainee_idno = '"+username+"' ")
+    }
+
   var insert_data = await pool.request()
     .query("insert into ontraining_evalation(trainee_idno, module_name , plant_code ,pretraining_date, pretraining_score, uploadfile, pretrainingstat, priorityval, pretraining_pf, pretraining_percent, examattempt, trainee_apln_slno) values('"+username+"','"+module+"',(select plant_code from trainee_apln where trainee_idno = '"+username+"'),CURRENT_TIMESTAMP,'"+score+"','"+file+"','SUBMITTED','"+priorityval+"','"+pf+"','"+percent+"',1,'"+apln_slno+"' )")
 
@@ -1505,8 +1523,11 @@ app.post('/offlineUpload', async(req,res)=>
 
   if(final['recordset'][final.rowsAffected-1].module_name == module)
   {
-    var last = await pool.request()
-    .query("update trainee_apln set test_status = 'COMPLETED' where trainee_idno = '"+username+"' ")
+    if(score == final['recordset'][final.rowsAffected-1].pass_criteria)
+    {
+      var last = await pool.request()
+      .query("update trainee_apln set test_status = 'COMPLETED' where trainee_idno = '"+username+"' ")
+    }
   }
 
     res.send({'message': 'success'})
@@ -1684,7 +1705,7 @@ app.post('/companyadd',async(req,res)=>{
     var result = await pool.request()
         .query("SELECT company_name FROM master_company WHERE company_code = "+Code+"")
 
-       if(result.rowsAffected!==0)
+       if(result.rowsAffected > 0)
        {
            res.send({message: 'already'});
        }
@@ -1711,7 +1732,7 @@ app.get('/companyshow',async(req,res)=>{
     var pool = await db.poolPromise
     var result = await pool.request()
       .query("select * from master_company where del_status=0")
-    let miu=datas['recordset'];
+    let miu=result['recordset'];
        res.send(miu)
 }
 catch(err)
@@ -2597,13 +2618,12 @@ app.post('/evaluationdays', async(req,res)=>{
 
   else
   {
-    console.log(3)
+    console.log(3, count)
     var result = await pool.request()
     .query(" EXEC POST_EVALUATION_LIST_HR @start= "+start+" , @end = "+end+" , @count = "+count+" ")
   }
   
   res.send(result['recordset'])
-  console.log(result['recordset'].length)
   }
   catch(err)
   {
@@ -2639,7 +2659,7 @@ app.post('/onboard', async(req, res)=>{
     if(select == 'TRAINING COMPLETED')
     {
       var result = await pool.request()
-      .query("select * from trainee_apln where apln_status = 'APPROVED' and test_status = 'completed' and plant_code = '"+pl+"' ")
+      .query("select * from trainee_apln where apln_status = 'APPROVED' and test_status = 'completed' and plant_code = '"+pl+"' order by doj desc ")
     }
     else
     {
@@ -2832,14 +2852,15 @@ app.post('/get_eval_form', async(req,res)=>
   console.log("select t.*, d.dept_name, l.line_name, ds.desig_name, p.new_level from trainee_apln t join department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code join designation ds on t.desig_slno = ds.slno join periodical_eval_level p on t.apln_slno = p.apln_slno where t.apln_slno = '"+apln_slno+"' ")
 
   var details = await pool.request()
-    .query("select t.*, d.dept_name, l.line_name, ds.desig_name, p.new_level from trainee_apln t join department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code join designation ds on t.desig_slno = ds.slno join periodical_eval_level p on t.apln_slno = p.apln_slno where t.apln_slno = '"+apln_slno+"' ")
+    .query("select t.*, d.dept_name, l.line_name,p.new_level from trainee_apln t join department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code join periodical_eval_level p on t.apln_slno = p.apln_slno where t.apln_slno = '"+apln_slno+"' ")
 
+    
     var result1 = await pool.request()
     .query("select o.oprn_desc from periodical_eval_operations p join operations o on p.oprn_slno = o.oprn_slno where p.apln_slno = '"+apln_slno+"' ")
 
   var plantcode = details['recordset'][0].plant_code
 
-  console.log(plantcode)
+  console.log("-------------------------------",plantcode)
 
     var result2 = await pool.request()
     .query("select dept_name from department where plant_code = '"+plantcode+"'  ")
@@ -2877,7 +2898,8 @@ app.post('/eval_form', async(req, res)=>
     var line = req.body.line
     var new_skill = req.body.new_skill
     var percentage = req.body.percentage
-    var process_trained = req.body.process_trained
+    var process_trained = []
+    process_trained = req.body.process_trained
     var score_for = req.body.score_for
     var score_obtained = req.body.score_obtained
     var apln_slno = req.body.apln_slno
@@ -2904,9 +2926,12 @@ app.post('/eval_form', async(req, res)=>
       .query("update periodical_eval_dept set new_dept_slno = (select top 1 dept_slno from department where dept_name = '"+department+"') , new_line_code = (select top 1 line_code from mst_line where line_name = '"+line+"') where apln_slno = '"+apln_slno+"' ")
       var result3 = await pool.request()
       .query("update periodical_eval_level set new_level = '"+new_skill+"' where apln_slno = '"+apln_slno+"'")
-      var result4 = await pool.request()
-      .query("insert into periodical_eval_operations values( (select top 1 peval_slno from periodical_eval where apln_slno = '"+apln_slno+"') , (select oprn_slno from operations where oprn_desc = '"+process_trained+"' ) , 1, '"+apln_slno+"')  ")
 
+      for(var i=0; i< process_trained.length; i++)
+      {
+        var result4 = await pool.request()
+        .query("insert into periodical_eval_operations values( (select top 1 peval_slno from periodical_eval where apln_slno = '"+apln_slno+"') , (select oprn_slno from operations where oprn_desc = '"+process_trained[i]+"' ) , 1, '"+apln_slno+"')  ")
+      }
 
     var insert = await pool.request()
       .query("insert into post_evaluation(plant_code, evaluation_days, apln_slno, line_name, evaluator_slno, evaluation_datetime, total_marks, pass_fail, HR_Entry, HR, HR_Date) values('"+plant_code+"','"+eval_days+"','"+apln_slno+"','"+line_name+"','"+emp_slno+"','"+evaluation_date+"','"+score_obtained+"','pass','Y','"+emp_slno+"','"+evaluation_date+"') ")
@@ -2935,7 +2960,7 @@ app.post('/get_eval_sup', async(req, res)=>
     var result3 = await pool.request()
       .query("select top 1 d.dept_name from periodical_eval_dept p join department d on p.new_dept_slno = d.dept_slno where apln_slno = '"+apln_slno+"'")
     var result4 = await pool.request()
-      .query("select top 1 o.oprn_desc  from periodical_eval_operations p join operations o on p.oprn_slno = o.oprn_slno where apln_slno = '"+apln_slno+"' ")
+      .query("select o.oprn_desc from periodical_eval_operations p join operations o on p.oprn_slno = o.oprn_slno where apln_slno = '"+apln_slno+"' ")
     var result5 = await pool.request()
       .query("select top 1 new_level from periodical_eval_level where apln_slno = '"+apln_slno+"' ")
 
@@ -2992,7 +3017,8 @@ app.post('/onboard_form', async(req, res)=>{
   var line= req.body.line
   var bio_id= req.body.bio_id
   var bio_no= req.body.bnum
-  var process_trained= req.body.process_trained
+  var process_trained = []
+  process_trained= req.body.process_trained
   var uan = req.body.uan
   var id= req.body.trainee_id
   var reporting_to= req.body.reportingto
@@ -3012,12 +3038,18 @@ app.post('/onboard_form', async(req, res)=>{
   else
     bio_id= 0
 
-    console.log("EXEC onboard @plantcode = '"+plantcode+"' ,  @grade = "+grade+" , @process_trained = '"+process_trained+"', @bio_id = 1 , @dept  = '"+dept+"', @doj = '"+doj+"', @active_status = '"+active_status+"', @line = '"+line+"', @bio_no = "+bio_no+", @uan = '"+uan+"', @gen_id  = '"+id+"', @reporting_to = '"+reporting_to+"', @designation = '"+designation+"', @apln_slno= "+apln_slno+", @category = '"+category+"' ")
+    console.log("EXEC onboard @plantcode = '"+plantcode+"' ,  @grade = "+grade+" , @bio_id = 1 , @dept  = '"+dept+"', @doj = '"+doj+"', @active_status = '"+active_status+"', @line = '"+line+"', @bio_no = "+bio_no+", @uan = '"+uan+"', @gen_id  = '"+id+"', @reporting_to = '"+reporting_to+"', @apln_slno= "+apln_slno+", @category = '"+category+"' ")
 
 
   var pool = await db.poolPromise
   var result = await pool.request()
-    .query("EXEC onboard @plantcode = '"+plantcode+"' ,  @grade = "+grade+" , @process_trained = '"+process_trained+"', @bio_id = 1 , @dept  = '"+dept+"', @doj = '"+doj+"', @active_status = '"+active_status+"', @line = '"+line+"', @bio_no = "+bio_no+", @uan = '"+uan+"', @gen_id  = '"+id+"', @reporting_to = '"+reporting_to+"', @designation = '"+designation+"', @apln_slno= "+apln_slno+", @category = '"+category+"' ")
+    .query("EXEC onboard @plantcode = '"+plantcode+"' ,  @grade = "+grade+" , @bio_id = 1 , @dept  = '"+dept+"', @doj = '"+doj+"', @active_status = '"+active_status+"', @line = '"+line+"', @bio_no = "+bio_no+", @uan = '"+uan+"', @gen_id  = '"+id+"', @reporting_to = '"+reporting_to+"', @apln_slno= "+apln_slno+", @category = '"+category+"' ")
+    console.log(process_trained)
+    for(var i =0; i<process_trained.length; i++)
+    {
+      var pt = await pool.request()
+      .query("insert into periodical_eval_operations values( (select top 1 peval_slno from periodical_eval where apln_slno = "+apln_slno+" ), (select top 1 oprn_slno from operations where oprn_desc = '"+process_trained[i]+"'  and plant_code = '"+plantcode+"' ),1, "+apln_slno+"  ) ")  
+    }
 
   res.send({message : "success"})
   }
