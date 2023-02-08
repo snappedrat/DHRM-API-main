@@ -116,11 +116,11 @@ app.post('/ars-login', async(request,response)=>{
     const result = await pool.request()
         .input('User_Name',User_Name)
         .input('Password',Password)
-        .query("select * from trainee_apln where apln_slno=@User_Name AND temp_password=@Password")
+        .query("select * from trainee_apln where apln_slno='"+User_Name+"' AND temp_password='"+Passowrd+"' ")
 
     const result2 = await pool.request()
         .input('User_Name',User_Name)
-        .query("select * from trainee_apln where apln_slno=@User_Name")
+        .query("select * from trainee_apln where apln_slno = '"+User_Name+"' ")
 
       if((result['recordset'].length  > 0))
         {
@@ -962,19 +962,19 @@ app.post('/getdataforid', async(req,res)=>{
 
   try
   {
-  var pool = await getpool()
   var mobile = req.body.mobile
   var company = req.body.company
 
   var r = await db.poolPromise
   var result = await r.request()
     .query("select addr from plant where plant_code = (select plant_code from trainee_apln where mobile_no1 = '"+mobile+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ) ")
-    pool.query("select fullname,fathername, trainee_idno,dept_slno, permanent_address, emergency_name, emergency_rel, other_files6 from trainee_apln where mobile_no1 = '"+mobile+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ").then(function(datas1){
-    object = datas1['recordset']
-    if(datas1['recordset'].length !=0)
+  var result2 = await r.request()
+    .query("select fullname,fathername, trainee_idno,dept_slno, permanent_address, emergency_name, emergency_rel, other_files6 from trainee_apln where mobile_no1 = '"+mobile+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ")
+    object = result2['recordset']
+
+    if(result2['recordset'].length !=0)
       object[0].addr = result['recordset'][0].addr
     res.send(object)
-  })
 }
 catch(err)
 {
@@ -988,25 +988,23 @@ catch(err)
 app.post('/getdatabasic', async(req,res)=>{
 try
 {
-  var pool = await getpool()
   var mobile = req.body.mobile
   var company = req.body.company
 
   var r = await db.poolPromise
   var result2 = await r.request()
     .query("select plant_name from plant where plant_code = (select plant_code from trainee_apln where mobile_no1 = '"+mobile+"' and company_code = (select company_code from master_company where company_name = '"+company+"'))")
-  pool.query("select * from trainee_apln where mobile_no1 = '"+mobile+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ").then(function(datas){
-    object = datas['recordset']
+  var result3 = await r.request()
+    .query("select * from trainee_apln where mobile_no1 = '"+mobile+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ")
+    object = result3['recordset']
 
-    if(datas['recordset'].length !=0)
-    {    object[0].company_name = company
-
+    if(result3['recordset'].length !=0)
+    {    
+      object[0].company_name = company
       object[0].plant_name = result2['recordset'][0].plant_name
-
     }
 
     res.send(object)
-  })
 }
 catch(err)
 {
@@ -1024,10 +1022,8 @@ app.post('/getdatafamily', async(req,res)=>{
 
   console.log(req.body)
   var result = await pool.request()
-    .query("select * from trainee_apln_family where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+mobile+"'  and company_code = (select company_code from master_company where company_name = '"+company+"'))  ").then(function(datas1){
-    console.log("one", datas1['recordset']);
-    res.send(datas1['recordset'])
-  })
+    .query("select * from trainee_apln_family where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+mobile+"'  and company_code = (select company_code from master_company where company_name = '"+company+"'))  ")
+  res.send(result['recordset'])
   }
   catch(err)
   {
@@ -1039,14 +1035,13 @@ app.post('/getdatafamily', async(req,res)=>{
 app.post('/getdatacareer', async(req,res)=>{
   try
   {
-  var pool = await getpool()
   var mobile = req.body.mobile
   var company = req.body.company
-  console.log(mobile)
-  pool.query("select * from trainee_apln_career where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+mobile+"'  and company_code = (select company_code from master_company where company_name = '"+company+"')) ").then(function(datas1){
-    console.log("one", datas1['recordset']);
-    res.send(datas1['recordset'])
-  })
+  var pool = await db.poolPromise
+  var result = await pool.request()
+      .query("select * from trainee_apln_career where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+mobile+"'  and company_code = (select company_code from master_company where company_name = '"+company+"')) ")
+  res.send(result['recordset'])
+
   }
   catch(err)
   {
@@ -1058,15 +1053,13 @@ app.post('/getdatacareer', async(req,res)=>{
 app.post('/getdataqualfn', async(req,res)=>{
   try
   {
-  var pool = await getpool()
   var mobile = req.body.mobile
   var company = req.body.company
 
-  console.log(mobile)
-  pool.query("select * from trainee_apln_qualifn where apln_slno = (select apln_slno from trainee_apln where mobile_no1 ='"+mobile+"'  and company_code = (select company_code from master_company where company_name = '"+company+"')) ").then(function(datas1){
-    console.log("one", datas1['recordset']);
-    res.send(datas1['recordset'])
-  })
+  var pool = await db.poolPromise
+  var result = await pool.request()
+    .query("select * from trainee_apln_qualifn where apln_slno = (select apln_slno from trainee_apln where mobile_no1 ='"+mobile+"'  and company_code = (select company_code from master_company where company_name = '"+company+"')) ")
+    res.send(result['recordset'])
   }
   catch(err)
   {
@@ -1208,7 +1201,7 @@ app.post('/Qualified', async(req,res)=>{
       if(score['recordset'][0].sum == null) 
         res.send({'message':'post-test'})
 
-      else if(score['recordset'][0].sum > pass_mark)
+      else if(score['recordset'][0].sum >= pass_mark)
         res.send({'message':'passed'})
 
       else
@@ -1239,7 +1232,7 @@ app.post('/Qualified', async(req,res)=>{
       {
         res.send({'message':'not qualified'})
       }
-      else if(prev_score['recordset'][0].sum > pass_mark)
+      else if(prev_score['recordset'][0].sum >= pass_mark)
       {
         res.send({'message':'qualified'})
       }
@@ -1257,7 +1250,7 @@ app.post('/Qualified', async(req,res)=>{
 
       if(score['recordset'][0].sum == null) 
         res.send({'message':'post-test'})
-      else if(score['recordset'][0].sum > pass_mark)
+      else if(score['recordset'][0].sum >= pass_mark)
         res.send({'message':'passed', 'marks':score['recordset'][0].sum})
       else
         res.send({'message':'failed', 'marks':score['recordset'][0].sum , 'pass' : pass_mark})
@@ -1405,7 +1398,7 @@ try
   var pool = await db.poolPromise
 
   var result =await pool.request()
-    .query("select fullname ,trainee_idno from trainee_apln where plant_code = '"+plantcode+"' and trainee_idno in (select distinct trainee_idno from ontraining_evalation where trainee_idno like 'p%')  ")
+    .query("select fullname ,trainee_idno from trainee_apln where plant_code = '"+plantcode+"' and trainee_idno in (select distinct trainee_idno from ontraining_evalation)  ")
 
 res.send(result['recordset'])  
 
@@ -1678,7 +1671,6 @@ catch(err)
 app.post('/companyadd',async(req,res)=>{
   try
   {
-    var pool = await getpool();
     var Code = req.body.company_code;
     var name = req.body.company_name;
     var active_status = req.body.status;
@@ -1688,20 +1680,23 @@ app.post('/companyadd',async(req,res)=>{
     
     console.log("SELECT company_name FROM master_company WHERE company_code = "+Code+"")
 
-    pool.query("SELECT company_name FROM master_company WHERE company_code = "+Code+"")
-        .then(function (x){
-       if(x.recordset.length!==0){
+    var pool = await db.poolPromise
+    var result = await pool.request()
+        .query("SELECT company_name FROM master_company WHERE company_code = "+Code+"")
+
+       if(result.rowsAffected!==0)
+       {
            res.send({message: 'already'});
        }
        else
        {
           console.log("insert into [dbo].[master_company](company_code,company_name,del_status,created_on,created_by) values("+Code+",'"+name+"',0,CURRENT_TIMESTAMP,'"+created_by+"')")
-           pool.query("insert into [dbo].[master_company](company_code,company_name,del_status,created_on,created_by) values("+Code+",'"+name+"',0,CURRENT_TIMESTAMP,'"+created_by+"')")
-               .then(function (datas) {
+          var result2 = await pool.request()
+            .query("insert into [dbo].[master_company](company_code,company_name,del_status,created_on,created_by) values("+Code+",'"+name+"',0,CURRENT_TIMESTAMP,'"+created_by+"')")
                    res.send({message: 'success'});
-                  })
+
        }
-    })
+
   }
   catch(err)
   {
@@ -1713,12 +1708,11 @@ app.post('/companyadd',async(req,res)=>{
 app.get('/companyshow',async(req,res)=>{
   try
   {
-  var pool = await getpool();
-  pool.query("select * from master_company where del_status=0").then(function (datas) {
+    var pool = await db.poolPromise
+    var result = await pool.request()
+      .query("select * from master_company where del_status=0")
     let miu=datas['recordset'];
-    console.log(miu)
        res.send(miu)
-  })
 }
 catch(err)
 {
@@ -1731,14 +1725,14 @@ app.post('/companyedit',async(req,res)=>{
 
 try
 {
-  var pool = await getpool();
   var company_code = req.body.company_code;
   var name = req.body.company_name;
   var modified_by = req.body.modified_by;
 
-  pool.query("update master_company set company_name= '"+name+"',modified_on= CURRENT_TIMESTAMP, modified_by ='"+modified_by+"' where company_code= '"+company_code+"' ").then(function (datas) {
+  var pool = await db.poolPromise
+  var result = await pool.request()
+    .query("update master_company set company_name= '"+name+"',modified_on= CURRENT_TIMESTAMP, modified_by ='"+modified_by+"' where company_code= '"+company_code+"' ")
       res.send({message: 'success'})
-    })
   }
   catch(err)
   {
@@ -1750,12 +1744,11 @@ try
 app.post('/companydel',async(req,res)=>{
   try
   {
-  var pool = await getpool();
  var company_code = req.body.company_code;
-
- pool.query("update master_company SET del_status = 1,modified_on=CURRENT_TIMESTAMP WHERE company_code= '"+company_code+"' ").then(function (datas) {
+ var pool = await db.poolPromise
+ var result = await pool.request()
+  .query("update master_company SET del_status = 1,modified_on=CURRENT_TIMESTAMP WHERE company_code= '"+company_code+"' ")
        res.send({message: 'success'});
-  })
   }
   catch(err)
   {
