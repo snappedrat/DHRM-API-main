@@ -1398,7 +1398,7 @@ try
   var pool = await db.poolPromise
 
   var result =await pool.request()
-    .query("select fullname ,trainee_idno from trainee_apln where plant_code = '"+plantcode+"' and trainee_idno in (select distinct trainee_idno from ontraining_evalation)  ")
+    .query("select fullname ,trainee_idno from trainee_apln where plant_code = '"+plantcode+"'  ")
 
 res.send(result['recordset'])  
 
@@ -2983,6 +2983,7 @@ app.post('/eval_form_sup', async(req,res)=>
 app.post('/onboard_form', async(req, res)=>{
 
   try{
+    console.log(req.body)
   var plantcode = req.body.plantcode
   var grade = req.body.grade
   var dept= req.body.department
@@ -3000,17 +3001,23 @@ app.post('/onboard_form', async(req, res)=>{
   var apln_slno = req.body.apln_slno
   var category = req.body.category
 
+  if(active_status == undefined)
+    active_status = 'ACTIVE'
+  else
+    active_status = 'INACTIVE'
+    
+
   if(bio_id == 'true')
     bio_id = 1
   else
     bio_id= 0
 
-  console.log("EXEC onboard @plantcode = '"+plantcode+"' ,  @grade = "+grade+" , @process_trained = '"+process_trained+"', @bio_id = "+bio_id+", @dept  = '"+dept+"', @doj = '"+doj+"', @active_status = '"+active_status+"', @line = '"+line+"', @bio_no = "+bio_no+", @uan = "+uan+", @gen_id  = '"+id+"', @reporting_to = '"+reporting_to+"', @designation = '"+designation+"' ")
+    console.log("EXEC onboard @plantcode = '"+plantcode+"' ,  @grade = "+grade+" , @process_trained = '"+process_trained+"', @bio_id = 1 , @dept  = '"+dept+"', @doj = '"+doj+"', @active_status = '"+active_status+"', @line = '"+line+"', @bio_no = "+bio_no+", @uan = '"+uan+"', @gen_id  = '"+id+"', @reporting_to = '"+reporting_to+"', @designation = '"+designation+"', @apln_slno= "+apln_slno+", @category = '"+category+"' ")
 
 
   var pool = await db.poolPromise
   var result = await pool.request()
-    .query("EXEC onboard @plantcode = '"+plantcode+"' ,  @grade = "+grade+" , @process_trained = '"+process_trained+"', @bio_id = "+bio_id+", @dept  = '"+dept+"', @doj = '"+doj+"', @active_status = '"+active_status+"', @line = '"+line+"', @bio_no = "+bio_no+", @uan = "+uan+", @gen_id  = '"+id+"', @reporting_to = '"+reporting_to+"', @designation = '"+designation+"', @apln_slno='"+apln_slno+"', @category = '"+category+"' ")
+    .query("EXEC onboard @plantcode = '"+plantcode+"' ,  @grade = "+grade+" , @process_trained = '"+process_trained+"', @bio_id = 1 , @dept  = '"+dept+"', @doj = '"+doj+"', @active_status = '"+active_status+"', @line = '"+line+"', @bio_no = "+bio_no+", @uan = '"+uan+"', @gen_id  = '"+id+"', @reporting_to = '"+reporting_to+"', @designation = '"+designation+"', @apln_slno= "+apln_slno+", @category = '"+category+"' ")
 
   res.send({message : "success"})
   }
