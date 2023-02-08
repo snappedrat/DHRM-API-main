@@ -116,7 +116,7 @@ app.post('/ars-login', async(request,response)=>{
     const result = await pool.request()
         .input('User_Name',User_Name)
         .input('Password',Password)
-        .query("select * from trainee_apln where apln_slno='"+User_Name+"' AND temp_password='"+Passowrd+"' ")
+        .query("select * from trainee_apln where apln_slno='"+User_Name+"' AND temp_password='"+Password+"' ")
 
     const result2 = await pool.request()
         .input('User_Name',User_Name)
@@ -2727,17 +2727,17 @@ app.post('/reporting', async(req, res)=>{
   try{
     console.log(req.body)
   var pool =await db.poolPromise
-  var gen_id = req.body.gen_id
+  var gen_id = req.body.apln_slno
   var dept = req.body.changedepartment
   var line = req.body.changeline
   var RA = req.body.reportingto
   var pl = req.body.plantcode
 
-  console.log("update trainee_apln set dept_slno = (select top 1 dept_slno from department where dept_name = '"+dept+"' and plant_code = '"+pl+"'), line_code = (select top 1 line_code from mst_line where line_name = '"+line+"' and plant_code = '"+pl+"'), reporting_to = "+RA+" where gen_id ='"+gen_id+"'  ")
+  console.log("update trainee_apln set dept_slno = (select top 1 dept_slno from department where dept_name = '"+dept+"' and plant_code = '"+pl+"'), line_code = (select top 1 line_code from mst_line where line_name = '"+line+"' and plant_code = '"+pl+"'), reporting_to = "+RA+" where apln_slno ='"+gen_id+"'  ")
 
 
   var result = await pool.request()
-    .query("update trainee_apln set dept_slno = (select top 1 dept_slno from department where dept_name = '"+dept+"' and plant_code = '"+pl+"'), line_code = (select top 1 line_code from mst_line where line_name = '"+line+"' and plant_code = '"+pl+"'), reporting_to = "+RA+" where gen_id ='"+gen_id+"'  ")
+    .query("update trainee_apln set dept_slno = (select top 1 dept_slno from department where dept_name = '"+dept+"' and plant_code = '"+pl+"'), line_code = (select top 1 line_code from mst_line where line_name = '"+line+"' and plant_code = '"+pl+"'), reporting_to = "+RA+" where apln_slno ='"+gen_id+"'  ")
 
   res.send({message: 'success'})
   }
@@ -2756,16 +2756,31 @@ app.post('/getonboard', async(req,res)=>
   var pool =await db.poolPromise
 
   var apln_slno = req.body.apln_slno
+  var readonly = req.body.readonly
+  console.log(req.body)
 
-  console.log("select t.*, d.dept_name, l.line_name, e.emp_name from trainee_apln t JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code join employees on t.reporting_to = e.empl_slno where apln_slno = '"+apln_slno+"' ")
+  var plant = await pool.request()
+    .query("select plant_code from trainee_apln where apln_slno = '"+apln_slno+"' ")
 
-  var details = await pool.request()
-  .query("select  t.*, d.dept_name, l.line_name, e.emp_name, ds.desig_name from trainee_apln t join designation ds on t.desig_slno = ds.slno JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code join employees e on t.reporting_to = e.empl_slno where apln_slno = '"+apln_slno+"' ")
+  console.log("select  t.*, d.dept_name, l.line_name, e.emp_name, ds.desig_name from trainee_apln t join designation ds on t.desig_slno = ds.slno JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code join employees e on t.reporting_to = e.empl_slno where apln_slno = '"+apln_slno+"' ")
+
+  if(readonly)
+  {
+    var details = await pool.request()
+    .query("select  t.*, d.dept_name, l.line_name, e.emp_name, ds.desig_name from trainee_apln t join designation ds on t.desig_slno = ds.slno JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code join employees e on t.reporting_to = e.empl_slno where apln_slno = '"+apln_slno+"' ")  
+  }
+  else
+  {
+    console.log("select plant_code , ifsc_code, bank_name, bank_account_number, apln_slno from trainee_apln where apln_slno = '"+apln_slno+"' ")  
+    var details = await pool.request()
+    .query("select plant_code , ifsc_code, bank_name, bank_account_number, apln_slno from trainee_apln where apln_slno = '"+apln_slno+"' ")  
+
+  }
 
   var details2 = await pool.request()
   .query("select o.oprn_desc from periodical_eval_operations p join operations o on p.oprn_slno = o.oprn_slno where apln_slno = '"+apln_slno+"' ")
 
-  var plantcode = details['recordset'][0].plant_code
+  var plantcode = plant['recordset'][0].plant_code
 
   console.log(plantcode)
 
