@@ -24,6 +24,18 @@ var storage = multer.diskStorage({
   }
 });
 
+var q_bank = multer.diskStorage({ 
+  
+  destination: function(req, file, cb) { 
+     cb(null, './qbank');    
+  }, 
+  filename: function (req, file, cb) { 
+     cb(null ,file.originalname);   
+  }
+});
+
+const qbank = multer({storage: q_bank}).single('file')
+
 const upload = multer({storage: storage}).single('file')
 
 app.use('/uploads',express.static('uploads'))
@@ -165,15 +177,11 @@ app.post('/traineelogin', async(req, res)=>{
   var result = await pool.request()
     .input('trainee_idno', User_Name)
     .input('pass', Password)
-    .query("select * from trainee_apln where trainee_idno=@trainee_idno and temp_password=@pass and apln_status = 'APPROVED' ")
-    console.log("select apln_slno from trainee_apln where trainee_idno='"+User_Name+"' and temp_password='"+Password+"' and apln_status = 'APPROVED' ")
+    .query("select * from trainee_apln where trainee_idno=@trainee_idno and temp_password=@pass ")
+    console.log("select apln_slno from trainee_apln where trainee_idno='"+User_Name+"' and temp_password='"+Password+"' ")
   var result2 = await pool.request()
     .input('trainee_idno', User_Name)
-    .query("select apln_slno from trainee_apln where trainee_idno=@trainee_idno and apln_status ='APPROVED' ")
-
-  var result3 = await pool.request()
-    .input('trainee_idno', User_Name)
-    .query("select apln_slno from trainee_apln where trainee_idno=@trainee_idno and apln_status <> 'APPROVED' ")
+    .query("select apln_slno from trainee_apln where trainee_idno=@trainee_idno")
 
   if(result['recordset'].length > 0)
   {
@@ -186,10 +194,6 @@ app.post('/traineelogin', async(req, res)=>{
     if(result2['recordset'].length == 0 && result['recordset'].length == 0)
     {
       res.send({'status': 'wrong_user'})
-    }
-    else if(result3['recordset'].length > 0)
-    {
-      res.send({'status': 'wrong_apln'})
     }
     else
     {
@@ -1314,7 +1318,7 @@ app.post('/posttest', async(req,res)=>
   var apln_slno = username.split('.')[2]
   var module = req.body[0].module
   module = module.split('.')[1]
-  var slno = module.split('.')[0]
+  var slno = req.body[0].module.split('.')[0]
   console.log(details)
   var pool = await db.poolPromise
   var i = 1
@@ -1329,12 +1333,22 @@ app.post('/posttest', async(req,res)=>
   .query("update test_result_summary set submission_date = CURRENT_TIMESTAMP, posttraining_score = '"+details[0].curr_total+"', posttraining_pf = '"+details[0].pf+"', posttraining_percent = '"+details[0].percent+"'where trainee_idno = '"+details[0].username+"' ")
 
   var final = await pool.request()
-    .query("select slno from trg_modules where plant_code= (select plant_code from trainee_apln where trainee_idno = '"+username+"') ")
+    .query("select slno, pass_criteria from trg_modules where plant_code= (select plant_code from trainee_apln where trainee_idno = '"+username+"') ")
 
-  if(final.rowsAffected == slno)
+  if(final['recordset'].length == slno)
   {
+    console.log('success')
     var last = await pool.request()
     .query("update trainee_apln set test_status = 'COMPLETED' where trainee_idno = '"+username+"' ")
+  }
+
+  if(final['recordset'].length == slno)
+  {
+    if(details[0].curr_total >= final['recordset'][final['recordset'].length-1].pass_criteria)
+    {
+      var last = await pool.request()
+      .query("update trainee_apln set test_status = 'COMPLETED' where trainee_idno = '"+username+"' ")
+    }
   }
 
   res.send({'message':'success'})
@@ -1430,11 +1444,11 @@ app.post('/get_test_status', async(req,res)=>
     .input('idno', idno)
     .query("select posttraining_score from ontraining_evalation where module_name = @module_name and trainee_idno = @idno ")
 
-  if(result.rowsAffected == 0)
+  if(result['recordset'].length == 0)
   {
     res.send({status:'pre-test'})
   }
-  else if(result.rowsAffected == 1)
+  else if(result['recordset'].length == 1)
   {
     if(result['recordset'][0].posttraining_score == null)
     {
@@ -1519,11 +1533,13 @@ app.post('/offlineUpload', async(req,res)=>
     .query("update test_result_summary set submission_date = CURRENT_TIMESTAMP, posttraining_score = '"+score+"', posttraining_pf = '"+pf+"', posttraining_percent = '"+percent+"'where trainee_idno = '"+username+"' ")
   
     var final = await pool.request()
-    .query(" WITH cte AS (SELECT module_name, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum FROM trg_modules where plant_code = (select plant_code from trainee_apln where trainee_idno = '"+username+"') ) SELECT * FROM cte; ")
+    .query(" WITH cte AS (SELECT module_name, pass_criteria, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum FROM trg_modules where plant_code = (select plant_code from trainee_apln where trainee_idno = '"+username+"') ) SELECT * FROM cte; ")
 
-  if(final['recordset'][final.rowsAffected-1].module_name == module)
+    console.log(final['recordset'][final['recordset'].length-1].module_name, module, score)
+
+  if(final['recordset'][final['recordset'].length-1].module_name == module)
   {
-    if(score == final['recordset'][final.rowsAffected-1].pass_criteria)
+    if(score >= final['recordset'][final['recordset'].length-1].pass_criteria)
     {
       var last = await pool.request()
       .query("update trainee_apln set test_status = 'COMPLETED' where trainee_idno = '"+username+"' ")
@@ -2655,16 +2671,19 @@ app.post('/onboard', async(req, res)=>{
     var pl = req.body.plantcode
     var select = req.body.select
 
+    console.log("select * from trainee_apln where apln_status = 'APPROVED' and test_status = 'COMPLETED' and plant_code = '"+pl+"' ")
+
+
     var pool = await db.poolPromise
     if(select == 'TRAINING COMPLETED')
     {
       var result = await pool.request()
-      .query("select * from trainee_apln where apln_status = 'APPROVED' and test_status = 'completed' and plant_code = '"+pl+"' order by doj desc ")
+      .query("select * from trainee_apln where apln_status = 'APPROVED' and test_status = 'COMPLETED' and plant_code = '"+pl+"' order by apln_slno desc ")
     }
     else
     {
       var result = await pool.request()
-      .query("select * from trainee_apln where apln_status = 'APPOINTED' and plant_code = '"+pl+"' ")
+      .query("select * from trainee_apln where apln_status = 'APPOINTED' and plant_code = '"+pl+"' order by apln_slno desc ")
     }
 
     res.send(result['recordset'])
