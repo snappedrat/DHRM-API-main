@@ -13,6 +13,64 @@ const { response } = require('express');
 const res = require('express/lib/response');
 let glob = 0;
 const multer = require('multer');
+const fs = require("fs");
+
+var q_bank = multer.diskStorage({ 
+  
+  destination: function(req, file, cb) { 
+    const folder = "qbank";
+    if (!fs.existsSync(folder)) {
+      fs.mkdirSync(folder);
+    }
+    cb(null, folder); 
+  }, 
+  filename: function (req, file, cb) { 
+     cb(null ,file.originalname);   
+  }
+});
+
+var plant_ = multer.diskStorage({ 
+  
+  destination: function(req, file, cb) { 
+    const folder = "plant";
+    if (!fs.existsSync(folder)) {
+      fs.mkdirSync(folder);
+    }
+    cb(null, folder); 
+  }, 
+  filename: function (req, file, cb) { 
+     cb(null ,file.originalname);   
+  }
+});
+
+var offline_test_ = multer.diskStorage({ 
+  
+  destination: function(req, file, cb) { 
+    const folder = "offline_test";
+    if (!fs.existsSync(folder)) {
+      fs.mkdirSync(folder);
+    }
+    cb(null, folder); 
+  }, 
+  filename: function (req, file, cb) { 
+     cb(null ,file.originalname);   
+  }
+});
+
+var skill_dev_ = multer.diskStorage({ 
+  
+  destination: function(req, file, cb) { 
+    const folder = "skill_dev";
+    if (!fs.existsSync(folder)) {
+      fs.mkdirSync(folder);
+    }
+    cb(null, folder); 
+  }, 
+  filename: function (req, file, cb) { 
+     cb(null ,file.originalname);   
+  }
+});
+
 
 var storage = multer.diskStorage({ 
   
@@ -24,21 +82,17 @@ var storage = multer.diskStorage({
   }
 });
 
-var q_bank = multer.diskStorage({ 
-  
-  destination: function(req, file, cb) { 
-     cb(null, './qbank');    
-  }, 
-  filename: function (req, file, cb) { 
-     cb(null ,file.originalname);   
-  }
-});
-
 const qbank = multer({storage: q_bank}).single('file')
-
 const upload = multer({storage: storage}).single('file')
+const plant = multer({storage: plant_}).single('file')
+const offline_test = multer({storage: offline_test_}).single('file')
+const skill_dev = multer({storage: skill_dev_}).single('file')
 
 app.use('/uploads',express.static('uploads'))
+app.use('/qbank',express.static('qbank'))
+app.use('/plant',express.static('plant'))
+app.use('/skill_dev',express.static('skill_dev'))
+app.use('/offline_test',express.static('offline_test'))
 
 app.post("/image", upload , async(req, res) => {
   
@@ -848,7 +902,7 @@ app.post('/searchfilter', async(req,res)=>
   colvalue = colvalue.trim()
 
   var result = await pool.request()
-    .query("select t.created_dt, t.fullname, t.fathername, t.birthdate, t.mobile_no1, t.aadhar_no, t.apln_status, m.company_name from trainee_apln as t left join master_company as m on t.company_code = m.company_code where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND "+colname+"= '"+colvalue+"' AND plant_code = '"+plantcode+"' ")
+    .query("select t.created_dt, t.fullname, t.fathername, t.birthdate, t.mobile_no1, t.aadhar_no, t.apln_status, m.company_name from trainee_apln as t left join master_company as m on t.company_code = m.company_code where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND "+colname+" like '"+colvalue+"%' AND plant_code = '"+plantcode+"' ")
     res.send(result['recordset'])
 }
 catch(err)
@@ -973,11 +1027,16 @@ app.post('/getdataforid', async(req,res)=>{
   var result = await r.request()
     .query("select addr from plant where plant_code = (select plant_code from trainee_apln where mobile_no1 = '"+mobile+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ) ")
   var result2 = await r.request()
-    .query("select fullname,fathername, trainee_idno,dept_slno, permanent_address, emergency_name, emergency_rel, other_files6 from trainee_apln where mobile_no1 = '"+mobile+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ")
+    .query("select fullname,fathername, trainee_idno,dept_slno, permanent_address, emergency_name, emergency_rel, other_files6, mobile_no2, plant_code from trainee_apln where mobile_no1 = '"+mobile+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ")
     object = result2['recordset']
+  var result3 = await r.request()
+    .query("select plant_sign from plant where plant_code = (select plant_code from trainee_apln where mobile_no1 = '"+mobile+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ) ")
+
 
     if(result2['recordset'].length !=0)
       object[0].addr = result['recordset'][0].addr
+    if(result3['recordset'].length !=0)
+    object[0].plant_sign = result3['recordset'][0].plant_sign
     res.send(object)
 }
 catch(err)
@@ -1335,12 +1394,6 @@ app.post('/posttest', async(req,res)=>
   var final = await pool.request()
     .query("select slno, pass_criteria from trg_modules where plant_code= (select plant_code from trainee_apln where trainee_idno = '"+username+"') ")
 
-  if(final['recordset'].length == slno)
-  {
-    console.log('success')
-    var last = await pool.request()
-    .query("update trainee_apln set test_status = 'COMPLETED' where trainee_idno = '"+username+"' ")
-  }
 
   if(final['recordset'].length == slno)
   {
@@ -1398,8 +1451,24 @@ catch(err)
 
 })
 
-app.post('/questionbankupload', upload , async(req,res)=>
+app.post('/questionbankupload', qbank , async(req,res)=>
 {
+  console.log(req.body)
+  res.send({'message':'success'})
+})
+app.post('/plantupload', plant , async(req,res)=>
+{
+  console.log(req.body)
+  res.send({'message':'success'})
+})
+app.post('/offline_test_upload', offline_test , async(req,res)=>
+{
+  console.log(req.body)
+  res.send({'message':'success'})
+})
+app.post('/skill_dev_upload', skill_dev , async(req,res)=>
+{
+  console.log(req.body)
   res.send({'message':'success'})
 })
 
@@ -1860,7 +1929,6 @@ app.post('/deleteplant', async(req,res)=>
 
 app.post('/updateplant', async(req,res)=>{
   try{
-
     var plant_code = req.body.plant_code
     var plant_name = req.body.plant_name
     var pl = req.body.pl
@@ -1868,12 +1936,12 @@ app.post('/updateplant', async(req,res)=>{
     var location = req.body.locatn
     var personal_area = req.body.personal_area
     var payroll_area = req.body.payroll_area
-    var company_code = req.body.company_code
+    var plant_sign = req.body.plant_sign
 
     var pool =await db.poolPromise
-    console.log("update plant set plant_code = '"+plant_code+"' , plant_name='"+plant_name+"', pl = '"+pl+"', addr = '"+address+"', locatn = '"+location+"', personal_area = "+personal_area+", payroll_area = "+payroll_area+", company_code = '"+company_code+"' where  plant_code='"+plant_code+"'")
+    console.log("update plant set plant_name='"+plant_name+"', pl = '"+pl+"', addr = '"+address+"', locatn = '"+location+"', personal_area = "+personal_area+", payroll_area = "+payroll_area+" where  plant_code='"+plant_code+"'")
         var result = await pool.request()
-          .query("update plant set plant_code = '"+plant_code+"' , plant_name='"+plant_name+"', pl = '"+pl+"', addr = '"+address+"', locatn = '"+location+"', personal_area = "+personal_area+", payroll_area = "+payroll_area+", company_code = '"+company_code+"' where  plant_code='"+plant_code+"'")
+          .query("update plant set plant_name='"+plant_name+"', pl = '"+pl+"',plant_sign = '"+plant_sign+"', addr = '"+address+"', locatn = '"+location+"', personal_area = "+personal_area+", payroll_area = "+payroll_area+" where  plant_code='"+plant_code+"'")
           res.send({'message': 'updated'})
   }catch(err){
     console.log(err)
