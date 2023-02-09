@@ -70,6 +70,19 @@ var skill_dev_ = multer.diskStorage({
      cb(null ,file.originalname);   
   }
 });
+var filedrop_ = multer.diskStorage({ 
+  
+  destination: function(req, file, cb) { 
+    const folder = "filedrop";
+    if (!fs.existsSync(folder)) {
+      fs.mkdirSync(folder);
+    }
+    cb(null, folder); 
+  }, 
+  filename: function (req, file, cb) { 
+     cb(null ,file.originalname);   
+  }
+});
 
 
 var storage = multer.diskStorage({ 
@@ -87,12 +100,14 @@ const upload = multer({storage: storage}).single('file')
 const plant = multer({storage: plant_}).single('file')
 const offline_test = multer({storage: offline_test_}).single('file')
 const skill_dev = multer({storage: skill_dev_}).single('file')
+const filedrop = multer({storage: filedrop_}).single('file')
 
 app.use('/uploads',express.static('uploads'))
 app.use('/qbank',express.static('qbank'))
 app.use('/plant',express.static('plant'))
 app.use('/skill_dev',express.static('skill_dev'))
 app.use('/offline_test',express.static('offline_test'))
+app.use('/filedrop',express.static('filedrop'))
 
 app.post("/image", upload , async(req, res) => {
   
@@ -1467,6 +1482,11 @@ app.post('/offline_test_upload', offline_test , async(req,res)=>
   res.send({'message':'success'})
 })
 app.post('/skill_dev_upload', skill_dev , async(req,res)=>
+{
+  console.log(req.body)
+  res.send({'message':'success'})
+})
+app.post('/filedrop', filedrop , async(req,res)=>
 {
   console.log(req.body)
   res.send({'message':'success'})
@@ -3202,7 +3222,7 @@ app.get('/test-summary', async(req,res)=>
 }
 )
 
-app.post('/filedrop', async(req,res)=>{
+app.post('/getfiledrop', async(req,res)=>{
 
   var apln_slno = req.body.apln_slno
   
@@ -3210,7 +3230,7 @@ app.post('/filedrop', async(req,res)=>{
   {
   let pool = await db.poolPromise
   var result = await pool.request()
-    .query("select * from trainee_apln where apln_slno = '"+apln_slno+"' ")
+    .query("EXEC FILEDROP @apln_slno = '"+apln_slno+"' ")
   res.send(result['recordset'])
 }
 catch(err)
