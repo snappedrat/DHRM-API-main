@@ -110,7 +110,7 @@ app.use('/offline_test',express.static('offline_test'))
 app.use('/filedrop',express.static('filedrop'))
 
 app.post("/image", upload , async(req, res) => {
-try{
+  
   var user = await getpool()
     res.send({'Message':req.body,"file": req.file})
 
@@ -119,10 +119,7 @@ try{
     var company = req.body.company
     var fileno = req.body.fileno
     user.query("update trainee_apln set other_files"+fileno+" = '"+name+"' where mobile_no1= '"+mobile+"' and company_code = (select company_code from master_company where company_name = '"+company+"')  "  )
-}catch(err){
-  console.log(err)
-  response.send({"message":"Failure"})
-}
+
 });
 
 const cors = require('cors');
