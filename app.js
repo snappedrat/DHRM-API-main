@@ -1724,12 +1724,12 @@ app.post('/updatemodule', async(req,res)=>{
 app.post('/testSummary', async(req,res)=>{
   try
   {
-  console.log("select fullname, trainee_idno,submission_date, sum(pretraining_percent)/count(*) as sum1,  sum(posttraining_percent)/count(*) as sum2 from test_result_summary where submission_date >= '"+details.start+"' and submission_date <= '"+details.end+"' and plant_code = '"+details.plantcode+"' group by fullname, trainee_idno, submission_date  ")
+  console.log("select fullname, trainee_idno,submission_date, sum(pretraining_percent)/count(*) as sum1,  sum(posttraining_percent)/count(*) as sum2 from test_result_summary where submission_date >= '"+details.start+"' and plant_code = '"+details.plantcode+"' group by fullname, trainee_idno, submission_date  ")
 
   details = req.body
   var pool = await db.poolPromise
   var result = await pool.request()
-  .query("select fullname, trainee_idno,submission_date, sum(pretraining_percent)/count(*) as sum1,  sum(posttraining_percent)/count(*) as sum2 from test_result_summary where submission_date >= '"+details.start+"' and submission_date <= '"+details.end+"' and plant_code = '"+details.plantcode+"' group by fullname, trainee_idno, submission_date  ")
+  .query("select fullname, trainee_idno,submission_date, sum(pretraining_percent)/count(*) as sum1,  sum(posttraining_percent)/count(*) as sum2 from test_result_summary where submission_date >= '"+details.start+"' and plant_code = '"+details.plantcode+"' group by fullname, trainee_idno, submission_date  ")
   res.send(result['recordset'])
 }
 catch(err)
