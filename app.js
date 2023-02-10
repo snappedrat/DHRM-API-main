@@ -2909,12 +2909,12 @@ app.post('/getonboard', async(req,res)=>
   var plant = await pool.request()
     .query("select plant_code from trainee_apln where apln_slno = '"+apln_slno+"' ")
 
-  console.log("select  t.*, d.dept_name, l.line_name, e.emp_name, ds.desig_name from trainee_apln t join designation ds on t.desig_slno = ds.slno JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code join employees e on t.reporting_to = e.empl_slno where apln_slno = '"+apln_slno+"' ")
+  console.log("select  t.*, d.dept_name, l.line_name, e.emp_name from trainee_apln t join designation ds on t.desig_slno = ds.slno JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code join employees e on t.reporting_to = e.empl_slno where apln_slno = '"+apln_slno+"' ")
 
   if(readonly)
   {
     var details = await pool.request()
-    .query("select  t.*, d.dept_name, l.line_name, e.emp_name, ds.desig_name from trainee_apln t JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code join employees e on t.reporting_to = e.empl_slno where apln_slno = '"+apln_slno+"' ")  
+    .query("select  t.*, d.dept_name, l.line_name, e.emp_name from trainee_apln t JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code join employees e on t.reporting_to = e.empl_slno where apln_slno = '"+apln_slno+"' ")  
   }
   else
   {
