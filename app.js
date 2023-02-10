@@ -1724,6 +1724,8 @@ app.post('/updatemodule', async(req,res)=>{
 app.post('/testSummary', async(req,res)=>{
   try
   {
+  console.log("select fullname, trainee_idno,submission_date, sum(pretraining_percent)/count(*) as sum1,  sum(posttraining_percent)/count(*) as sum2 from test_result_summary where submission_date >= '"+details.start+"' and submission_date <= '"+details.end+"' and plant_code = '"+details.plantcode+"' group by fullname, trainee_idno, submission_date  ")
+
   details = req.body
   var pool = await db.poolPromise
   var result = await pool.request()
@@ -2680,6 +2682,8 @@ app.post('/evaluationdays', async(req,res)=>{
   var start = req.body.status.split('-')[0]
   var end = req.body.status.split('-')[1]
   var id = req.body.id
+  var emp_id = req.body.emp_id
+  var filter = req.body.filter
 
   if(id==2)
   {
@@ -2705,26 +2709,42 @@ app.post('/evaluationdays', async(req,res)=>{
       count = 3
   }
   }
+  console.log( " EXEC POST_EVALUATION_LIST_SUP @start= "+start+" , @end = "+end+" , @count = "+count+", @emp_id = '"+emp_id+"' ")  
 
   if (id==2)
   {
     console.log(1)
     var result = await pool.request()
-    .query(" EXEC POST_EVALUATION_LIST_SUP @start= "+start+" , @end = "+end+" , @count = "+count+" ")
+    .query(" EXEC POST_EVALUATION_LIST_SUP @start= "+start+" , @end = "+end+" , @count = "+count+", @emp_id = '"+emp_id+"' ")
 
   }
   else if ((id==3 && count == 0) | (id==1 && count == 0) )
   {
     console.log(2)
-    var result = await pool.request()
-    .query("select t.*,DATEDIFF(day, TRY_PARSE(t.doj AS DATE USING 'en-US'), GETDATE()) as diff, d.dept_name, l.line_name from trainee_apln t JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code  where  apln_status = 'APPOINTED'  and doj > '2022-05-09' and test_status = 'completed' and apln_slno not in (select apln_slno from post_evaluation) and apln_status = 'APPOINTED' ")
+    if(filter == undefined || filter == 'undefined' || filter == 'PENDING')
+    {
+      var result = await pool.request()
+      .query("select t.*,DATEDIFF(day, TRY_PARSE(t.doj AS DATE USING 'en-US'), GETDATE()) as diff, d.dept_name, l.line_name from trainee_apln t JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code  where  apln_status = 'APPOINTED' and test_status = 'completed' and t.doj > '2022-12-02' and apln_slno not in (select apln_slno from post_evaluation) and apln_status = 'APPOINTED' ")  
+    }
+    else if(filter == 'APPROVED')
+    {
+      var result = await pool.request()
+      .query(" exec POST_EVALUATION_LIST_HR_FILTER @start="+start+" , @end = "+end+", @count="+count+" ")
+    }
   }
 
   else
   {
     console.log(3, count)
-    var result = await pool.request()
-    .query(" EXEC POST_EVALUATION_LIST_HR @start= "+start+" , @end = "+end+" , @count = "+count+" ")
+    if(filter == undefined || filter == 'undefined' || filter == 'PENDING')
+    {
+      var result = await pool.request()
+      .query(" EXEC POST_EVALUATION_LIST_HR @start= "+start+" , @end = "+end+" , @count = "+count+" ")    }
+    else if(filter == 'APPROVED')
+    {
+      var result = await pool.request()
+      .query(" EXEC POST_EVALUATION_LIST_HR @start= "+start+" , @end = "+end+" , @count = "+count+" ")    }
+
   }
   
   res.send(result['recordset'])
@@ -2894,7 +2914,7 @@ app.post('/getonboard', async(req,res)=>
   if(readonly)
   {
     var details = await pool.request()
-    .query("select  t.*, d.dept_name, l.line_name, e.emp_name, ds.desig_name from trainee_apln t join designation ds on t.desig_slno = ds.slno JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code join employees e on t.reporting_to = e.empl_slno where apln_slno = '"+apln_slno+"' ")  
+    .query("select  t.*, d.dept_name, l.line_name, e.emp_name, ds.desig_name from trainee_apln t JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code join employees e on t.reporting_to = e.empl_slno where apln_slno = '"+apln_slno+"' ")  
   }
   else
   {
@@ -3033,6 +3053,10 @@ app.post('/eval_form', async(req, res)=>
       .query("update periodical_eval_dept set new_dept_slno = (select top 1 dept_slno from department where dept_name = '"+department+"') , new_line_code = (select top 1 line_code from mst_line where line_name = '"+line+"') where apln_slno = '"+apln_slno+"' ")
       var result3 = await pool.request()
       .query("update periodical_eval_level set new_level = '"+new_skill+"' where apln_slno = '"+apln_slno+"'")
+
+      var result5 = await pool.request()
+      .query("update trainee_apln set dept_slno = (select new_dept_slno from periodical_eval_dept where apln_slno = '"+apln_slno+"'), line_code = (select top 1 line_code from mst_line where line_name = '"+line+"') where apln_slno = '"+apln_slno+"'")
+
 
       for(var i=0; i< process_trained.length; i++)
       {
