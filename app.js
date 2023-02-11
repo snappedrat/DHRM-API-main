@@ -118,7 +118,7 @@ app.post("/image", upload , async(req, res) => {
     var mobile = req.body.mobile
     var company = req.body.company
     var fileno = req.body.fileno
-    user.query("update trainee_apln set other_files"+fileno+" = '"+name+"' where mobile_no1= '"+mobile+"' and company_code = (select company_code from master_company where company_name = '"+company+"')  "  )
+    user.query("update trainee_apln set other_files"+fileno+" = '"+name+"' where mobile_no1= '"+mobile+"' and company_code = (select company_code from master_company where sno = "+company+")  "  )
 
 });
 
@@ -424,9 +424,9 @@ app.post('/basicforms', async(req,res,err)=>{
     if(title == null)
       title_col = ''
 
-    console.log("update trainee_apln set "+title_col+" fullname = '"+fullname+"', permanent_address = '"+permanent+"' ,present_address = '"+permanent+"' ,first_name = '"+fname+"' ,last_name = '"+lname+"',fathername = '"+father+"', aadhar_no = '"+aadhar+"', birthdate = '"+dob+"' ,height = '"+height+"',weight = '"+weight+"' , blood_group = '" +bg+"' , dose1_dt = '"+dose1+"',dose2_dt = '"+dose2+"' ,gender = '"+gender+"',nationality = '"+nation+"',religion = '"+religion+"',  city = '"+city+"', state_name = '"+state+"', birth_place = '"+bp+"', pincode = '"+pc+"', ident_mark1 = '"+idm1+"', ident_mark2 = '"+idm2+"',  marital_status = '"+martial+"',physical_disability = '"+phy_disable+"' where mobile_no1 = '"+mobilenumber+"'  and company_code = (select company_code from master_company where company_name = '"+company+"') ")
+    console.log("update trainee_apln set "+title_col+" fullname = '"+fullname+"', permanent_address = '"+permanent+"' ,present_address = '"+permanent+"' ,first_name = '"+fname+"' ,last_name = '"+lname+"',fathername = '"+father+"', aadhar_no = '"+aadhar+"', birthdate = '"+dob+"' ,height = '"+height+"',weight = '"+weight+"' , blood_group = '" +bg+"' , dose1_dt = '"+dose1+"',dose2_dt = '"+dose2+"' ,gender = '"+gender+"',nationality = '"+nation+"',religion_sl = (select slno from religion where religion_name = '"+religion+"') , religion= '"+religion+"',  city = '"+city+"', state_name = '"+state+"', birth_place = '"+bp+"', pincode = '"+pc+"', ident_mark1 = '"+idm1+"', ident_mark2 = '"+idm2+"',  marital_status = '"+martial+"',physical_disability = '"+phy_disable+"' where mobile_no1 = '"+mobilenumber+"'  and company_code = (select company_code from master_company where sno = "+company+") ")
   var result = await pool.request()
-    .query("update trainee_apln set "+title_col+" fullname = '"+fullname+"', permanent_address = '"+permanent+"' ,present_address = '"+permanent+"' ,first_name = '"+fname+"' ,last_name = '"+lname+"',fathername = '"+father+"', aadhar_no = '"+aadhar+"', birthdate = '"+dob+"' ,height = '"+height+"',weight = '"+weight+"' ,  blood_group = '" +bg+"' , dose1_dt = '"+dose1+"',dose2_dt = '"+dose2+"' ,gender = '"+gender+"',nationality = '"+nation+"',religion = '"+religion+"',  city = '"+city+"', state_name = '"+state+"', birth_place = '"+bp+"', pincode = '"+pc+"', ident_mark1 = '"+idm1+"', ident_mark2 = '"+idm2+"',  marital_status = '"+martial+"',physical_disability = '"+phy_disable+"' where mobile_no1 = '"+mobilenumber+"'  and company_code = (select company_code from master_company where company_name = '"+company+"')  ")
+    .query("update trainee_apln set "+title_col+" fullname = '"+fullname+"', permanent_address = '"+permanent+"' ,present_address = '"+permanent+"' ,first_name = '"+fname+"' ,last_name = '"+lname+"',fathername = '"+father+"', aadhar_no = '"+aadhar+"', birthdate = '"+dob+"' ,height = '"+height+"',weight = '"+weight+"' ,  blood_group = '" +bg+"' , dose1_dt = '"+dose1+"',dose2_dt = '"+dose2+"' ,gender = '"+gender+"',nationality = '"+nation+"',religion_sl = (select slno from religion where religion_name = '"+religion+"'),religion= '"+religion+"',  city = '"+city+"', state_name = '"+state+"', birth_place = '"+bp+"', pincode = '"+pc+"', ident_mark1 = '"+idm1+"', ident_mark2 = '"+idm2+"',  marital_status = '"+martial+"',physical_disability = '"+phy_disable+"' where mobile_no1 = '"+mobilenumber+"'  and company_code = (select company_code from master_company where sno = "+company+")  ")
   res.send({message:'success'})
 }
 
@@ -450,7 +450,7 @@ app.post('/bankforms',async(req,res)=>{
     var company = req.body.company
     
     var result = await pool.request()
-      .query("update trainee_apln set bank_account_number = '"+account+"', ifsc_code = '"+ifsc+"', bank_name = '"+bankName+"' where mobile_no1 = '"+mobileNumber+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ")
+      .query("update trainee_apln set bank_account_number = '"+account+"', ifsc_code = '"+ifsc+"', bank_name = '"+bankName+"' where mobile_no1 = '"+mobileNumber+"' and company_code = (select company_code from master_company where sno = "+company+") ")
     res.send({message: 'success'})
   }
   catch(err)
@@ -544,35 +544,35 @@ app.post('/traineeformdata', async(req,res)=>
   var pool =await db.poolPromise
 
   var result = await pool.request()
-  .query("select * from trainee_apln where mobile_no1 = '"+mobileNumber+"' and company_code = (select company_code from master_company where company_name = '"+companyname+"') ");
+  .query("select * from trainee_apln where mobile_no1 = '"+mobileNumber+"' and company_code = (select company_code from master_company where sno = "+companyname+") ");
   
     if(result['recordset'].length == 0 )
       {
         console.log("adding form......")
-        console.log("insert into trainee_apln (mobile_no1, plant_code, created_dt, for_quality, temp_password, apln_status, company_code) values('"+mobileNumber+"' ,(select plant_code from plant where plant_name = '"+plantname+"'), CAST(getdate() AS date), 0, '"+pass+"', 'NEW INCOMPLETE', (select company_code from master_company where company_name = '"+companyname+"'))")
+        console.log("insert into trainee_apln (mobile_no1, plant_code, created_dt, for_quality, temp_password, apln_status, company_code) values('"+mobileNumber+"' ,(select plant_code from plant where plant_name = '"+plantname+"'), CAST(getdate() AS date), 0, '"+pass+"', 'NEW INCOMPLETE', (select company_code from master_company where sno = "+companyname+"))")
         var result2 =await pool.request()
-        result2.query("insert into trainee_apln (mobile_no1, plant_code, created_dt, for_quality, temp_password, apln_status, company_code) values('"+mobileNumber+"' ,(select plant_code from plant where plant_name = '"+plantname+"'), CAST(getdate() AS date), 0, '"+pass+"', 'NEW INCOMPLETE', (select company_code from master_company where company_name = '"+companyname+"'))");
+        result2.query("insert into trainee_apln (mobile_no1, plant_code, created_dt, for_quality, temp_password, apln_status, company_code) values('"+mobileNumber+"' ,(select plant_code from plant where plant_name = '"+plantname+"'), CAST(getdate() AS date), 0, '"+pass+"', 'NEW INCOMPLETE', (select company_code from master_company where sno = "+companyname+"))");
         status.status = 'newform';
         res.send(status);  
       }
     else if(result['recordset'].length == 1)
     {
 
-      if(result['recordset'][0]?.apln_status == 'PENDING' ||result['recordset'][0]?.apln_status == 'SUBMITTED' ||result['recordset'][0]?.apln_status == 'APPROVED'||result['recordset'][0]?.apln_status == 'REJECTED'||result['recordset'][0]?.apln_status == 'APPOINTED')
+      if(result['recordset'][0]?.apln_status != 'NEW INCOMPLETE')
       {
       console.log("alreadyyyy.......")
       status.status = 'registered';
       res.send(status);
       }
-      else if((result['recordset'][0]?.apln_status == 'NEW INCOMPLETE'))
+      else if(result['recordset'][0]?.apln_status == 'NEW INCOMPLETE')
         {
-          console.log("update trainee_apln set plant_code = (select plant_code from plant where plant_name = '"+plantname+"'), company_code = (select company_code from master_company where company_name = '"+companyname+"') where mobile_no1 = '"+mobileNumber+"' and ")
           var update = await pool.request()
           .query("update trainee_apln set plant_code = (select plant_code from plant where plant_name = '"+plantname+"') where mobile_no1 = '"+mobileNumber+"' and apln_slno = "+result['recordset'][0].apln_slno+" ")
           status.status = 'incomplete';
           res.send(status);
         }
     }
+    console.log(result['recordset'].length, result['recordset'][0]?.apln_status == 'NEW INCOMPLETE', result['recordset'][0]?.apln_status)
   }
   catch(err)
   {
@@ -592,7 +592,7 @@ app.post('/emergency',async(req,res)=>{
     var mobilenumber = req.body.mobilenumber;
     var company = req.body.company
     var result = await pool.request()
-      .query("  update trainee_apln set emergency_name='"+contactName+"',mobile_no2='"+contactNumber+"',emergency_rel='"+relations+"' where mobile_no1 = '"+mobilenumber+"'  and company_code = (select company_code from master_company where company_name = '"+company+"') ")
+      .query("  update trainee_apln set emergency_name='"+contactName+"',mobile_no2='"+contactNumber+"',emergency_rel='"+relations+"' where mobile_no1 = '"+mobilenumber+"'  and company_code = (select company_code from master_company where sno = "+company+") ")
     res.send({message: 'success'})
     }
     catch(err)
@@ -643,17 +643,17 @@ try
   else
   {
   var result1 = await pool.request()
-  .query("  update trainee_apln set lang1_name = '"+ lang1.language+"' , lang1_speak = '"+ lang1.speak +"', lang1_read = '"+ lang1.read +"', lang1_write = '"+ lang1.write +"', lang1_understand = '"+ lang1.understand +"', lang1_mothertounge = '"+ lang1.mothertongue +"' where mobile_no1 = '"+ lang1.mobile+"' and company_code = (select company_code from master_company where company_name = '"+lang1.company+"') ")
+  .query("  update trainee_apln set lang1_name = '"+ lang1.language+"' , lang1_speak = '"+ lang1.speak +"', lang1_read = '"+ lang1.read +"', lang1_write = '"+ lang1.write +"', lang1_understand = '"+ lang1.understand +"', lang1_mothertounge = '"+ lang1.mothertongue +"' where mobile_no1 = '"+ lang1.mobile+"' and company_code = (select company_code from master_company where sno = "+lang1.company+") ")
   var result2 = await pool.request()
-  .query("  update trainee_apln set lang2_name = '"+ lang2.language+"' , lang2_speak = '"+ lang2.speak +"', lang2_read = '"+ lang2.read +"', lang2_write = '"+ lang2.write +"', lang2_understand = '"+ lang2.understand +"', lang2_mothertounge = '"+ lang2.mothertongue +"' where mobile_no1 = '"+ lang1.mobile+"'  and company_code = (select company_code from master_company where company_name = '"+lang1.company+"') ")
+  .query("  update trainee_apln set lang2_name = '"+ lang2.language+"' , lang2_speak = '"+ lang2.speak +"', lang2_read = '"+ lang2.read +"', lang2_write = '"+ lang2.write +"', lang2_understand = '"+ lang2.understand +"', lang2_mothertounge = '"+ lang2.mothertongue +"' where mobile_no1 = '"+ lang1.mobile+"'  and company_code = (select company_code from master_company where sno = "+lang1.company+") ")
   var result3 = await pool.request()
-  .query("  update trainee_apln set lang3_name = '"+ lang3.language+"' , lang3_speak = '"+ lang3.speak +"', lang3_read = '"+ lang3.read +"', lang3_write = '"+ lang3.write +"', lang3_understand = '"+ lang3.understand +"', lang3_mothertounge = '"+ lang4.mothertongue +"' where mobile_no1 = '"+ lang1.mobile+"'  and company_code = (select company_code from master_company where company_name = '"+lang1.company+"') ")
+  .query("  update trainee_apln set lang3_name = '"+ lang3.language+"' , lang3_speak = '"+ lang3.speak +"', lang3_read = '"+ lang3.read +"', lang3_write = '"+ lang3.write +"', lang3_understand = '"+ lang3.understand +"', lang3_mothertounge = '"+ lang4.mothertongue +"' where mobile_no1 = '"+ lang1.mobile+"'  and company_code = (select company_code from master_company where sno = "+lang1.company+") ")
   var result4 = await pool.request()
-  .query("  update trainee_apln set lang4_name = '"+ lang4.language+"' , lang4_speak = '"+ lang4.speak +"', lang4_read = '"+ lang4.read +"', lang4_write = '"+ lang4.write +"', lang4_understand = '"+ lang4.understand +"', lang4_mothertounge = '"+ lang4.mothertongue +"' where mobile_no1 = '"+ lang1.mobile+"'  and company_code = (select company_code from master_company where company_name = '"+lang1.company+"') ")
+  .query("  update trainee_apln set lang4_name = '"+ lang4.language+"' , lang4_speak = '"+ lang4.speak +"', lang4_read = '"+ lang4.read +"', lang4_write = '"+ lang4.write +"', lang4_understand = '"+ lang4.understand +"', lang4_mothertounge = '"+ lang4.mothertongue +"' where mobile_no1 = '"+ lang1.mobile+"'  and company_code = (select company_code from master_company where sno = "+lang1.company+") ")
   var result5 = await pool.request()
-  .query("  update trainee_apln set lang5_name = '"+ lang5.language+"' , lang5_speak = '"+ lang5.speak +"', lang5_read = '"+ lang5.read +"', lang5_write = '"+ lang5.write +"', lang5_understand = '"+ lang5.understand +"', lang5_mothertounge = '"+ lang5.mothertongue +"' where mobile_no1 = '"+ lang1.mobile+"'  and company_code = (select company_code from master_company where company_name = '"+lang1.company+"') ")
+  .query("  update trainee_apln set lang5_name = '"+ lang5.language+"' , lang5_speak = '"+ lang5.speak +"', lang5_read = '"+ lang5.read +"', lang5_write = '"+ lang5.write +"', lang5_understand = '"+ lang5.understand +"', lang5_mothertounge = '"+ lang5.mothertongue +"' where mobile_no1 = '"+ lang1.mobile+"'  and company_code = (select company_code from master_company where sno = "+lang1.company+") ")
   var result6 = await pool.request()
-  .query("  update trainee_apln set lang6_name = '"+ lang6.language+"' , lang6_speak = '"+ lang6.speak +"', lang6_read = '"+ lang6.read +"', lang6_write = '"+ lang6.write +"', lang6_understand = '"+ lang6.understand +"', lang6_mothertounge = '"+ lang6.mothertongue +"' where mobile_no1 = '"+ lang1.mobile+"'  and company_code = (select company_code from master_company where company_name = '"+lang1.company+"') ")
+  .query("  update trainee_apln set lang6_name = '"+ lang6.language+"' , lang6_speak = '"+ lang6.speak +"', lang6_read = '"+ lang6.read +"', lang6_write = '"+ lang6.write +"', lang6_understand = '"+ lang6.understand +"', lang6_mothertounge = '"+ lang6.mothertongue +"' where mobile_no1 = '"+ lang1.mobile+"'  and company_code = (select company_code from master_company where sno = "+lang1.company+") ")
 
   res.send({message: 'success'})
 
@@ -687,7 +687,7 @@ app.post('/family',async(req,res)=>{
   var pool = await db.poolPromise
 
   var result = await pool.request()
-      .query("select * from trainee_apln_family where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"' and company_code = (select company_code from master_company where company_name = '"+details[0].company+"') )")
+      .query("select * from trainee_apln_family where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"' and company_code = (select company_code from master_company where sno = "+details[0].company+") )")
 
   if(result['recordset'].length == 0 )
   {
@@ -696,7 +696,7 @@ app.post('/family',async(req,res)=>{
       if(details[i].name !='' && details[i].name != 'undefined' && details[i].name != null )
       {
         var result1 = await pool.request()
-          .query("insert into trainee_apln_family(apln_slno,relation_name ,relation_type, age, occupation, dependent, contact_number) values((select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"'  and company_code = (select company_code from master_company where company_name = '"+details[0].company+"')),'"+details[i].name+"', '"+details[i].relation+"', '"+details[i].age+"', '"+details[i].occupation+"', '"+details[i].dependent+"', '"+details[i].contactnumber+"')")
+          .query("insert into trainee_apln_family(apln_slno,relation_name ,relation_type, age, occupation, dependent, contact_number) values((select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"'  and company_code = (select company_code from master_company where sno = "+details[0].company+")),'"+details[i].name+"', '"+details[i].relation+"', '"+details[i].age+"', '"+details[i].occupation+"', '"+details[i].dependent+"', '"+details[i].contactnumber+"')")
       }
   }
   else if(result['recordset'].length > 0)
@@ -709,14 +709,14 @@ app.post('/family',async(req,res)=>{
         if(details[i].name != '' && details[i].name != 'undefined' && details[i].name != null )
         {
           var result2 = await pool.request()
-            .query("insert into trainee_apln_family(apln_slno,relation_name ,relation_type, age, occupation, dependent, contact_number) values((select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"' and company_code = (select company_code from master_company where company_name = '"+details[0].company+"')),'"+details[i].name+"', '"+details[i].relation+"', '"+details[i].age+"', '"+details[i].occupation+"', '"+details[i].dependent+"', '"+details[i].contactnumber+"')")
+            .query("insert into trainee_apln_family(apln_slno,relation_name ,relation_type, age, occupation, dependent, contact_number) values((select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"' and company_code = (select company_code from master_company where sno = "+details[0].company+")),'"+details[i].name+"', '"+details[i].relation+"', '"+details[i].age+"', '"+details[i].occupation+"', '"+details[i].dependent+"', '"+details[i].contactnumber+"')")
           console.log('insert', i) 
         }
       }
       else if(result['recordset'][i] != undefined)
       {
         var result3 = await pool.request()
-        .query("  update trainee_apln_family set relation_name = '"+details[i].name+"' ,relation_type = '"+details[i].relation+"', age = '"+details[i].age+"', occupation = '"+details[i].occupation+"', dependent = '"+details[i].dependent+"', contact_number = '"+details[i].contactnumber+"' where family_slno = (select min(family_slno) from trainee_apln_family where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"' and company_code = (select company_code from master_company where company_name = '"+details[0].company+"')))+'"+i+"'  ")
+        .query("  update trainee_apln_family set relation_name = '"+details[i].name+"' ,relation_type = '"+details[i].relation+"', age = '"+details[i].age+"', occupation = '"+details[i].occupation+"', dependent = '"+details[i].dependent+"', contact_number = '"+details[i].contactnumber+"' where family_slno = (select min(family_slno) from trainee_apln_family where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"' and company_code = (select company_code from master_company where sno = "+details[0].company+")))+'"+i+"'  ")
         console.log("  update", i)
       }
     }
@@ -741,7 +741,7 @@ app.post('/edu',async(req,res)=>{
   console.log(details)
   var pool = await db.poolPromise
   var result = await pool.request()
-      .query("select * from trainee_apln_qualifn where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"' and company_code = (select company_code from master_company where company_name = '"+details[0].company+"'))")
+      .query("select * from trainee_apln_qualifn where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"' and company_code = (select company_code from master_company where sno = "+details[0].company+"))")
     console.log(result['recordset'].length)
   if(result['recordset'].length == 0 )
   {
@@ -750,7 +750,7 @@ app.post('/edu',async(req,res)=>{
       if(details[i].school !=''  && details[i].school != 'undefined' && details[i].school != null  )
       {
         var result1 = await pool.request()
-        .query("insert into trainee_apln_qualifn (apln_slno,school_name ,exam_passed, passing_yr, subjects, cert_number, cert_date, percentage) values((select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"' and company_code = (select company_code from master_company where company_name = '"+details[0].company+"') ),'"+details[i].school+"', '"+details[i].passed+"', '"+details[i].year+"', '"+details[i].department+"', '"+details[i].certificatenumber+"', '"+details[i].certificatedate+"', '"+details[i].percentage+"')")
+        .query("insert into trainee_apln_qualifn (apln_slno,school_name ,exam_passed, passing_yr, subjects, cert_number, cert_date, percentage) values((select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"' and company_code = (select company_code from master_company where sno = "+details[0].company+") ),'"+details[i].school+"', '"+details[i].passed+"', '"+details[i].year+"', '"+details[i].department+"', '"+details[i].certificatenumber+"', '"+details[i].certificatedate+"', '"+details[i].percentage+"')")
       }
   }
   else if(result['recordset'].length > 0)
@@ -763,7 +763,7 @@ app.post('/edu',async(req,res)=>{
         if(details[i].school != '' && details[i].school != 'undefined' && details[i].school != null )
         {
           var result2 = await pool.request()        
-          .query("insert into trainee_apln_qualifn (apln_slno,school_name ,exam_passed, passing_yr, subjects, cert_number, cert_date, percentage) values((select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"' and company_code = (select company_code from master_company where company_name = '"+details[0].company+"')),'"+details[i].school+"', '"+details[i].passed+"', '"+details[i].year+"', '"+details[i].department+"', '"+details[i].certificatenumber+"', '"+details[i].certificatedate+"', '"+details[i].percentage+"')")
+          .query("insert into trainee_apln_qualifn (apln_slno,school_name ,exam_passed, passing_yr, subjects, cert_number, cert_date, percentage) values((select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"' and company_code = (select company_code from master_company where sno = "+details[0].company+")),'"+details[i].school+"', '"+details[i].passed+"', '"+details[i].year+"', '"+details[i].department+"', '"+details[i].certificatenumber+"', '"+details[i].certificatedate+"', '"+details[i].percentage+"')")
         }
       }
       
@@ -771,7 +771,7 @@ app.post('/edu',async(req,res)=>{
       {
         console.log('4')
         var result3 = await pool.request()
-        .query("  update trainee_apln_qualifn set school_name = '"+details[i].school+"' ,exam_passed = '"+details[i].passed+"', passing_yr = '"+details[i].year+"', subjects = '"+details[i].department+"', cert_number = '"+details[i].certificatenumber+"', cert_date = '"+details[i].certificatedate+"',percentage = '"+details[i].percentage+"' where qual_slno = (select min(qual_slno) from trainee_apln_qualifn where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"' and company_code = (select company_code from master_company where company_name = '"+details[0].company+"') ))+'"+i+"'  ") 
+        .query("  update trainee_apln_qualifn set school_name = '"+details[i].school+"' ,exam_passed = '"+details[i].passed+"', passing_yr = '"+details[i].year+"', subjects = '"+details[i].department+"', cert_number = '"+details[i].certificatenumber+"', cert_date = '"+details[i].certificatedate+"',percentage = '"+details[i].percentage+"' where qual_slno = (select min(qual_slno) from trainee_apln_qualifn where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"' and company_code = (select company_code from master_company where sno = "+details[0].company+") ))+'"+i+"'  ") 
       }
     }
   }
@@ -795,7 +795,7 @@ app.post('/prev',async(req,res)=>{
 
   var pool = await db.poolPromise
   var result = await pool.request()
-      .query("select * from trainee_apln_career where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"' and company_code = (select company_code from master_company where company_name = '"+details[0].company+"') )")
+      .query("select * from trainee_apln_career where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"' and company_code = (select company_code from master_company where sno = "+details[0].company+") )")
 
   if(result['recordset'].length == 0 )
   {
@@ -804,7 +804,7 @@ app.post('/prev',async(req,res)=>{
       if(details[i].name !=''  && details[i].name != 'undefined' && details[i].name != null  )
       {
         var result1 = await pool.request()
-        .query("insert into trainee_apln_career (apln_slno,company_name ,designation, period_from,period_to, last_salary, leaving_reason) values((select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"' and company_code = (select company_code from master_company where company_name = '"+details[0].company+"')),'"+details[i].name+"', '"+details[i].desig+"', '"+details[i].periodf+"', '"+details[i].periodt+"', '"+details[i].sal+"', '"+details[i].reason+"')")
+        .query("insert into trainee_apln_career (apln_slno,company_name ,designation, period_from,period_to, last_salary, leaving_reason) values((select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"' and company_code = (select company_code from master_company where sno = "+details[0].company+")),'"+details[i].name+"', '"+details[i].desig+"', '"+details[i].periodf+"', '"+details[i].periodt+"', '"+details[i].sal+"', '"+details[i].reason+"')")
       }
   }
 
@@ -818,7 +818,7 @@ app.post('/prev',async(req,res)=>{
         if(details[i].name != ''  && details[i].name != 'undefined' && details[i].name != null )
         {    
           var result2 = await pool.request()
-          .query("insert into trainee_apln_career (apln_slno,company_name ,designation, period_from,period_to, last_salary, leaving_reason) values((select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"' and company_code = (select company_code from master_company where company_name = '"+details[0].company+"')),'"+details[i].name+"', '"+details[i].desig+"', '"+details[i].periodf+"', '"+details[i].periodt+"', '"+details[i].sal+"', '"+details[i].reason+"')")
+          .query("insert into trainee_apln_career (apln_slno,company_name ,designation, period_from,period_to, last_salary, leaving_reason) values((select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"' and company_code = (select company_code from master_company where sno = "+details[0].company+")),'"+details[i].name+"', '"+details[i].desig+"', '"+details[i].periodf+"', '"+details[i].periodt+"', '"+details[i].sal+"', '"+details[i].reason+"')")
         }
       }
       
@@ -826,7 +826,7 @@ app.post('/prev',async(req,res)=>{
       {
         console.log('4')
         var result3 = await pool.request()
-        .query("  update trainee_apln_career set company_name = '"+details[i].name+"' ,designation = '"+details[i].desig+"', period_from = '"+details[i].periodf+"', period_to = '"+details[i].periodt+"', last_salary = '"+details[i].sal+"', leaving_reason = '"+details[i].reason+"' where career_slno = (select min(career_slno) from trainee_apln_career where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"' and company_code = (select company_code from master_company where company_name = '"+details[0].company+"') ))+'"+i+"'  ") 
+        .query("  update trainee_apln_career set company_name = '"+details[i].name+"' ,designation = '"+details[i].desig+"', period_from = '"+details[i].periodf+"', period_to = '"+details[i].periodt+"', last_salary = '"+details[i].sal+"', leaving_reason = '"+details[i].reason+"' where career_slno = (select min(career_slno) from trainee_apln_career where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+details[0].mobile+"' and company_code = (select company_code from master_company where son = "+details[0].company+") ))+'"+i+"'  ") 
       }
     }
   }
@@ -874,7 +874,7 @@ app.post('/others',async(req,res)=>{
     var mobilenumber = req.body.mobilenumber;
     var company = req.body.company
     var result = await pool.request()
-      .query("  update trainee_apln set any_empl_rane='"+known+"',prev_rane_empl='"+work+"',existing_empl_name='"+names+"',existing_empl_company='"+place+"',prev_rane_exp='"+com+"',extra_curricular='"+extra+"' where mobile_no1 = '"+mobilenumber+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ")
+      .query("  update trainee_apln set any_empl_rane='"+known+"',prev_rane_empl='"+work+"',existing_empl_name='"+names+"',existing_empl_company='"+place+"',prev_rane_exp='"+com+"',extra_curricular='"+extra+"' where mobile_no1 = '"+mobilenumber+"' and company_code = (select company_code from master_company where sno = "+company+") ")
       res.send({message: 'success'})
     }
     catch(err)
@@ -894,7 +894,7 @@ app.post('/filter', async(req,res)=>{
   var plantcode = req.body.plantcode
 
   var result = await pool.request()
-    .query("select t.created_dt, t.fullname, t.fathername, t.birthdate, t.mobile_no1, t.aadhar_no, t.apln_status, m.company_name from trainee_apln as t left join master_company as m on t.company_code = m.company_code where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND plant_code = '"+plantcode+"' ")
+    .query("select t.created_dt, t.fullname, t.fathername, t.birthdate, t.mobile_no1, t.aadhar_no, t.apln_status, m.sno from trainee_apln as t left join master_company as m on t.company_code = m.company_code where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND plant_code = '"+plantcode+"' ")
     res.send(result['recordset'])
 }
 catch(err)
@@ -917,7 +917,7 @@ app.post('/searchfilter', async(req,res)=>
   colvalue = colvalue.trim()
 
   var result = await pool.request()
-    .query("select t.created_dt, t.fullname, t.fathername, t.birthdate, t.mobile_no1, t.aadhar_no, t.apln_status, m.company_name from trainee_apln as t left join master_company as m on t.company_code = m.company_code where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND "+colname+" like '"+colvalue+"%' AND plant_code = '"+plantcode+"' ")
+    .query("select t.created_dt, t.fullname, t.fathername, t.birthdate, t.mobile_no1, t.aadhar_no, t.apln_status, m.sno from trainee_apln as t left join master_company as m on t.company_code = m.company_code where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND "+colname+" like '"+colvalue+"%' AND plant_code = '"+plantcode+"' ")
     res.send(result['recordset'])
 }
 catch(err)
@@ -933,7 +933,7 @@ app.post('/filterforapproval', async(req,res)=>{
   var status = req.body.status
   var plantcode = req.body.plantcode
   var result = await pool.request()
-    .query("select t.created_dt, t.fullname, t.fathername, t.birthdate, t.mobile_no1,t.trainee_idno, t.aadhar_no, t.apln_status, m.company_name from trainee_apln as t left join master_company as m on t.company_code = m.company_code where apln_status = '"+status+"'AND plant_code = '"+plantcode+"' ")
+    .query("select t.created_dt, t.fullname, t.fathername, t.birthdate, t.mobile_no1,t.trainee_idno, t.aadhar_no, t.apln_status, m.sno from trainee_apln as t left join master_company as m on t.company_code = m.company_code where apln_status = '"+status+"'AND plant_code = '"+plantcode+"' ")
     res.send(result['recordset'])
 }
 catch(err)
@@ -958,14 +958,14 @@ app.post('/submitted', async(req,res)=>{
   var pool = await db.poolPromise
   var result =await pool.request()
   
-  .query("select pl from plant where plant_code = (select plant_code from trainee_apln where mobile_no1 = '"+mob+"' and company_code = (select company_code from master_company where company_name = '"+company+"')) ")
+  .query("select pl from plant where plant_code = (select plant_code from trainee_apln where mobile_no1 = '"+mob+"' and company_code = (select company_code from master_company where sno = "+company+")) ")
   
   var result2 = await pool.request()
-    .query("select apln_slno from trainee_apln where mobile_no1 = '"+mob+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ")
+    .query("select apln_slno from trainee_apln where mobile_no1 = '"+mob+"' and company_code = (select company_code from master_company where sno = "+company+") ")
   
   id = result['recordset'][0]?.pl+'/'+year+'/'+result2['recordset'][0]?.apln_slno
   var result3 = await pool.request()
-    .query("  update trainee_apln set apln_status = 'SUBMITTED', trainee_idno = '"+id+"' where mobile_no1 = '"+mob+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ")
+    .query("  update trainee_apln set apln_status = 'SUBMITTED', trainee_idno = '"+id+"' where mobile_no1 = '"+mob+"' and company_code = (select company_code from master_company where sno = "+company+") ")
   console.log("..........", result3)
   res.send(result3)
 }
@@ -984,7 +984,7 @@ app.post('/pending', async(req,res)=>{
     var company = req.body.company
 
   var result = await pool.request()
-  .query("update trainee_apln set apln_status = 'PENDING' where mobile_no1 = '"+mob+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ")
+  .query("update trainee_apln set apln_status = 'PENDING' where mobile_no1 = '"+mob+"' and company_code = (select company_code from master_company where sno = "+company+") ")
     res.send({message: 'success'})
 
 }
@@ -1002,7 +1002,7 @@ app.post('/approved', async(req,res)=>{
     var company = req.body.company
 
   var result = await pool.request()
-  .query("update trainee_apln set apln_status = 'APPROVED' where mobile_no1 = '"+mob+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ")
+  .query("update trainee_apln set apln_status = 'APPROVED' where mobile_no1 = '"+mob+"' and company_code = (select company_code from master_company where sno = "+company+") ")
     res.send({message: 'success'})
 
 }
@@ -1020,7 +1020,7 @@ app.post('/rejected', async(req,res)=>{
     var company = req.body.company
 
   var result = await pool.request()
-  .query("update trainee_apln set apln_status = 'REJECTED' where mobile_no1 = '"+mob+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ")
+  .query("update trainee_apln set apln_status = 'REJECTED' where mobile_no1 = '"+mob+"' and company_code = (select company_code from master_company where sno = "+company+") ")
     res.send({message: 'success'})
 
 }
@@ -1040,12 +1040,12 @@ app.post('/getdataforid', async(req,res)=>{
 
   var r = await db.poolPromise
   var result = await r.request()
-    .query("select addr from plant where plant_code = (select plant_code from trainee_apln where mobile_no1 = '"+mobile+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ) ")
+    .query("select addr from plant where plant_code = (select plant_code from trainee_apln where mobile_no1 = '"+mobile+"' and company_code = (select company_code from master_company where sno = "+company+") ) ")
   var result2 = await r.request()
-    .query("select fullname,fathername, trainee_idno,dept_slno, permanent_address, emergency_name, emergency_rel, other_files6, mobile_no2, plant_code from trainee_apln where mobile_no1 = '"+mobile+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ")
+    .query("select fullname,fathername, trainee_idno,dept_slno, permanent_address, emergency_name, emergency_rel, other_files6, mobile_no2, plant_code from trainee_apln where mobile_no1 = '"+mobile+"' and company_code = (select company_code from master_company where sno = "+company+") ")
     object = result2['recordset']
   var result3 = await r.request()
-    .query("select plant_sign from plant where plant_code = (select plant_code from trainee_apln where mobile_no1 = '"+mobile+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ) ")
+    .query("select plant_sign from plant where plant_code = (select plant_code from trainee_apln where mobile_no1 = '"+mobile+"' and company_code = (select company_code from master_company where sno = "+company+") ) ")
 
 
     if(result2['recordset'].length !=0)
@@ -1071,14 +1071,15 @@ try
 
   var r = await db.poolPromise
   var result2 = await r.request()
-    .query("select plant_name from plant where plant_code = (select plant_code from trainee_apln where mobile_no1 = '"+mobile+"' and company_code = (select company_code from master_company where company_name = '"+company+"'))")
+    .query("select plant_name from plant where plant_code = (select plant_code from trainee_apln where mobile_no1 = '"+mobile+"' and company_code = (select company_code from master_company where sno = "+company+"))")
   var result3 = await r.request()
-    .query("select * from trainee_apln where mobile_no1 = '"+mobile+"' and company_code = (select company_code from master_company where company_name = '"+company+"') ")
+    .query("select * from trainee_apln where mobile_no1 = '"+mobile+"' and company_code = (select company_code from master_company where sno = "+company+") ")
     object = result3['recordset']
-
+  var result4 = await r.request()
+    .query("select company_name from master_company where sno = "+company+" ")
     if(result3['recordset'].length !=0)
     {    
-      object[0].company_name = company
+      object[0].company_name = result4['recordset'][0].company_name
       object[0].plant_name = result2['recordset'][0].plant_name
     }
 
@@ -1100,7 +1101,7 @@ app.post('/getdatafamily', async(req,res)=>{
 
   console.log(req.body)
   var result = await pool.request()
-    .query("select * from trainee_apln_family where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+mobile+"'  and company_code = (select company_code from master_company where company_name = '"+company+"'))  ")
+    .query("select * from trainee_apln_family where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+mobile+"'  and company_code = (select company_code from master_company where sno = "+company+"))  ")
   res.send(result['recordset'])
   }
   catch(err)
@@ -1117,7 +1118,7 @@ app.post('/getdatacareer', async(req,res)=>{
   var company = req.body.company
   var pool = await db.poolPromise
   var result = await pool.request()
-      .query("select * from trainee_apln_career where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+mobile+"'  and company_code = (select company_code from master_company where company_name = '"+company+"')) ")
+      .query("select * from trainee_apln_career where apln_slno = (select apln_slno from trainee_apln where mobile_no1 = '"+mobile+"'  and company_code = (select company_code from master_company where sno = "+company+")) ")
   res.send(result['recordset'])
 
   }
@@ -1136,7 +1137,7 @@ app.post('/getdataqualfn', async(req,res)=>{
 
   var pool = await db.poolPromise
   var result = await pool.request()
-    .query("select * from trainee_apln_qualifn where apln_slno = (select apln_slno from trainee_apln where mobile_no1 ='"+mobile+"'  and company_code = (select company_code from master_company where company_name = '"+company+"')) ")
+    .query("select * from trainee_apln_qualifn where apln_slno = (select apln_slno from trainee_apln where mobile_no1 ='"+mobile+"'  and company_code = (select company_code from master_company where sno = "+company+")) ")
     res.send(result['recordset'])
   }
   catch(err)
@@ -1724,12 +1725,14 @@ app.post('/updatemodule', async(req,res)=>{
 app.post('/testSummary', async(req,res)=>{
   try
   {
-  console.log("select fullname, trainee_idno,submission_date, sum(pretraining_percent)/count(*) as sum1,  sum(posttraining_percent)/count(*) as sum2 from test_result_summary where submission_date >= '"+details.start+"' and plant_code = '"+details.plantcode+"' group by fullname, trainee_idno, submission_date  ")
+      var details = req.body
+      console.log(req.body)
 
-  details = req.body
+  console.log("select fullname, trainee_idno,submission_date, sum(pretraining_percent)/count(*) as sum1,  sum(posttraining_percent)/count(*) as sum2 from test_result_summary where submission_date >= '"+details.start+"' and submission_date <= '"+details.end+"  23:59:59'  and plant_code = '"+details.plantcode+"' group by fullname, trainee_idno, submission_date  ")
+
   var pool = await db.poolPromise
   var result = await pool.request()
-  .query("select fullname, trainee_idno,submission_date, sum(pretraining_percent)/count(*) as sum1,  sum(posttraining_percent)/count(*) as sum2 from test_result_summary where submission_date >= '"+details.start+"' and plant_code = '"+details.plantcode+"' group by fullname, trainee_idno, submission_date  ")
+  .query("select fullname, trainee_idno,submission_date, sum(pretraining_percent)/count(*) as sum1,  sum(posttraining_percent)/count(*) as sum2 from test_result_summary where submission_date >= '"+details.start+"' and submission_date <= '"+details.end+"  23:59:59' and plant_code = '"+details.plantcode+"' group by fullname, trainee_idno, submission_date  ")
   res.send(result['recordset'])
 }
 catch(err)
@@ -2684,8 +2687,9 @@ app.post('/evaluationdays', async(req,res)=>{
   var id = req.body.id
   var emp_id = req.body.emp_id
   var filter = req.body.filter
+  var plant_code = req.body.plantcode
 
-  if(id==2)
+  if(id==2 || (id==1 && filter == 'APPROVED'))
   {
     if(end == 60)
       count = 1
@@ -2709,7 +2713,7 @@ app.post('/evaluationdays', async(req,res)=>{
       count = 3
   }
   }
-  console.log( " EXEC POST_EVALUATION_LIST_SUP @start= "+start+" , @end = "+end+" , @count = "+count+", @emp_id = '"+emp_id+"' ")  
+  console.log("EXEC POST_EVALUATION_LIST_SUP @start= "+start+" , @end = "+end+" , @count = "+count+", @emp_id = '"+emp_id+"' ")  
 
   if (id==2)
   {
@@ -2718,32 +2722,41 @@ app.post('/evaluationdays', async(req,res)=>{
     .query(" EXEC POST_EVALUATION_LIST_SUP @start= "+start+" , @end = "+end+" , @count = "+count+", @emp_id = '"+emp_id+"' ")
 
   }
-  else if ((id==3 && count == 0) | (id==1 && count == 0) )
+  else if(id==1 && count == 0) 
   {
     console.log(2)
     if(filter == undefined || filter == 'undefined' || filter == 'PENDING')
     {
       var result = await pool.request()
-      .query("select t.*,DATEDIFF(day, TRY_PARSE(t.doj AS DATE USING 'en-US'), GETDATE()) as diff, d.dept_name, l.line_name from trainee_apln t JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code  where  apln_status = 'APPOINTED' and test_status = 'completed' and t.doj > '2022-12-02' and apln_slno not in (select apln_slno from post_evaluation) and apln_status = 'APPOINTED' ")  
+      .query("select t.*,DATEDIFF(day, TRY_PARSE(t.doj AS DATE USING 'en-US'), GETDATE()) as diff, d.dept_name, l.line_name from trainee_apln t JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code  where  apln_status = 'APPOINTED' and test_status = 'completed' and t.doj > '2022-12-02' and apln_slno not in (select apln_slno from post_evaluation) and apln_status = 'APPOINTED' and t.plant_code = '"+plant_code+"' ")  
     }
     else if(filter == 'APPROVED')
     {
       var result = await pool.request()
-      .query(" exec POST_EVALUATION_LIST_HR_FILTER @start="+start+" , @end = "+end+", @count="+count+" ")
+      .query(" exec POST_EVALUATION_LIST_HR_FILTER @start="+start+" , @end = "+end+", @count="+count+", @plant_code = '"+plant_code+"' ")
     }
   }
+  else if(id==3)
+  {
+    console.log(3)
+    var result = await pool.request()
+    .query(" EXEC POST_EVALUATION_LIST_DUE @plant_code = '"+plant_code+"' ")    
 
+  }
   else
   {
     console.log(3, count)
     if(filter == undefined || filter == 'undefined' || filter == 'PENDING')
     {
+      console.log(" EXEC POST_EVALUATION_LIST_HR @start= "+start+" , @end = "+end+" , @count = "+count+", @plant_code = '"+plant_code+"' ") 
       var result = await pool.request()
-      .query(" EXEC POST_EVALUATION_LIST_HR @start= "+start+" , @end = "+end+" , @count = "+count+" ")    }
+      .query(" EXEC POST_EVALUATION_LIST_HR @start= "+start+" , @end = "+end+" , @count = "+count+", @plant_code = '"+plant_code+"' ")    
+    }
     else if(filter == 'APPROVED')
     {
       var result = await pool.request()
-      .query(" EXEC POST_EVALUATION_LIST_HR @start= "+start+" , @end = "+end+" , @count = "+count+" ")    }
+      .query(" EXEC POST_EVALUATION_LIST_HR_FILTER @start= "+start+" , @end = "+end+" , @count = "+count+", @plant_code = '"+plant_code+"' ")    
+    }
 
   }
   
