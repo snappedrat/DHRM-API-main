@@ -1662,16 +1662,10 @@ try
   var plantcode = req.body.plantcode
 
   var pool =await db.poolPromise
-  var result = await pool.request()
-    .query("select * from trg_modules where priorityval = '"+priorityval+"' and del_status = 'N' ")
-  if(result['recordset'].length > 0)
-    res.send({'message': 'already'})
-  else
-    {
+
       var result = await pool.request()
         .query("insert into trg_modules values('"+module_name+"', "+total_marks+","+pass_criteria+", "+pass_percent+", '"+category+"', 'N', "+priorityval+", 0, '"+plantcode+"'  )")
         res.send({'message': 'inserted'})
-    }
   }
   catch(err)
   {
@@ -2420,7 +2414,7 @@ app.post('/getoperation', async(req,res)=>{
   try{
   var pool = await db.poolPromise
   var result = await pool.request()
-    .query("select * from operations join plant on operations.plant_code = plant.plant_code  where operations.del_status = 'N'") 
+    .query("select operations.*, plant.plant_name from operations join plant on operations.plant_code = plant.plant_code  where operations.del_status = 'N'") 
   res.send(result['recordset'])
   }catch(err){
     console.log(err)
