@@ -1894,8 +1894,8 @@ app.post('/addplant' , async(req,res)=>
       var plant_code = req.body.plant_code
       var plant_name = req.body.plant_name
       var pl = req.body.pl
-      var address = req.body.address
-      var location = req.body.location
+      var address = req.body.addr
+      var location = req.body.locatn
       var personal_area = req.body.personal_area
       var payroll_area = req.body.payroll_area
       var plant_sign = req.body.plant_sign
@@ -2161,8 +2161,8 @@ app.post('/getline', async(req,res)=>{
   try{
   var pool = await db.poolPromise
   var result = await pool.request()
-  .query("select mst_line.Line_code,plant.plant_name, department.dept_name, mst_line.Line_Name, mst_line.personal_subarea, mst_line.createddt, mst_line.Created_By, mst_line.modifieddt, mst_line.modifiedby from mst_line join plant on mst_line.plant_code = plant.plant_code join department on mst_line.Module_code = department.dept_slno where mst_line.plant_code = '"+req.body.plantcode+"' and mst_line.del_status = 'N' ")
-  console.log("select mst_line.Line_Name, mst_line.Line_code, plant.plant_name ,mst_line.personal_subarea, mst_line.created_on, mst_line.Created_By, mst_line.modified_on, mst_line.modified_by from mst_line join plant on Mst_Line.Plant_code = plant.plant_code where mst_line.del_status = 'N' and Mst_Line.Plant_code = '"+req.body.plantcode+"' ")
+  .query("select mst_line.Line_code,plant.plant_name, department.dept_name, mst_line.Line_Name, mst_line.personal_subarea, mst_line.createddt, mst_line.Created_By, mst_line.modifieddt, mst_line.modifiedby from mst_line join plant on mst_line.plant_code = plant.plant_code join department on mst_line.Module_code = department.dept_slno and mst_line.del_status = 'N' ")
+  console.log("select mst_line.Line_Name, mst_line.Line_code, plant.plant_name ,mst_line.personal_subarea, mst_line.created_on, mst_line.Created_By, mst_line.modified_on, mst_line.modified_by from mst_line join plant on Mst_Line.Plant_code = plant.plant_code where mst_line.del_status = 'N' ")
   res.send(result['recordset'])
   }catch(err){
     console.log(err)
@@ -2432,6 +2432,7 @@ app.post('/getoperation', async(req,res)=>{
 app.post('/addemployee' , async(req,res)=>
 {
   try{
+    console.log(req.body)
     var gen_id = req.body.gen_id
     var emp_name = req.body.Emp_Name
     var department = req.body.dept_name
@@ -2457,15 +2458,15 @@ app.post('/addemployee' , async(req,res)=>
 
      var result3 =await pool.request()
      .query("select line_code from mst_line where line_name = '"+line+"' ")
-    var line_code = result2['recordset'][0].line_code
+    var line_code = result3['recordset'][0].line_code
 
-    var result3 =await pool.request()
+    var result4 =await pool.request()
     .query("select dept_slno from department where dept_name = '"+department+"' ")
-    var dept_slno = result2['recordset'][0].dept_slno
+    var dept_slno = result4['recordset'][0].dept_slno
   
-    var result3 =await pool.request()
+    var result5 =await pool.request()
     .query("select slno from designation where desig_name = '"+designation+"' ")
-    var slno = result2['recordset'][0].slno
+    var slno = result5['recordset'][0].slno
 
       var result = await pool.request()
       .query("select user_name from employees where user_name = '"+user_name+"'")
@@ -3277,5 +3278,71 @@ catch(err)
 }
 }
 )
+
+app.post('/people_planning', async(req,res)=>{
+
+
+  var pool = await db.poolPromise
+  var plantcode = req.body.plantcode
+  var year = req.body.year
+  var month = req.body.month
+
+  console.log(req.body)
+
+  var result = await pool.request()
+  .query("select p.*, d.dept_slno, m.line_code, d.dept_name, m.line_name, d.dept_slno from people_planning p join department d on p.dept_slno = d.dept_slno join mst_line m on m.line_code = p.line_code where p.plant_code = '"+plantcode+"' and plan_year = "+year+" and plan_month = "+month+" ")
+
+  if(result['recordset'].length == 0)
+  {
+    var result2 = await pool.request()
+    .query("select d.dept_slno, m.line_code, m.line_name,d.dept_name, d.dept_group  from mst_line m join department d on m.module_code = d.dept_slno where m.plant_code = '"+plantcode+"' ")
+    res.send(result2['recordset'])
+  }
+  else
+   res.send(result['recordset'])
+})
+
+app.post('people_planning_save', async(req,res)=>{
+try
+{
+   var pool = await db.poolPromise
+   
+   var details = req.body
+
+   for(var i =0; i<details.length-1; i++)
+   {
+    if(details[i].shift1_reqd == null || details[i].shift1_reqd == undefined)
+    {
+
+    }
+    else
+    {
+      var result = await pool.request()
+      .input("plan_month", details[0].plant_month)
+      .input("plan_year", details[0].plan_year)
+      .input("plant_code", details[0].plant_code)
+      .input("dept_slno", details[i].dept_slno)
+      .input("line_code", details[i].line_code)
+      .input("shift1_reqd", details[i].shift1_reqd)
+      .input("shift2_reqd", details[i].shift2_reqd)
+      .input("shift3_reqd", details[i].shift3_reqd)
+      .input("genl_reqd", details[i].genl_reqd)
+      .input("total_reqd", details[i].total_reqd)
+      .input("created_by", details[0].created_by)
+      // .input("modified_by", details[0].modified_by)
+      // .input("modified_dt", details[0].modified_dt)
+      .query("insert into people_planning values(@plan_month, @plan_year, @plant_code, @dept_slno,@line_code, @shift1_reqd, @shift2_reqd, @shift3_reqd, @genl_reqd, @total_reqd, @created_by, CURRENT_TIMESTAMP) ")
+    }
+
+   }
+
+}
+catch(err)
+{
+  console.log(err)
+  res.send({message: 'success'})
+}
+
+})
 
 module.exports = app;
