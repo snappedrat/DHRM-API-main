@@ -303,7 +303,7 @@ app.post('/gethrappr', async(req,res)=>{
 
   var pool = await db.poolPromise;
 
-  if(usertype == 'emp')
+  if(usertype == 'emp' || usertype == 'emp2')
   {
     var result = await pool.request()
     .query("select employees.*, department.dept_name, plant.plant_name from employees left join department on employees.department = department.dept_slno left join plant on plant.plant_code = employees.plant_code where employees.User_Name = '"+user_name+"' ")
@@ -1296,7 +1296,7 @@ app.post('/Qualified', async(req,res)=>{
       var prev_module = await pool.request()
         .query("select module_name from trg_modules where priorityval = ((select priorityval from trg_modules where module_name = '"+module+"')-1) and plant_code = (select plant_code from trg_modules where module_name = '"+module+"' ) ")
 
-        console.log("select sum(posttraining_score) as sum from ontraining_evalation where trainee_idno = '"+username+"' and module_name = '"+prev_module['recordset'][0].module_name+"'")
+        // console.log("select sum(posttraining_score) as sum from ontraining_evalation where trainee_idno = '"+username+"' and module_name = '"+prev_module['recordset'][0].module_name+"'")
       
       var prev_score = await pool.request()
         .query("select sum(posttraining_score) as sum from ontraining_evalation where trainee_idno = '"+username+"' and module_name = '"+prev_module['recordset'][0].module_name+"'")
@@ -1999,7 +1999,7 @@ app.post('/adddepartment' , async(req,res)=>
                           .input("plant_code", plant_code)
                           .input("department_name", department_name)
                           .input("sap_code", sap_code)
-                          .query("Insert into department values(@department_name, @plant_code, 1, @sap_code)")
+                          .query("Insert into department values(@department_name, @plant_code, 0, @sap_code)")
         res.send({'message': 'inserted'})
         
         
@@ -3284,7 +3284,7 @@ app.post('/people_planning', async(req,res)=>{
   console.log(req.body)
 
   var result = await pool.request()
-  .query("select p.*, d.dept_slno, m.line_code, d.dept_name, m.line_name, d.dept_slno from people_planning p join department d on p.dept_slno = d.dept_slno join mst_line m on m.line_code = p.line_code where p.plant_code = '"+plantcode+"' and plan_year = "+year+" and plan_month = "+month+" ")
+  .query("select p.*,d.dept_group, d.dept_slno, m.line_code, d.dept_name, m.line_name, d.dept_slno from people_planning p join department d on p.dept_slno = d.dept_slno join mst_line m on m.line_code = p.line_code where p.plant_code = '"+plantcode+"' and plan_year = "+year+" and plan_month = "+month+" ")
 
   if(result['recordset'].length == 0)
   {
@@ -3296,12 +3296,13 @@ app.post('/people_planning', async(req,res)=>{
    res.send(result['recordset'])
 })
 
-app.post('people_planning_save', async(req,res)=>{
+app.post('/people_planning_save', async(req,res)=>{
 try
 {
    var pool = await db.poolPromise
    
    var details = req.body
+   console.log(details)
 
    for(var i =0; i<details.length-1; i++)
    {
@@ -3312,9 +3313,9 @@ try
     else
     {
       var result = await pool.request()
-      .input("plan_month", details[0].plant_month)
-      .input("plan_year", details[0].plan_year)
-      .input("plant_code", details[0].plant_code)
+      .input("plan_month", details[details.length-1].plant_month)
+      .input("plan_year", details[details.length-1].plant_year)
+      .input("plant_code", details[details.length-1].plant_code)
       .input("dept_slno", details[i].dept_slno)
       .input("line_code", details[i].line_code)
       .input("shift1_reqd", details[i].shift1_reqd)
@@ -3322,19 +3323,25 @@ try
       .input("shift3_reqd", details[i].shift3_reqd)
       .input("genl_reqd", details[i].genl_reqd)
       .input("total_reqd", details[i].total_reqd)
-      .input("created_by", details[0].created_by)
+      .input("created_by", details[details.length-1].created_by)
       // .input("modified_by", details[0].modified_by)
       // .input("modified_dt", details[0].modified_dt)
-      .query("insert into people_planning values(@plan_month, @plan_year, @plant_code, @dept_slno,@line_code, @shift1_reqd, @shift2_reqd, @shift3_reqd, @genl_reqd, @total_reqd, @created_by, CURRENT_TIMESTAMP) ")
+      // console.log("insert into people_planning(plan_month, plan_year, plant_code, dept_slno, line_code, shift1_reqd, shift2_reqd, shift3_reqd, genl_reqd, total_reqd, created_by, created_dt) values('"+details[details.length-1].plant_month+"', '"+details[details.length-1].plant_year+"', '"+details[details.length-1].plant_code+"', '"+details[i].dept_slno+"','"+details[i].line_code+"', '"+details[i].shift1_reqd+"', '"+details[i].shift2_reqd+"', '"+details[i].shift3_reqd+"', '"+details[i].genl_reqd+"', '"+details[i].total_reqd+"', '"+details[details.length-1].created_by+"', CURRENT_TIMESTAMP) ")
+      .query("insert into people_planning(plan_month, plan_year, plant_code, dept_slno, line_code,oprn_slno, shift1_reqd, shift2_reqd, shift3_reqd, genl_reqd, total_reqd, created_by, created_dt) values(@plan_month, @plan_year, @plant_code, @dept_slno,@line_code,1, @shift1_reqd, @shift2_reqd, @shift3_reqd, @genl_reqd, @total_reqd, @created_by, CURRENT_TIMESTAMP) ")
     }
 
    }
+   if(result.rowsAffected > 0)
+    res.send({message: 'success'})
+  else
+  res.send({message: 'failed'})
+
 
 }
 catch(err)
 {
   console.log(err)
-  res.send({message: 'success'})
+  res.send({message: 'failure'})
 }
 
 })
