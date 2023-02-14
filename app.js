@@ -482,21 +482,23 @@ app.post('/getall', async(req,res)=>
 {
   try{
 
+    console.log(req.body)
+
   var pool =await db.poolPromise
   if(req.body.plantcode.search(':')>=0)
-    var plantcode = req.body.plantcode.split(' ')[1]
+    var plantcode = req.body.plantcode
   else
     var plantcode = req.body.plantcode
 
   console.log(plantcode)
     var result = await pool.request()
-    .query("select desig_name from designation where plant_code = (select plant_code from plant where plant_name = '"+plantcode+"' ) and del_status = 0   ")
+    .query("select slno, desig_name from designation where plant_code = '"+plantcode+"' and del_status = 0   ")
 
     var result2 = await pool.request()
-    .query("select dept_name from department where plant_code = (select plant_code from plant where plant_name = '"+plantcode+"')  and del_staus = 0  ")
+    .query("select dept_slno, dept_name from department where plant_code ='"+plantcode+"' and del_staus = 0  ")
 
     var result3 = await pool.request()
-    .query("select line_name from mst_line where plant_code = (select plant_code from plant where plant_name = '"+plantcode+"' ) and del_status = 'N'  ")
+    .query("select line_code, line_name from mst_line where plant_code = '"+plantcode+"' and del_status = 'N'  ")
   
     var object = []
     object[0] = result['recordset']
@@ -1809,7 +1811,7 @@ app.post('/companyadd',async(req,res)=>{
     var result = await pool.request()
         .query("SELECT company_name FROM master_company WHERE company_code = "+Code+"")
 
-       if(result.rowsAffected > 0)
+       if(result['recordset'].length > 0)
        {
            res.send({message: 'already'});
        }
@@ -1986,20 +1988,22 @@ app.post('/getplant', async(req,res)=>{
 app.post('/adddepartment' , async(req,res)=>
 {
   try{
-      var plant_name = req.body.plant_name
+      var plant_code = req.body.plant_name
       var department_name = req.body.dept_name
+      var dept_group = req.body.dept_group
       var sap_code = req.body.sap_code
       var pool =await db.poolPromise
 
-      var result = await pool.request()
-        .query("select plant_code from plant where plant_name = '"+plant_name+"'")
-      var plant_code = result['recordset'][0].plant_code
+      // var result = await pool.request()
+      //   .query("select plant_code from plant where plant_name = '"+plant_name+"'")
+      // var plant_code = result['recordset'][0].plant_code
 
       result = await pool.request()
                           .input("plant_code", plant_code)
                           .input("department_name", department_name)
+                          .input("dept_group", dept_group)
                           .input("sap_code", sap_code)
-                          .query("Insert into department values(@department_name, @plant_code, 0, @sap_code)")
+                          .query("Insert into department values(@department_name, @plant_code, 0, @sap_code, @dept_group)")
         res.send({'message': 'inserted'})
         
         
@@ -2030,17 +2034,18 @@ app.post('/deletedepartment', async(req,res)=>
 app.post('/updatedepartment', async(req,res)=>{
   try{
 
-    var plant_name = req.body.plant_name
+    var plant_code = req.body.plant_name
     var department_name = req.body.dept_name
     var sap_code = req.body.sap_code
     var dept_slno = req.body.dept_slno
+    var dept_group = req.body.dept_group
 
     var pool =await db.poolPromise
     var result = await pool.request()
-    .query("select plant_code from plant where plant_name = '"+plant_name+"'")
-    var plant_code = result['recordset'][0].plant_code
+    // .query("select plant_code from plant where plant_name = '"+plant_name+"'")
+    // var plant_code = result['recordset'][0].plant_code
     var result = await pool.request()
-      .query("update department set plant_code = '"+plant_code+"' , dept_name='"+department_name+"', sap_code = '"+sap_code+"' where  dept_slno='"+dept_slno+"'")
+      .query("update department set plant_code = '"+plant_code+"' , dept_name='"+department_name+"', sap_code = '"+sap_code+"', dept_group='"+dept_group+"' where  dept_slno='"+dept_slno+"'")
       res.send({'message': 'updated'})
   }catch(err){
     console.log(err)
@@ -2052,7 +2057,7 @@ app.post('/getdepartment', async(req,res)=>{
   try{
   var pool = await db.poolPromise
   var result = await pool.request()
-    .query("select department.dept_slno, department.dept_name, department.plant_code,department.sap_code, plant.plant_name from department join plant on department.plant_code = plant.plant_code where department.del_staus=0") 
+    .query("select department.dept_group, department.dept_slno, department.dept_name, department.plant_code,department.sap_code, plant.plant_name from department join plant on department.plant_code = plant.plant_code where department.del_staus=0") 
 
   res.send(result['recordset'])
   }catch(err){
@@ -2072,6 +2077,7 @@ app.post('/plantcode', async(req,res)=>{
 app.post('/addline' , async(req,res)=>
 {
   try{
+    console.log(req.body)
       var line_name = req.body.Line_Name
       var dept_name = req.body.dept_name
       var personal_subarea = req.body.personal_subarea
@@ -2080,18 +2086,15 @@ app.post('/addline' , async(req,res)=>
 
       var pool =await db.poolPromise
 
-      var result3 =await pool.request()
-      .query("select dept_slno from department where dept_name = '"+dept_name+"' ")
-      var module_code = result3['recordset'][0].dept_slno
+      var plant_code = req.body.plant_name
 
-      var result2 =await pool.request()
-       .query("select plant_code from plant where plant_name = '"+req.body.plant_name+"' ")
-      var plant_code = result2['recordset'][0].plant_code
+      var result3 =await pool.request()
+      .query("select dept_slno from department where dept_name = '"+dept_name+"' and plant_code = '"+plant_code+"' ")
+      var module_code = result3['recordset'][0].dept_slno
 
       console.log(plant_code, req.body.plant_code)
       var result = await pool.request()
                           .input("plant_code", plant_code)
-                          // .input("shop_code", shop_code)
                           .input("created_by", created_by)
                           .input("line_name", line_name)
                           .input("module_code", module_code)
@@ -2126,19 +2129,15 @@ app.post('/updateline', async(req,res)=>{
     var line_code = req.body.Line_code
     var line_name = req.body.Line_Name
     var dept_name = req.body.dept_name
-    var plant_name = req.body.plant_name
+    var plant_code = req.body.plant_name
     var personal_subarea = req.body.personal_subarea
     var modified_by = req.body.modified_by
 
     var pool =await db.poolPromise
 
     var result3 =await pool.request()
-    .query("select dept_slno from department where dept_name = '"+dept_name+"' ")
+    .query("select dept_slno from department where dept_name = '"+dept_name+"' and plant_code = '"+plant_code+"' ")
     var module_code = result3['recordset'][0].dept_slno
-
-    var result2 =await pool.request()
-     .query("select plant_code from plant where plant_name = '"+plant_name+"' ")
-    var plant_code = result2['recordset'][0].plant_code
     
     console.log("  update mst_line set plant_code = '"+plant_code+"' , line_name='"+line_name+"' , shop_code=1 , module_code='"+module_code+"' , personal_subarea='"+personal_subarea+"', modifiedby = '"+modified_by+"', modifieddt = CURRENT_TIMESTAMP where  line_code='"+line_code+"'")
 
@@ -2155,7 +2154,7 @@ app.post('/getline', async(req,res)=>{
   try{
   var pool = await db.poolPromise
   var result = await pool.request()
-  .query("select mst_line.Line_code,plant.plant_name, department.dept_name, mst_line.Line_Name, mst_line.personal_subarea, mst_line.createddt, mst_line.Created_By, mst_line.modifieddt, mst_line.modifiedby from mst_line join plant on mst_line.plant_code = plant.plant_code join department on mst_line.Module_code = department.dept_slno and mst_line.del_status = 'N' ")
+  .query("select mst_line.Line_code,plant.plant_name,plant.plant_code, department.dept_name, mst_line.Line_Name, mst_line.personal_subarea, mst_line.createddt, mst_line.Created_By, mst_line.modifieddt, mst_line.modifiedby from mst_line join plant on mst_line.plant_code = plant.plant_code join department on mst_line.Module_code = department.dept_slno and mst_line.del_status = 'N' ")
   console.log("select mst_line.Line_Name, mst_line.Line_code, plant.plant_name ,mst_line.personal_subarea, mst_line.created_on, mst_line.Created_By, mst_line.modified_on, mst_line.modified_by from mst_line join plant on Mst_Line.Plant_code = plant.plant_code where mst_line.del_status = 'N' ")
   res.send(result['recordset'])
   }catch(err){
@@ -2168,14 +2167,14 @@ app.post('/getline', async(req,res)=>{
 app.post('/adddesignation' , async(req,res)=>
 {
   try{
-      var plant_name = req.body.plant_name
+      var plant_code = req.body.plant_name
       var desig_name = req.body.desig_name
 
       var pool =await db.poolPromise
 
-      var result = await pool.request()
-        .query("select plant_code from plant where plant_name = '"+plant_name+"'")
-      var plant_code = result['recordset'][0].plant_code
+      // var result = await pool.request()
+      //   .query("select plant_code from plant where plant_name = '"+plant_name+"'")
+      // var plant_code = result['recordset'][0].plant_code
 
       result = await pool.request()
                           .input("plant_code", plant_code)
@@ -2210,15 +2209,15 @@ app.post('/deletedesignation', async(req,res)=>
 app.post('/updatedesignation', async(req,res)=>{
   try{
 
-    var plant_name = req.body.plant_name
+    var plant_code = req.body.plant_name
     var desig_name = req.body.desig_name
     var slno = req.body.slno
 
     var pool =await db.poolPromise
 
-    var result = await pool.request()
-    .query("select plant_code from plant where plant_name = '"+plant_name+"'")
-    var plant_code = result['recordset'][0].plant_code
+    // var result = await pool.request()
+    // .query("select plant_code from plant where plant_name = '"+plant_name+"'")
+    // var plant_code = result['recordset'][0].plant_code
 
     var result = await pool.request()
       .query("  update designation set plant_code = '"+plant_code+"' , desig_name='"+desig_name+"' where  slno='"+slno+"'")
@@ -2327,7 +2326,7 @@ app.post('/addoperation' , async(req,res)=>
 {
   try{
       var oprn_desc = req.body.oprn_desc
-      var plant_name = req.body.plant_name
+      var plant_code = req.body.plant_name
       var skill_level = req.body.skill_level
       var critical_oprn = req.body.critical_oprn
 
@@ -2339,9 +2338,9 @@ app.post('/addoperation' , async(req,res)=>
       }
       var pool =await db.poolPromise
 
-      var result2 =await pool.request()
-      .query("select plant_code from plant where plant_name = '"+plant_name+"' ")
-     var plant_code = result2['recordset'][0].plant_code
+    //   var result2 =await pool.request()
+    //   .query("select plant_code from plant where plant_name = '"+plant_name+"' ")
+    //  var plant_code = result2['recordset'][0].plant_code
 
      console.log("Insert into operations values('"+plant_code+"', '"+req.body.oprn_desc+"','N', 0, '"+skill_level+"', '"+critical_oprn+"')")
 
@@ -2381,7 +2380,7 @@ app.post('/updateoperation', async(req,res)=>{
   try{
 
     var oprn_desc = req.body.oprn_desc
-    var plant_name = req.body.plant_name
+    var plant_code = req.body.plant_name
     var skill_level = req.body.skill_level
     var critical_oprn = req.body.critical_oprn
     var oprn_slno = req.body.oprn_slno
@@ -2395,9 +2394,9 @@ app.post('/updateoperation', async(req,res)=>{
 
     var pool =await db.poolPromise
 
-    var result2 =await pool.request()
-    .query("select plant_code from plant where plant_name = '"+plant_name+"' ")
-   var plant_code = result2['recordset'][0].plant_code
+  //   var result2 =await pool.request()
+  //   .query("select plant_code from plant where plant_name = '"+plant_name+"' ")
+  //  var plant_code = result2['recordset'][0].plant_code
 
       console.log(" update operations set plant_code = '"+plant_code+"' , oprn_desc='"+oprn_desc+"' , skill_level='"+skill_level+"' , critical_oprn='"+critical_oprn +"' where  oprn_slno='"+oprn_slno+"'")
 
@@ -2451,19 +2450,19 @@ app.post('/addemployee' , async(req,res)=>
      var plant_code = result2['recordset'][0].plant_code
 
      var result3 =await pool.request()
-     .query("select line_code from mst_line where line_name = '"+line+"' ")
+     .query("select line_code from mst_line where line_name = '"+line+"' and plant_code = '"+plant_code+"' ")
     var line_code = result3['recordset'][0].line_code
 
     var result4 =await pool.request()
-    .query("select dept_slno from department where dept_name = '"+department+"' ")
+    .query("select dept_slno from department where dept_name = '"+department+"' and plant_code = '"+plant_code+"' ")
     var dept_slno = result4['recordset'][0].dept_slno
   
     var result5 =await pool.request()
-    .query("select slno from designation where desig_name = '"+designation+"' ")
+    .query("select slno from designation where desig_name = '"+designation+"' and plant_code = '"+plant_code+"' ")
     var slno = result5['recordset'][0].slno
 
       var result = await pool.request()
-      .query("select user_name from employees where user_name = '"+user_name+"'")
+      .query("select user_name from employees where user_name = '"+user_name+"' and plant_code = '"+plant_code+"' ")
       
       if(result['recordset'].length > 0)
         res.send({'message': 'already'})
@@ -3049,7 +3048,7 @@ app.post('/eval_form', async(req, res)=>
 
 
     console.log("update periodical_eval set tre_eval_date = CURRENT_TIMESTAMP, tre_filename = '"+upload_file+"', tre_submitted = 1,tnr_eval_date = CURRENT_TIMESTAMP, tnr_filename = '"+upload_file+"', tnr_submitted = 1, tnr_numerator = '"+score_obtained+"' , tnr_denominator= '"+score_for+"', tnr_new_skill= '"+percentage+"',sup_numerator = '"+score_obtained+"' , sup_denominator= '"+score_for+"', sup_new_skill= '"+percentage+"' where apln_slno = '"+apln_slno+"' \n ")
-    console.log("update periodical_eval_dept set new_dept_slno = (select top 1 dept_slno from department dept_name = '"+department+"') , new_line_code = (select top 1 line_code from mst_line where line_name = '"+line+"') where apln_slno = '"+apln_slno+"' ")
+    console.log("update periodical_eval_dept set new_dept_slno = (select top 1 dept_slno from department dept_name = '"+department+"' and plant_code = '"+plant_code+"' ) , new_line_code = (select top 1 line_code from mst_line where line_name = '"+line+"') where apln_slno = '"+apln_slno+"' ")
     console.log("update periodical_eval_level set new_level = '"+new_skill+"' where apln_slno = '"+apln_slno+"'")
     console.log("insert into periodical_eval_operations values( (select top 1 peval_slno from periodical_eval where apln_slno = '"+apln_slno+"') , (select oprn_slno from operations where oprn_desc = '"+process_trained+"' ) , 1, '"+apln_slno+"')  ")
     console.log("insert into post_evaluation(plant_code, evaluation_days, apln_slno, line_name, evaluator_slno, evaluation_datetime, total_marks, pass_fail, HR_Entry, HR, HR_Date) values('"+plant_code+"','"+eval_days+"','"+apln_slno+"','"+line_name+"','"+emp_slno+"',CURRENT_TIMESTAMP,'"+score_obtained+"','pass','Y','"+emp_slno+"',current_timestamp) ")
@@ -3060,17 +3059,17 @@ app.post('/eval_form', async(req, res)=>
       .query("update periodical_eval set tre_eval_date = '"+evaluation_date+"', tre_filename = '"+upload_file+"', tre_submitted = 1,tnr_name = '"+emp_name+"',tnr_eval_date = '"+evaluation_date+"', tnr_filename = '"+upload_file+"', tnr_submitted = 1, tnr_numerator = '"+score_obtained+"' , tnr_denominator= '"+score_for+"', tnr_new_skill= '"+percentage+"',sup_numerator = '"+score_obtained+"' , sup_denominator= '"+score_for+"', sup_new_skill= '"+percentage+"' where apln_slno = '"+apln_slno+"'  ")
 
       var result2 = await pool.request()
-      .query("update periodical_eval_dept set new_dept_slno = (select top 1 dept_slno from department where dept_name = '"+department+"') , new_line_code = (select top 1 line_code from mst_line where line_name = '"+line+"') where apln_slno = '"+apln_slno+"' ")
+      .query("update periodical_eval_dept set new_dept_slno = (select top 1 dept_slno from department where dept_name = '"+department+"' and plant_code = '"+plant_code+"' ) , new_line_code = (select top 1 line_code from mst_line where line_name = '"+line+"' and plant_code = '"+plant_code+"' ) where apln_slno = '"+apln_slno+"' ")
       var result3 = await pool.request()
       .query("update periodical_eval_level set new_level = '"+new_skill+"' where apln_slno = '"+apln_slno+"'")
 
       var result5 = await pool.request()
-      .query("update trainee_apln set dept_slno = (select new_dept_slno from periodical_eval_dept where apln_slno = '"+apln_slno+"'), line_code = (select top 1 line_code from mst_line where line_name = '"+line+"') where apln_slno = '"+apln_slno+"'")
+      .query("update trainee_apln set dept_slno = (select new_dept_slno from periodical_eval_dept where apln_slno = '"+apln_slno+"'), line_code = (select top 1 line_code from mst_line where line_name = '"+line+"' and plant_code = '"+plant_code+"' ) where apln_slno = '"+apln_slno+"'")
 
       for(var i=0; i< process_trained.length; i++)
       {
         var result4 = await pool.request()
-        .query("insert into periodical_eval_operations values( (select top 1 peval_slno from periodical_eval where apln_slno = '"+apln_slno+"') , (select oprn_slno from operations where oprn_desc = '"+process_trained[i]+"' ) , 1, '"+apln_slno+"')  ")
+        .query("insert into periodical_eval_operations values( (select top 1 peval_slno from periodical_eval where apln_slno = '"+apln_slno+"' and plant_code = '"+plant_code+"' ) , (select oprn_slno from operations where oprn_desc = '"+process_trained[i]+"' ) , 1, '"+apln_slno+"')  ")
       }
 
     var insert = await pool.request()
