@@ -14,6 +14,7 @@ const res = require('express/lib/response');
 let glob = 0;
 const multer = require('multer');
 const fs = require("fs");
+const nodemailer = require('nodemailer');
 
 var q_bank = multer.diskStorage({ 
   
@@ -3046,12 +3047,16 @@ app.post('/eval_form', async(req, res)=>
     var line_name = req.body.line_name
     var upload_file = req.body.upload_file
 
+    console.log(process_trained)
 
-    console.log("update periodical_eval set tre_eval_date = CURRENT_TIMESTAMP, tre_filename = '"+upload_file+"', tre_submitted = 1,tnr_eval_date = CURRENT_TIMESTAMP, tnr_filename = '"+upload_file+"', tnr_submitted = 1, tnr_numerator = '"+score_obtained+"' , tnr_denominator= '"+score_for+"', tnr_new_skill= '"+percentage+"',sup_numerator = '"+score_obtained+"' , sup_denominator= '"+score_for+"', sup_new_skill= '"+percentage+"' where apln_slno = '"+apln_slno+"' \n ")
-    console.log("update periodical_eval_dept set new_dept_slno = (select top 1 dept_slno from department dept_name = '"+department+"' and plant_code = '"+plant_code+"' ) , new_line_code = (select top 1 line_code from mst_line where line_name = '"+line+"') where apln_slno = '"+apln_slno+"' ")
+
+    console.log("update periodical_eval set tre_eval_date = '"+evaluation_date+"', tre_filename = '"+upload_file+"', tre_submitted = 1,tnr_name = '"+emp_name+"',tnr_eval_date = '"+evaluation_date+"', tnr_filename = '"+upload_file+"', tnr_submitted = 1, tnr_numerator = '"+score_obtained+"' , tnr_denominator= '"+score_for+"', tnr_new_skill= '"+percentage+"',sup_numerator = '"+score_obtained+"' , sup_denominator= '"+score_for+"', sup_new_skill= '"+percentage+"' where apln_slno = '"+apln_slno+"'  ")
+    console.log("update periodical_eval_dept set new_dept_slno = (select top 1 dept_slno from department where dept_name = '"+department+"' and plant_code = '"+plant_code+"' ) , new_line_code = (select top 1 line_code from mst_line where line_name = '"+line+"' and plant_code = '"+plant_code+"' ) where apln_slno = '"+apln_slno+"' ")
     console.log("update periodical_eval_level set new_level = '"+new_skill+"' where apln_slno = '"+apln_slno+"'")
-    console.log("insert into periodical_eval_operations values( (select top 1 peval_slno from periodical_eval where apln_slno = '"+apln_slno+"') , (select oprn_slno from operations where oprn_desc = '"+process_trained+"' ) , 1, '"+apln_slno+"')  ")
-    console.log("insert into post_evaluation(plant_code, evaluation_days, apln_slno, line_name, evaluator_slno, evaluation_datetime, total_marks, pass_fail, HR_Entry, HR, HR_Date) values('"+plant_code+"','"+eval_days+"','"+apln_slno+"','"+line_name+"','"+emp_slno+"',CURRENT_TIMESTAMP,'"+score_obtained+"','pass','Y','"+emp_slno+"',current_timestamp) ")
+    console.log("update trainee_apln set dept_slno = (select new_dept_slno from periodical_eval_dept where apln_slno = '"+apln_slno+"'), line_code = (select top 1 line_code from mst_line where line_name = '"+line+"' and plant_code = '"+plant_code+"' ) where apln_slno = '"+apln_slno+"'")
+    console.log("update trainee_apln set dept_slno = (select new_dept_slno from periodical_eval_dept where apln_slno = '"+apln_slno+"'), line_code = (select top 1 line_code from mst_line where line_name = '"+line+"' and plant_code = '"+plant_code+"' ) where apln_slno = '"+apln_slno+"'")
+    console.log("insert into periodical_eval_operations values( (select top 1 peval_slno from periodical_eval where apln_slno = '"+apln_slno+"' and plant_code = '"+plant_code+"' ) , (select oprn_slno from operations where oprn_desc = '"+process_trained[i]+"' ) , 1, '"+apln_slno+"')  ")
+    console.log("insert into post_evaluation(plant_code, evaluation_days, apln_slno, line_name, evaluator_slno, evaluation_datetime, total_marks, pass_fail, HR_Entry, HR, HR_Date) values('"+plant_code+"','"+eval_days+"','"+apln_slno+"','"+line_name+"','"+emp_slno+"','"+evaluation_date+"','"+score_obtained+"','pass','Y','"+emp_slno+"','"+evaluation_date+"') ")
 
     var pool = await db.poolPromise
 
@@ -3069,7 +3074,7 @@ app.post('/eval_form', async(req, res)=>
       for(var i=0; i< process_trained.length; i++)
       {
         var result4 = await pool.request()
-        .query("insert into periodical_eval_operations values( (select top 1 peval_slno from periodical_eval where apln_slno = '"+apln_slno+"' and plant_code = '"+plant_code+"' ) , (select oprn_slno from operations where oprn_desc = '"+process_trained[i]+"' ) , 1, '"+apln_slno+"')  ")
+        .query("insert into periodical_eval_operations values( (select top 1 peval_slno from periodical_eval where apln_slno = '"+apln_slno+"') , (select oprn_slno from operations where oprn_desc = '"+process_trained[i]+"' ) , 1, '"+apln_slno+"')  ")
       }
 
     var insert = await pool.request()
@@ -3220,13 +3225,17 @@ app.post('/relieve', async(req,res)=>
   }
 })
 
-app.get('/trainee-report', async(req,res)=>
+app.post('/trainee-report', async(req,res)=>
 {
   try
   {
+
+  var fromdate = req.body.fromDate
+  var todate = req.body.toDate
+
   let pool = await db.poolPromise
   var result = await pool.request()
-    .query("select * from trainee_apln")
+    .query("select * from trainee_apln where created_dt >= '"+fromdate+"' and created_dt <= '"+todate+"' ")
   res.send(result['recordset'])
 }
 catch(err)
@@ -3236,13 +3245,39 @@ catch(err)
 }
 }
 )
-app.get('/test-summary', async(req,res)=>
+app.post('/test-summary', async(req,res)=>
 {
   try
   {
+    var fromdate = req.body.fromDate
+    var todate = req.body.toDate
+
+    console.log("select fullname, trainee_idno,submission_date, sum(pretraining_percent)/count(*) as pretraining-percent, sum(posttraining_percent)/count(*) as sum2 from test_result_summary where submission_date >= '"+fromdate+"' and submission_date <= '"+todate+"' group by fullname, trainee_idno, submission_date  ")
+
     var pool = await db.poolPromise
     var result = await pool.request()
-      .query("select fullname, trainee_idno,submission_date, sum(pretraining_score)/count(*) as sum1, sum(posttraining_score)/count(*) as sum2 from test_result_summary  group by fullname, trainee_idno, submission_date ")
+      .query("select fullname, trainee_idno,submission_date, sum(pretraining_percent)/count(*) as pre_training_percent, sum(posttraining_percent)/count(*) as post_training_percent from test_result_summary where submission_date >= '"+fromdate+"' and submission_date <= '"+todate+"' group by fullname, trainee_idno, submission_date  ")
+    res.send(result['recordset'])
+  }
+  catch(err)
+  {
+    console.log(err)
+    res.send({message:'failure'})
+  }
+
+}
+)
+app.post('/evaluation-due-report', async(req,res)=>
+{
+  try
+  {
+    var fromdate = req.body.fromDate
+    var todate = req.body.toDate
+    var plant_code = req.body.plant_code
+
+    var pool = await db.poolPromise
+    var result = await pool.request()
+    .query(" WITH cte AS (SELECT apln_slno, COUNT(*) AS record_count FROM post_evaluation GROUP BY apln_slno) SELECT t.trainee_idno, t.fullname, d.dept_name, l.line_name , DATEDIFF(day, TRY_PARSE(t.doj AS DATE USING 'en-US'), GETDATE()) as Aging,cte.record_count as evaluation_completed FROM trainee_apln t INNER JOIN cte ON t.apln_slno = cte.apln_slno JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code and apln_status = 'APPOINTED' AND t.apln_slno IN (SELECT distinct apln_slno FROM post_evaluation WHERE ra_entry = 'Y' and HR_Entry = 'Y') where t.plant_code = '"+plant_code+"' and t.doj >= '"+fromdate+"' and t.doj <= '"+todate+"' ")
     res.send(result['recordset'])
   }
   catch(err)
@@ -3284,20 +3319,16 @@ app.post('/people_planning', async(req,res)=>{
   console.log(req.body)
 
   var result = await pool.request()
-  .query("select p.*,d.dept_group, d.dept_name, m.line_name from people_planning p join department d on p.dept_slno = d.dept_slno join mst_line m on m.line_code = p.line_code where p.plant_code = '"+plantcode+"' and plan_year = "+year+" and plan_month = "+month+" ")
+  .query("select p.plan_slno, p.plan_month, p.plan_year ,d.dept_group, d.dept_name, m.line_name,p.shift1_reqd, p.shift2_reqd, p.shift3_reqd, p.genl_reqd, p.total_reqd from people_planning p join department d on p.dept_slno = d.dept_slno join mst_line m on m.line_code = p.line_code where p.plant_code = '"+plantcode+"' and plan_year = "+year+" and plan_month = "+month+" ")
   if(result['recordset'].length == 0)
   {
     var result2 = await pool.request()
     .query("select d.dept_slno, m.line_code, m.line_name,d.dept_name, d.dept_group  from mst_line m join department d on m.module_code = d.dept_slno where m.plant_code = '"+plantcode+"' ")
-    result2['recordset'][0].status = 'new'
-
-    var result3 = await 
 
     res.send(result2['recordset'])
   }
   else
   {
-    result['recordset'][0].status = 'old'
     res.send(result['recordset'])
   }
 })
@@ -3308,33 +3339,26 @@ try
    var pool = await db.poolPromise
    
    var details = req.body
-   console.log(details)
+   console.log(details[0])
 
    for(var i =0; i<details.length; i++)
    {
-    if(details[i].shift1_reqd == null || details[i].shift1_reqd == undefined)
-    {
-
-    }
-    else
-    {
       var result = await pool.request()
       .input("plan_month", details[0].plant_month)
       .input("plan_year", details[0].plant_year)
       .input("plant_code", details[0].plant_code)
       .input("dept_slno", details[i].dept_slno)
       .input("line_code", details[i].line_code)
-      .input("shift1_reqd", details[i].shift1_reqd)
-      .input("shift2_reqd", details[i].shift2_reqd)
-      .input("shift3_reqd", details[i].shift3_reqd)
-      .input("genl_reqd", details[i].genl_reqd)
-      .input("total_reqd", details[i].total_reqd)
+      .input("shift1_reqd", details[i].shift1)
+      .input("shift2_reqd", details[i].shift2)
+      .input("shift3_reqd", details[i].shift3)
+      .input("genl_reqd", details[i].genl)
+      .input("total_reqd", details[i].total)
       .input("created_by", details[0].created_by)
       // .input("modified_by", details[0].modified_by)
       // .input("modified_dt", details[0].modified_dt)
       // console.log("insert into people_planning(plan_month, plan_year, plant_code, dept_slno, line_code, shift1_reqd, shift2_reqd, shift3_reqd, genl_reqd, total_reqd, created_by, created_dt) values('"+details[0].plant_month+"', '"+details[0].plant_year+"', '"+details[0].plant_code+"', '"+details[i].dept_slno+"','"+details[i].line_code+"', '"+details[i].shift1_reqd+"', '"+details[i].shift2_reqd+"', '"+details[i].shift3_reqd+"', '"+details[i].genl_reqd+"', '"+details[i].total_reqd+"', '"+details[0].created_by+"', CURRENT_TIMESTAMP) ")
       .query("insert into people_planning(plan_month, plan_year, plant_code, dept_slno, line_code,oprn_slno, shift1_reqd, shift2_reqd, shift3_reqd, genl_reqd, total_reqd, created_by, created_dt) values(@plan_month, @plan_year, @plant_code, @dept_slno,@line_code,23, @shift1_reqd, @shift2_reqd, @shift3_reqd, @genl_reqd, @total_reqd, @created_by, CURRENT_TIMESTAMP) ")
-    }
 
    }
     res.send({message: 'success'})
@@ -3366,9 +3390,9 @@ try
       var result = await pool.request()
       .input("plan_month", details[0].plant_month)
       .input("plan_year", details[0].plant_year)
-      .input("plant_code", details[0].plant_code)
-      .input("dept_slno", details[i].dept_slno)
-      .input("line_code", details[i].line_code)
+      // .input("plant_code", details[0].plant_code)
+      // .input("dept_slno", details[i].dept_slno)
+      // .input("line_code", details[i].line_code)
       .input("shift1_reqd", details[i].shift1_reqd)
       .input("shift2_reqd", details[i].shift2_reqd)
       .input("shift3_reqd", details[i].shift3_reqd)
@@ -3378,7 +3402,7 @@ try
       // .input("modified_by", details[0].modified_by)
       // .input("modified_dt", details[0].modified_dt)
       // console.log("insert into people_planning(plan_month, plan_year, plant_code, dept_slno, line_code, shift1_reqd, shift2_reqd, shift3_reqd, genl_reqd, total_reqd, created_by, created_dt) values('"+details[0].plant_month+"', '"+details[0].plant_year+"', '"+details[0].plant_code+"', '"+details[i].dept_slno+"','"+details[i].line_code+"', '"+details[i].shift1_reqd+"', '"+details[i].shift2_reqd+"', '"+details[i].shift3_reqd+"', '"+details[i].genl_reqd+"', '"+details[i].total_reqd+"', '"+details[0].created_by+"', CURRENT_TIMESTAMP) ")
-      .query("update people_planning set plan_month = @plan_month, plan_year =  @plan_year, plant_code = @plant_code, dept_slno =  @dept_slno, line_code = @line_code, shift1_reqd =  @shift1_reqd, shift2_reqd =  @shift2_reqd, shift3_reqd= @shift3_reqd , genl_reqd = @genl_reqd, total_reqd =@total_reqd, modified_by =  @modified_by, modified_dt = CURRENT_TIMESTAMP where plan_slno = "+details[i].plan_slno+" ")
+      .query("update people_planning set plan_month = @plan_month, plan_year =  @plan_year, shift1_reqd =  @shift1_reqd, shift2_reqd =  @shift2_reqd, shift3_reqd= @shift3_reqd , genl_reqd = @genl_reqd, total_reqd =@total_reqd, modified_by =  @modified_by, modified_dt = CURRENT_TIMESTAMP where plan_slno = "+details[i].plan_slno+" ")
     }
 
    }
@@ -3388,6 +3412,165 @@ catch(err)
 {
   console.log(err)
   res.send({message: 'failure'})
+}
+
+})
+
+app.post('/people-planning-report', async(req, res)=>{
+
+  var pool = await db.poolPromise
+  var year = req.body.year
+  var month = req.body.month
+  var plant_code = req.body.plant_code;
+
+  var result = await pool.request()
+    .query("select * from people_planning")
+
+})
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: '201501004@rajalakshmi.edu.in',
+    pass: 'REC20209003'
+  }
+});
+
+app.post('/submitted_mail', async(req,res)=>{
+
+
+  try
+  {
+  var plant_code = req.body.plant_code
+  var mobile = req.body.mobile
+  var company = req.body.company
+ 
+  var pool = await db.poolPromise;
+  console.log("select apln_slno from trainee_apln where mobile_no1 = '"+mobile+"' and company_code =(select company_code from master_company where sno = '"+company+"')  ")
+
+  var apln = await pool.request()
+  .query("select apln_slno from trainee_apln where mobile_no1 = '"+mobile+"' and company_code =(select company_code from master_company where sno = '"+company+"') ")
+
+  var result = await pool.request()
+  .query("select mail_id from employees where plant_code = '"+plant_code+"' and Is_HRAppr = 1 ")
+
+  var mail = result['recordset'].map((a)=>a.mail_id)
+
+  const mailOptions = {
+    from: '201501004@rajalakshmi.edu.in',
+    to: mail.join(','),
+    subject: 'Application Process - DHRM',
+    text: 'The application has been submitted for the application Number :'+apln['recordset'][0].apln_slno+'.Kindly Update the Application Status. '
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log(error);
+      res.status(500).send('Internal server error');
+    } else {
+      console.log('Email sent: ' + info.response);
+      res.send({message:'Email sent'});
+    }
+  });
+}
+catch(err)
+{
+  console.log(err)
+  res.send({message: 'mail not sent'})
+}
+
+})
+app.post('/approved_mail', async(req,res)=>{
+
+try
+{
+  var plant_code = req.body.plant_code
+  var mobile = req.body.mobile
+  var company = req.body.company
+ 
+  var pool = await db.poolPromise;
+
+  var apln = await pool.request()
+  .query("select apln_slno from trainee_apln where mobile_no1 = '"+mobile+"' and company_code =(select company_code from master_company where sno = '"+company+"') ")
+
+  var result = await pool.request()
+  .query("select mail_id from employees where plant_code = '"+plant_code+"' and Is_HR = 1 ")
+
+  var mail = result['recordset'].map((a)=>a.mail_id)
+
+  const mailOptions = {
+    from: '201501004@rajalakshmi.edu.in',
+    to: mail.join(','),
+    subject: 'Application Process - DHRM',
+    text: 'The application has been Approved for the application Number :'+apln['recordset'][0].apln_slno+'.Kindly Update the Application Status. '
+  };
+
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log(error);
+      res.status(500).send('Internal server error');
+    } else {
+      console.log('Email sent: ' + info.response);
+      res.send({message:'Email sent'});
+    }
+  });
+
+  
+}
+catch(err)
+{
+  console.log(err)
+  res.send({message: 'mail not sent'})
+}
+
+})
+
+app.post('/evaluation_mail', async(req,res)=>{
+
+try
+{
+  var plant_code = req.body.plant_code
+
+  var idno = req.body.idno
+
+  var pool = await db.poolPromise;
+  var result = await pool.request()
+  .query(" select mail_id from employees where plant_code = '"+plant_code+"' and department = (select dept_slno from trainee_apln where trainee_idno = '"+idno+"' ) and line_code = (select line_code from trainee_apln where trainee_idno = '"+idno+"' ) ")
+
+  var mail = result['recordset'].map((a)=>a.mail_id)
+
+  // var mail2 = ['ahamedrmdind@gmail.com']
+
+  if(mail.length == 0 )
+  {
+    res.send({message:'No email Found'}); 
+  }
+  else
+  {
+    const mailOptions = {
+      from: '201501004@rajalakshmi.edu.in',
+      to: mail.join(','),
+      subject: 'Post Evaluation Process - DHRM',
+      text: 'The Employess with id :'+idno+' has been Evaluated. Kindly Complete the Evaluation Process. '
+    };
+  
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log(error);
+        res.status(500).send('Internal server error');
+      } else {
+        console.log('Email sent: ' + info.response);
+        res.send({message:'Email sent'});
+      }
+    });
+  }
+
+
+}
+catch(err)
+{
+  console.log(err)
+  res.send({message: 'mail not sent'})
 }
 
 })
