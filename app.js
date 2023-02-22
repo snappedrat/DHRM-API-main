@@ -469,7 +469,7 @@ app.post('/plantcodelist', async(req,res)=>
     var pool = await db.poolPromise;
   var company_name = req.body.company_name
   var result = await pool.request()
-    .query("select plant_name from plant where company_code =  (select top 1 company_code from master_company where company_name = '"+company_name+"')  ")
+    .query("select plant_name from plant where company_code =  (select top 1 company_code from master_company where company_name = '"+company_name+"') and del_status= 1 ")
     res.send(result['recordset'])
   }
   catch(err)
@@ -3232,10 +3232,11 @@ app.post('/trainee-report', async(req,res)=>
 
   var fromdate = req.body.fromDate
   var todate = req.body.toDate
+  var plantcode = req.body.plantcode
 
   let pool = await db.poolPromise
   var result = await pool.request()
-    .query("select * from trainee_apln where created_dt >= '"+fromdate+"' and created_dt <= '"+todate+"' ")
+    .query("select * from trainee_apln where created_dt >= '"+fromdate+"' and created_dt <= '"+todate+"' and plant_code = '"+plantcode+"' ")
   res.send(result['recordset'])
 }
 catch(err)
@@ -3251,12 +3252,14 @@ app.post('/test-summary', async(req,res)=>
   {
     var fromdate = req.body.fromDate
     var todate = req.body.toDate
+    var plantcode = req.body.plantcode
+
 
     console.log("select fullname, trainee_idno,submission_date, sum(pretraining_percent)/count(*) as pretraining-percent, sum(posttraining_percent)/count(*) as sum2 from test_result_summary where submission_date >= '"+fromdate+"' and submission_date <= '"+todate+"' group by fullname, trainee_idno, submission_date  ")
 
     var pool = await db.poolPromise
     var result = await pool.request()
-      .query("select fullname, trainee_idno,submission_date, sum(pretraining_percent)/count(*) as pre_training_percent, sum(posttraining_percent)/count(*) as post_training_percent from test_result_summary where submission_date >= '"+fromdate+"' and submission_date <= '"+todate+"' group by fullname, trainee_idno, submission_date  ")
+      .query("select fullname, trainee_idno,submission_date, sum(pretraining_percent)/count(*) as pre_training_percent, sum(posttraining_percent)/count(*) as post_training_percent from test_result_summary where submission_date >= '"+fromdate+"' and submission_date <= '"+todate+"' and plant_code = '"+plantcode+"'  group by fullname, trainee_idno, submission_date  ")
     res.send(result['recordset'])
   }
   catch(err)
