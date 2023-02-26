@@ -469,7 +469,7 @@ app.post('/plantcodelist', async(req,res)=>
     var pool = await db.poolPromise;
   var company_name = req.body.company_name
   var result = await pool.request()
-    .query("select plant_name from plant where company_code =  (select top 1 company_code from master_company where company_name = '"+company_name+"') and del_status= 1 ")
+    .query("select plant_name from plant where company_code =  (select top 1 company_code from master_company where company_name = '"+company_name+"') and del_status= 0 ")
     res.send(result['recordset'])
   }
   catch(err)
@@ -2209,6 +2209,7 @@ app.post('/deletedesignation', async(req,res)=>
 
 app.post('/updatedesignation', async(req,res)=>{
   try{
+    console.log(req.body)
 
     var plant_code = req.body.plant_name
     var desig_name = req.body.desig_name
@@ -2233,7 +2234,7 @@ app.post('/getdesignation', async(req,res)=>{
   try{
   var pool = await db.poolPromise
   var result = await pool.request()
-    .query("select designation.slno, designation.desig_name, plant.plant_name from designation join plant on designation.plant_code = plant.plant_code where designation.del_status = 0") 
+    .query("select designation.slno, designation.desig_name, plant.plant_name, plant.plant_code from designation join plant on designation.plant_code = plant.plant_code where designation.del_status = 0") 
   res.send(result['recordset'])
   }catch(err){
     console.log(err)
@@ -2653,7 +2654,7 @@ app.post('/updateshift', async(req,res)=>{
 
     var pool =await db.poolPromise
     var result = await pool.request()
-      .query("update mst_defaultshift set plant_code = '"+plant_code+"' , shift_desc='"+shift_desc+"' , in_tm_min='"+in_tm_min+"' , act_tm_from='"+act_tm_from+"' , in_tm_max='"+in_tm_max+"' , act_tm_to='"+act_tm_to+"' , type='"+type+"' , shift_group='"+shift_group+"' , plant_id=2 , security_shift='"+security_shift+"' , plant_desc='"+plant_desc+"' where  shift_id='"+shift_id+"',  ")
+      .query("update mst_defaultshift set plant_code = '"+plant_code+"' , shift_desc='"+shift_desc+"' , in_tm_min='"+in_tm_min+"' , act_tm_from='"+act_tm_from+"' , in_tm_max='"+in_tm_max+"' , act_tm_to='"+act_tm_to+"' , type='"+type+"' , shift_group='"+shift_group+"' , plant_id=2 , security_shift='"+security_shift+"' , plant_desc='"+plant_desc+"' where  shift_id='"+shift_id+"' ")
       res.send({'message': 'updated'})
   }catch(err){
     console.log(err)
@@ -2668,6 +2669,37 @@ app.post('/getshift', async(req,res)=>{
     .query("select * from mst_defaultshift where del_status = 'N'") 
   res.send(result['recordset'])
   }catch(err){
+    console.log(err)
+    res.send({"message":"failure"})
+  }
+})
+app.post('/eval_pending_approval', async(req,res)=>{
+  try
+  {
+    console.log(req.body);
+    var pool = await db.poolPromise
+    var start = req.body.status.split('-')[0]
+    var end = req.body.status.split('-')[1]
+    var plant_code = req.body.plantcode
+
+    if(end == 60)
+      count = 1
+    else if(end == 120)
+      count = 2
+    else if(end == 180)
+      count = 3
+    else if(end == 270)
+      count = 4
+
+    console.log(count)
+    
+    var result = await pool.request()
+      .query("WITH cte AS (SELECT apln_slno, COUNT(*) AS record_count FROM post_evaluation GROUP BY apln_slno) SELECT t.*, DATEDIFF(day, TRY_PARSE(t.doj AS DATE USING 'en-US'), GETDATE()) as diff,d.dept_name, l.line_name FROM trainee_apln t INNER JOIN cte ON t.apln_slno = cte.apln_slno JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code WHERE cte.record_count  = '"+count+"' and apln_status = 'APPOINTED' AND t.apln_slno IN (SELECT apln_slno FROM post_evaluation WHERE ra_entry = 'N') AND t.plant_code = '"+plant_code+"' ")  
+
+    res.send(result['recordset'])
+  }
+  catch(err)
+  {
     console.log(err)
     res.send({"message":"failure"})
   }
@@ -2710,13 +2742,14 @@ app.post('/evaluationdays', async(req,res)=>{
       count = 3
   }
   }
+
   console.log("EXEC POST_EVALUATION_LIST_SUP @start= "+start+" , @end = "+end+" , @count = "+count+", @emp_id = '"+emp_id+"' ")  
 
   if (id==2)
   {
     console.log(1)
     var result = await pool.request()
-    .query(" EXEC POST_EVALUATION_LIST_SUP @start= "+start+" , @end = "+end+" , @count = "+count+", @emp_id = '"+emp_id+"' ")
+    .query("EXEC POST_EVALUATION_LIST_SUP @start= "+start+" , @end = "+end+" , @count = "+count+", @emp_id = '"+emp_id+"' ")
 
   }
   else if(id==1 && count == 0) 
@@ -2725,12 +2758,12 @@ app.post('/evaluationdays', async(req,res)=>{
     if(filter == undefined || filter == 'undefined' || filter == 'PENDING')
     {
       var result = await pool.request()
-      .query("select t.*,DATEDIFF(day, TRY_PARSE(t.doj AS DATE USING 'en-US'), GETDATE()) as diff, d.dept_name, l.line_name from trainee_apln t JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code  where  apln_status = 'APPOINTED' and test_status = 'completed' and t.doj > '2022-12-02' and apln_slno not in (select apln_slno from post_evaluation) and apln_status = 'APPOINTED' and t.plant_code = '"+plant_code+"' ")  
+      .query("select t.*, DATEDIFF(day, TRY_PARSE(t.doj AS DATE USING 'en-US'), GETDATE()) as diff, d.dept_name, l.line_name from trainee_apln t JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code  where  apln_status = 'APPOINTED' and test_status = 'completed' and t.doj > '2022-12-02' and apln_slno not in (select apln_slno from post_evaluation) and apln_status = 'APPOINTED' and t.plant_code = '"+plant_code+"' ")  
     }
     else if(filter == 'APPROVED')
     {
       var result = await pool.request()
-      .query(" exec POST_EVALUATION_LIST_HR_FILTER @start="+start+" , @end = "+end+", @count="+count+", @plant_code = '"+plant_code+"' ")
+      .query("exec POST_EVALUATION_LIST_HR_FILTER @start="+starxt+" , @end = "+end+", @count="+count+", @plant_code = '"+plant_code+"' ")
     }
   }
   else if(id==3)
