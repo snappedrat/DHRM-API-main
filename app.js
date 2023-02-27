@@ -2705,6 +2705,22 @@ app.post('/eval_pending_approval', async(req,res)=>{
   }
 })
 
+app.post('/dummy' ,async(req,res)=>{
+  try
+  {
+  var pool = await db.poolPromise
+  var result = await pool.request()
+  .query("select top 20000 * from ontraining_evalation")
+  // res.send({"message":"success"})
+  res.send(result['recordset'])
+  }
+  catch(err)
+  {
+    console.log(err)
+    res.send({"message":"failure"})
+  }
+})
+
 app.post('/evaluationdays', async(req,res)=>{
   try
   {
