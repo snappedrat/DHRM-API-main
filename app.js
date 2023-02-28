@@ -1063,6 +1063,34 @@ catch(err)
   res.send({message:'failure'})
 }
 })
+app.post('/getdataforpermid', async(req,res)=>{
+
+  try
+  {
+  var apln_slno = req.body.apln_slno
+
+  var r = await db.poolPromise
+  var result = await r.request()
+    .query("select addr from plant where plant_code = (select plant_code from trainee_apln where apln_slno = '"+apln_slno+"' ) ")
+  var result2 = await r.request()
+    .query("select gen_id, mobile_no1, birthdate,blood_group ,fullname,fathername, trainee_idno,dept_slno, permanent_address, emergency_name, emergency_rel, other_files6, mobile_no2, plant_code from trainee_apln where apln_slno = '"+apln_slno+"' ")
+    object = result2['recordset']
+  var result3 = await r.request()
+    .query("select plant_sign from plant where plant_code = (select plant_code from trainee_apln where apln_slno = '"+apln_slno+"' ) ")
+
+
+    if(result2['recordset'].length !=0)
+      object[0].addr = result['recordset'][0].addr
+    if(result3['recordset'].length !=0)
+    object[0].plant_sign = result3['recordset'][0].plant_sign
+    res.send(object)
+}
+catch(err)
+{
+  console.log(err)
+  res.send({message:'failure'})
+}
+})
 
 
 
@@ -1206,7 +1234,7 @@ try
   if(isNaN(parseInt(username)))
   {
     var result = await pool.request()
-    .query("select* from trg_modules where plant_code = (select plant_code from trainee_apln where trainee_idno = '"+username+"') order by priorityval ")
+    .query("select* from trg_modules where plant_code = (select plant_code from trainee_apln where trainee_idno = '"+username+"') and del_status = 'N' order by priorityval ")
   }
   else
   {
@@ -1408,15 +1436,15 @@ app.post('/posttest', async(req,res)=>
   }
 
   var summary = await pool.request()
-  .query("update test_result_summary set submission_date = CURRENT_TIMESTAMP, posttraining_score = '"+details[0].curr_total+"', posttraining_pf = '"+details[0].pf+"', posttraining_percent = '"+details[0].percent+"'where trainee_idno = '"+details[0].username+"' ")
+  .query("update test_result_summary set submission_date = CURRENT_TIMESTAMP, posttraining_score = '"+details[0].curr_total+"', posttraining_pf = '"+details[0].pf+"', posttraining_percent = '"+details[0].percent+"'where trainee_idno = '"+details[0].username+"' and module_name = '"+module+"' ")
 
   var final = await pool.request()
-    .query("select slno, pass_criteria from trg_modules where plant_code= (select plant_code from trainee_apln where trainee_idno = '"+username+"') ")
+    .query("select slno, pass_criteria from trg_modules where plant_code= (select plant_code from trainee_apln where trainee_idno = '"+username+"') order by priorityval ")
 
-
+  console.log(final['recordset'].length,  slno)
   if(final['recordset'].length == slno)
   {
-    if(details[0].curr_total >= final['recordset'][final['recordset'].length-1].pass_criteria)
+    if(details[0].curr_total >= final['recordset'][slno-1].pass_criteria)
     {
       var last = await pool.request()
       .query("update trainee_apln set test_status = 'COMPLETED' where trainee_idno = '"+username+"' ")
@@ -1437,11 +1465,12 @@ app.post('/questionbank' , async(req,res)=>
   try
   {
   var details = req.body
-  
+  console.log(req.body)
   var insert = details.slice(details.length-(details[details.length-1].inserted), details.length)
   var update = details.slice(0, details.length-(details[details.length-1].inserted))
 
-  console.log(insert, update)
+  console.log("11", insert)
+  console.log("22", update)
 
   var pool = await db.poolPromise
   for(var i = 0; i < insert.length-1 ; i++)
@@ -1468,6 +1497,23 @@ catch(err)
   res.send({message:'failure'})
 }
 
+})
+
+app.post('/questionBankDelete', async(req, res)=>
+{
+  try
+  {
+    var qslno = req.body.qslno
+    var pool = await db.poolPromise
+    var result = await pool.request()
+      .query("delete from question_bank2 where qslno = '"+qslno+"' ")
+    res.send({'message': 'success'})
+  }
+  catch(err)
+  {
+    console.log(err)
+    res.send({message:'failure'})
+  }  
 })
 
 app.post('/questionbankupload', qbank , async(req,res)=>
@@ -1572,7 +1618,7 @@ app.post('/getOfflineModule', async(req,res)=>
 
   var pool = await db.poolPromise
   var result =await pool.request()
-    .query("select * from trg_modules where plant_code = '"+plantcode+"' and category = 'OFFLINE' and del_status = 'N' ")
+    .query("select * from trg_modules where plant_code = '"+plantcode+"' and category = 'OFFLINE' and del_status = 'N' order by priorityval ")
 
   res.send(result['recordset'])
 
@@ -1600,8 +1646,8 @@ app.post('/offlineUpload', async(req,res)=>
   {
 
     var r = await pool.request()
-    .query("select module_name from trg_modules where plant_code = '"+plant_code+"' ")
-
+    .query("select module_name from trg_modules where plant_code = '"+plant_code+"' and category='OFFLINE' ")
+    console.log(r['recordset'][0].module_name ,module)
     if(r['recordset'][0].module_name == module)
     {
       var last = await pool.request()
@@ -1623,10 +1669,10 @@ app.post('/offlineUpload', async(req,res)=>
     .query("update ontraining_evalation set posttraining_date = CURRENT_TIMESTAMP, posttraining_score = '"+score+"' , posttrainingstat = 'SUBMITTED', posttraining_pf = '"+pf+"', posttraining_percent = '"+percent+"' where trainee_idno = '"+username+"' and module_name = '"+module+"' ")
 
     var summary = await pool.request()
-    .query("update test_result_summary set submission_date = CURRENT_TIMESTAMP, posttraining_score = '"+score+"', posttraining_pf = '"+pf+"', posttraining_percent = '"+percent+"'where trainee_idno = '"+username+"' ")
+    .query("update test_result_summary set submission_date = CURRENT_TIMESTAMP, posttraining_score = '"+score+"', posttraining_pf = '"+pf+"', posttraining_percent = '"+percent+"'where trainee_idno = '"+username+"' and module_name = '"+module+"' ")
   
     var final = await pool.request()
-    .query(" WITH cte AS (SELECT module_name, pass_criteria, ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS RowNum FROM trg_modules where plant_code = (select plant_code from trainee_apln where trainee_idno = '"+username+"') ) SELECT * FROM cte; ")
+    .query(" select * from trg_modules where plant_code = (select plant_code from trainee_apln where trainee_idno = '"+username+"') order by priorityval    ")
 
     console.log(final['recordset'][final['recordset'].length-1].module_name, module, score)
 
@@ -2694,7 +2740,7 @@ app.post('/eval_pending_approval', async(req,res)=>{
     console.log(count)
     
     var result = await pool.request()
-      .query("WITH cte AS (SELECT apln_slno, COUNT(*) AS record_count FROM post_evaluation GROUP BY apln_slno) SELECT t.*, DATEDIFF(day, TRY_PARSE(t.doj AS DATE USING 'en-US'), GETDATE()) as diff,d.dept_name, l.line_name FROM trainee_apln t INNER JOIN cte ON t.apln_slno = cte.apln_slno JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code WHERE cte.record_count  = '"+count+"' and apln_status = 'APPOINTED' AND t.apln_slno IN (SELECT apln_slno FROM post_evaluation WHERE ra_entry = 'N') AND t.plant_code = '"+plant_code+"' ")  
+      .query("WITH cte AS (SELECT apln_slno, COUNT(*) AS record_count FROM post_evaluation GROUP BY apln_slno) SELECT t.*, DATEDIFF(day, TRY_PARSE(t.doj AS DATE USING 'en-US'), GETDATE()) as diff,d.dept_name, l.line_name FROM trainee_apln t INNER JOIN cte ON t.apln_slno = cte.apln_slno JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code WHERE cte.record_count  = '"+count+"' and apln_status = 'APPOINTED' AND t.apln_slno IN (SELECT apln_slno FROM post_evaluation WHERE ra_entry = 'Y') AND t.plant_code = '"+plant_code+"' ")  
 
     res.send(result['recordset'])
   }
@@ -2758,9 +2804,6 @@ app.post('/evaluationdays', async(req,res)=>{
       count = 3
   }
   }
-
-  console.log("EXEC POST_EVALUATION_LIST_SUP @start= "+start+" , @end = "+end+" , @count = "+count+", @emp_id = '"+emp_id+"' ")  
-
   if (id==2)
   {
     console.log(1)
@@ -2779,7 +2822,7 @@ app.post('/evaluationdays', async(req,res)=>{
     else if(filter == 'APPROVED')
     {
       var result = await pool.request()
-      .query("exec POST_EVALUATION_LIST_HR_FILTER @start="+starxt+" , @end = "+end+", @count="+count+", @plant_code = '"+plant_code+"' ")
+      .query("exec POST_EVALUATION_LIST_HR_FILTER @start= "+start+" , @end = "+end+", @count="+count+", @plant_code = '"+plant_code+"' ")
     }
   }
   else if(id==3)
@@ -3077,7 +3120,7 @@ app.post('/get_eval_form', async(req,res)=>
   console.log("-------------------------------",plantcode)
 
     var result2 = await pool.request()
-    .query("select dept_name from department where plant_code = '"+plantcode+"' and del_staus = 0 ")
+    .query("select dept_name, dept_slno from department where plant_code = '"+plantcode+"' and del_staus = 0 ")
 
     var result3 = await pool.request()
     .query("select line_name from mst_line where plant_code = '"+plantcode+"' and del_status = 'N' ")
