@@ -2560,7 +2560,7 @@ app.post('/updateemployee', async(req,res)=>{
   console.log(plant_code, line_code, dept_slno, slno)
 
     var result = await pool.request()
-      .query("  update employees set plant_code = '"+plant_code+"' , gen_id='"+gen_id+"' , line_code='"+line_code+"' , is_tou='"+is_tou+"' , is_reportingauth='"+is_reportingauth+"' , is_supervisor='"+is_supervisor+"' , is_trainer='"+is_trainer+"' , is_hrappr='"+is_hrappr+"' , is_hr='"+is_hr+"' , password='"+password+"' , user_name='"+user_name+"' , mobile_no='"+mobile_no+"' , mail_id='"+mail_id+"' , designation='"+slno+"' , emp_name='"+emp_name+"' , department='"+dept_slno +"' where  user_name='"+user_name+"'")
+      .query("  update employees set line_code='"+line_code+"' , is_tou='"+is_tou+"' , is_reportingauth='"+is_reportingauth+"' , is_supervisor='"+is_supervisor+"' , is_trainer='"+is_trainer+"' , is_hrappr='"+is_hrappr+"' , is_hr='"+is_hr+"' , password='"+password+"' , user_name='"+user_name+"' , mobile_no='"+mobile_no+"' , mail_id='"+mail_id+"' , designation='"+slno+"' , emp_name='"+emp_name+"' , department='"+dept_slno +"' where  user_name='"+user_name+"'")
       res.send({'message': 'updated'})
   }catch(err){
     console.log(err)
@@ -2927,6 +2927,34 @@ catch(err)
   res.send({message:'failure'})
 }
 }) ;
+
+app.post('/getLineName', async(req,res)=>
+{
+  try
+  {
+  var pool =await db.poolPromise
+
+  var dept_slno = req.body.dept_slno
+
+    var result2 = await pool.request()
+    .query("select empl_slno, emp_name from employees where Department = '"+dept_slno+"' and is_ReportingAuth = 1 ")
+
+    var result = await pool.request()
+    .query("select line_code,line_name from mst_line where module_code = '"+dept_slno+"' and del_status = 'N'  ")
+  
+    var object = []
+    object[0] = result['recordset']
+    object[1] = result2['recordset']
+    
+  res.send(object)
+}
+catch(err)
+{
+  console.log(err)
+  res.send({message:'failure'})
+}
+}) ;
+
 
 app.post('/reporting', async(req, res)=>{
 
