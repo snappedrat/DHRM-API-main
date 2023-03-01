@@ -496,7 +496,7 @@ app.post('/getall', async(req,res)=>
     .query("select slno, desig_name from designation where plant_code = '"+plantcode+"' and del_status = 0   ")
 
     var result2 = await pool.request()
-    .query("select dept_slno, dept_name from department where plant_code ='"+plantcode+"' and del_staus = 0  ")
+    .query("select dept_slno, dept_name from department where plant_code ='"+plantcode+"' and del_staus = 1  ")
 
     var result3 = await pool.request()
     .query("select line_code, line_name from mst_line where plant_code = '"+plantcode+"' and del_status = 'N'  ")
@@ -2050,7 +2050,7 @@ app.post('/adddepartment' , async(req,res)=>
                           .input("department_name", department_name)
                           .input("dept_group", dept_group)
                           .input("sap_code", sap_code)
-                          .query("Insert into department values(@department_name, @plant_code, 0, @sap_code, @dept_group)")
+                          .query("Insert into department values(@department_name, @plant_code, 1, @sap_code, @dept_group)")
         res.send({'message': 'inserted'})
         
         
@@ -2065,10 +2065,10 @@ app.post('/deletedepartment', async(req,res)=>
   try{
   var dept_slno = req.body.slno
   var pool = await db.poolPromise
-  console.log("update department set del_staus = '1' where dept_slno = "+dept_slno+" ")
+  console.log("update department set del_staus = '0' where dept_slno = "+dept_slno+" ")
 
   var result = await pool.request()
-    .query("update department set del_staus = '1' where dept_slno = "+dept_slno+" ")
+    .query("update department set del_staus = '0' where dept_slno = "+dept_slno+" ")
   res.send({'message': 'success'})
   }catch(err){
     console.log(err)
@@ -2104,7 +2104,7 @@ app.post('/getdepartment', async(req,res)=>{
   try{
   var pool = await db.poolPromise
   var result = await pool.request()
-    .query("select department.dept_group, department.dept_slno, department.dept_name, department.plant_code,department.sap_code, plant.plant_name from department join plant on department.plant_code = plant.plant_code where department.del_staus=0") 
+    .query("select department.dept_group, department.dept_slno, department.dept_name, department.plant_code,department.sap_code, plant.plant_name from department join plant on department.plant_code = plant.plant_code where department.del_staus=1") 
 
   res.send(result['recordset'])
   }catch(err){
@@ -2936,7 +2936,7 @@ app.post('/dept-line-report', async(req,res)=>
     .query("select empl_slno, emp_name from employees where plant_code = '"+plantcode+"' and is_ReportingAuth = 1 ")
 
     var result2 = await pool.request()
-    .query("select dept_slno, dept_name from department where plant_code = '"+plantcode+"' and del_staus = 0 ")
+    .query("select dept_slno, dept_name from department where plant_code = '"+plantcode+"' and del_staus = 1 ")
 
     var result3 = await pool.request()
     .query("select line_code,line_name from mst_line where plant_code = '"+plantcode+"' and del_status = 'N'  ")
@@ -3049,7 +3049,7 @@ app.post('/getonboard', async(req,res)=>
     .query("select slno ,desig_name from designation where plant_code = '"+plantcode+"' and del_status = 0 ")
 
     var result2 = await pool.request()
-    .query("select dept_slno, dept_name from department where plant_code = '"+plantcode+"' and del_staus = 0 ")
+    .query("select dept_slno, dept_name from department where plant_code = '"+plantcode+"' and del_staus = 1 ")
 
     var result3 = await pool.request()
     .query("select line_code, line_name from mst_line where plant_code = '"+plantcode+"' and del_status = 'N' ")
@@ -3104,7 +3104,7 @@ app.post('/get_eval_form', async(req,res)=>
   console.log("-------------------------------",plantcode)
 
     var result2 = await pool.request()
-    .query("select dept_name, dept_slno from department where plant_code = '"+plantcode+"' and del_staus = 0 ")
+    .query("select dept_name, dept_slno from department where plant_code = '"+plantcode+"' and del_staus = 1")
 
     var result3 = await pool.request()
     .query("select line_name from mst_line where plant_code = '"+plantcode+"' and del_status = 'N' ")
