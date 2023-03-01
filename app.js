@@ -2740,7 +2740,7 @@ app.post('/eval_pending_approval', async(req,res)=>{
     console.log(count)
     
     var result = await pool.request()
-      .query("WITH cte AS (SELECT apln_slno, COUNT(*) AS record_count FROM post_evaluation GROUP BY apln_slno) SELECT t.*,e.Emp_Name, DATEDIFF(day, TRY_PARSE(t.doj AS DATE USING 'en-US'), GETDATE()) as diff,d.dept_name, l.line_name FROM trainee_apln t INNER JOIN cte ON t.apln_slno = cte.apln_slno JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code JOIN employees e on t.reporting_to = e.empl_slno WHERE cte.record_count  = '"+count+"' and apln_status = 'APPOINTED' AND t.apln_slno IN (SELECT apln_slno FROM post_evaluation WHERE ra_entry = 'Y') AND t.plant_code = '"+plant_code+"' ")  
+      .query("WITH cte AS (SELECT apln_slno, COUNT(*) AS record_count FROM post_evaluation GROUP BY apln_slno) SELECT t.*,e.Emp_Name, DATEDIFF(day, TRY_PARSE(t.doj AS DATE USING 'en-US'), GETDATE()) as diff,d.dept_name, l.line_name FROM trainee_apln t INNER JOIN cte ON t.apln_slno = cte.apln_slno JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code JOIN employees e on t.reporting_to = e.empl_slno WHERE cte.record_count  = '"+count+"' and apln_status = 'APPOINTED' AND t.apln_slno IN (SELECT apln_slno FROM post_evaluation WHERE ra_entry = 'N') AND t.plant_code = '"+plant_code+"' ")  
 
     res.send(result['recordset'])
   }
