@@ -202,7 +202,7 @@ app.post('/ars-login', async(request,response)=>{
 
     const result2 = await pool.request()
         .input('User_Name',User_Name)
-        .query("select * from trainee_apln where apln_slno = '"+User_Name+"' ")
+        .query("select * from trainee_apln where gen_id = '"+User_Name+"' ")
 
       if((result['recordset'].length  > 0))
         {
@@ -552,7 +552,7 @@ app.post('/traineeformdata', async(req,res)=>
   var pool =await db.poolPromise
 
   var result = await pool.request()
-  .query("select * from trainee_apln where mobile_no1 = '"+mobileNumber+"' and company_code = (select company_code from master_company where sno = "+companyname+") ");
+  .query(`select * from trainee_apln where mobile_no1 = '${mobileNumber}' and company_code = (select company_code from master_company where sno = '${companyname}') `);
   
     if(result['recordset'].length == 0 )
       {
@@ -580,8 +580,12 @@ app.post('/traineeformdata', async(req,res)=>
           res.send(status);
         }
     }
-    console.log(result['recordset'].length, result['recordset'][0]?.apln_status == 'NEW INCOMPLETE', result['recordset'][0]?.apln_status)
+    else
+    {
+      res.send({status:'registered'})
+    }
   }
+
   catch(err)
   {
     console.log(err)
@@ -1556,7 +1560,7 @@ try
   var pool = await db.poolPromise
 
   var result =await pool.request()
-    .query("select fullname ,trainee_idno from trainee_apln where plant_code = '"+plantcode+"' ")
+    .query("select fullname ,trainee_idno from trainee_apln where plant_code = '"+plantcode+"' and apln_status = 'APPROVED' and test_status is not null ")
 
 res.send(result['recordset'])  
 
@@ -2800,7 +2804,7 @@ app.post('/evaluationdays', async(req,res)=>{
     if(filter == undefined || filter == 'undefined' || filter == 'PENDING')
     {
       var result = await pool.request()
-      .query("select t.*,e.Emp_Name, DATEDIFF(day, TRY_PARSE(t.doj AS DATE USING 'en-US'), GETDATE()) as diff, d.dept_name, l.line_name from trainee_apln t JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code JOIN employees e on t.reporting_to = e.empl_slno where  apln_status = 'APPOINTED' and test_status = 'completed' and t.doj > '2022-12-02' and apln_slno not in (select apln_slno from post_evaluation) and apln_status = 'APPOINTED' and t.plant_code = '"+plant_code+"' ")  
+      .query("select t.*,e.Emp_Name, DATEDIFF(day, TRY_PARSE(t.doj AS DATE USING 'en-US'), GETDATE()) as diff, d.dept_name, l.line_name from trainee_apln t JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code JOIN employees e on t.reporting_to = e.empl_slno where  apln_status = 'APPOINTED' and test_status = 'completed' and apln_slno not in (select apln_slno from post_evaluation) and apln_status = 'APPOINTED' and t.plant_code = '"+plant_code+"' ")  
     }
     else if(filter == 'APPROVED')
     {
@@ -3467,7 +3471,7 @@ try
       .query("insert into people_planning(plan_month, plan_year, plant_code, dept_slno, line_code,oprn_slno, shift1_reqd, shift2_reqd, shift3_reqd, genl_reqd, total_reqd, created_by, created_dt) values(@plan_month, @plan_year, @plant_code, @dept_slno,@line_code,23, @shift1_reqd, @shift2_reqd, @shift3_reqd, @genl_reqd, @total_reqd, @created_by, CURRENT_TIMESTAMP) ")
 
    }
-    res.send({message: 'inserted people planning'})
+    res.send({message: 'inserted'})
 }
 catch(err)
 {
@@ -3512,7 +3516,7 @@ try
     }
 
    }
-    res.send({message: 'updated people planning'})
+    res.send({message: 'updated'})
 }
 catch(err)
 {
