@@ -198,7 +198,7 @@ app.post('/ars-login', async(request,response)=>{
     const result = await pool.request()
         .input('User_Name',User_Name)
         .input('Password',Password)
-        .query("select * from trainee_apln where apln_slno='"+User_Name+"' AND temp_password='"+Password+"' ")
+        .query("select * from trainee_apln where gen_id='"+User_Name+"' AND temp_password='"+Password+"' ")
 
     const result2 = await pool.request()
         .input('User_Name',User_Name)
@@ -313,6 +313,11 @@ app.post('/gethrappr', async(req,res)=>{
   {
   var result = await pool.request()
       .query("select t.fullname, p.plant_name, d.dept_name from trainee_apln t left join department d on t.dept_slno = d.dept_slno left join plant p on p.plant_code = t.plant_code where t.apln_slno = '"+user_name+"' ")
+  }
+  else if(usertype == 'ars')
+  {
+  var result = await pool.request()
+      .query("select t.fullname, p.plant_name, d.dept_name from trainee_apln t left join department d on t.dept_slno = d.dept_slno left join plant p on p.plant_code = t.plant_code where t.gen_id = '"+user_name+"' ")
   }
     res.send(result['recordset'])
   }
@@ -1771,11 +1776,11 @@ app.post('/testSummary', async(req,res)=>{
       var details = req.body
       console.log(req.body)
 
-  console.log("select fullname, trainee_idno,submission_date, sum(pretraining_percent)/count(*) as sum1,  sum(posttraining_percent)/count(*) as sum2 from test_result_summary where submission_date >= '"+details.start+"' and submission_date <= '"+details.end+"  23:59:59'  and plant_code = '"+details.plantcode+"' group by fullname, trainee_idno, submission_date  ")
+  console.log("select fullname, trainee_idno,MAX(submission_date)  as submission_date, sum(pretraining_percent)/count(*) as sum1,  sum(posttraining_percent)/count(*) as sum2 from test_result_summary where submission_date >= '"+details.start+"' and submission_date <= '"+details.end+"  23:59:59'  and plant_code = '"+details.plantcode+"' group by fullname, trainee_idno  ")
 
   var pool = await db.poolPromise
   var result = await pool.request()
-  .query("select fullname, trainee_idno,submission_date, sum(pretraining_percent)/count(*) as sum1,  sum(posttraining_percent)/count(*) as sum2 from test_result_summary where submission_date >= '"+details.start+"' and submission_date <= '"+details.end+"  23:59:59' and plant_code = '"+details.plantcode+"' group by fullname, trainee_idno, submission_date  ")
+  .query("select fullname, trainee_idno,MAX(submission_date) as submission_date, sum(pretraining_percent)/count(*) as sum1,  sum(posttraining_percent)/count(*) as sum2 from test_result_summary where submission_date >= '"+details.start+"' and submission_date <= '"+details.end+"  23:59:59' and plant_code = '"+details.plantcode+"' group by fullname, trainee_idno  ")
   res.send(result['recordset'])
 }
 catch(err)
@@ -2088,11 +2093,9 @@ app.post('/updatedepartment', async(req,res)=>{
     var dept_group = req.body.dept_group
 
     var pool =await db.poolPromise
+
     var result = await pool.request()
-    // .query("select plant_code from plant where plant_name = '"+plant_name+"'")
-    // var plant_code = result['recordset'][0].plant_code
-    var result = await pool.request()
-      .query("update department set plant_code = '"+plant_code+"' , dept_name='"+department_name+"', sap_code = '"+sap_code+"', dept_group='"+dept_group+"' where  dept_slno='"+dept_slno+"'")
+      .query("update department set dept_name='"+department_name+"', sap_code = '"+sap_code+"', dept_group='"+dept_group+"' where  dept_slno='"+dept_slno+"'")
       res.send({'message': 'updated'})
   }catch(err){
     console.log(err)
@@ -2182,14 +2185,10 @@ app.post('/updateline', async(req,res)=>{
 
     var pool =await db.poolPromise
 
-    var result3 =await pool.request()
-    .query("select dept_slno from department where dept_name = '"+dept_name+"' and plant_code = '"+plant_code+"' ")
-    var module_code = result3['recordset'][0].dept_slno
-    
-    console.log("  update mst_line set plant_code = '"+plant_code+"' , line_name='"+line_name+"' , shop_code=1 , module_code='"+module_code+"' , personal_subarea='"+personal_subarea+"', modifiedby = '"+modified_by+"', modifieddt = CURRENT_TIMESTAMP where  line_code='"+line_code+"'")
+    console.log("  update mst_line set line_name='"+line_name+"' , shop_code=1  , personal_subarea='"+personal_subarea+"', modifiedby = '"+modified_by+"', modifieddt = CURRENT_TIMESTAMP where  line_code='"+line_code+"'")
 
     var result = await pool.request()
-      .query("  update mst_line set plant_code = '"+plant_code+"' , line_name='"+line_name+"' , shop_code=1 , module_code='"+module_code+"' , personal_subarea='"+personal_subarea+"', modifiedby = '"+modified_by+"', modifieddt = CURRENT_TIMESTAMP where  line_code='"+line_code+"'")
+      .query("  update mst_line set line_name='"+line_name+"' , shop_code=1  , personal_subarea='"+personal_subarea+"', modifiedby = '"+modified_by+"', modifieddt = CURRENT_TIMESTAMP where  line_code='"+line_code+"'")
       res.send({'message': 'updated'})
   }catch(err){
     console.log(err)
@@ -2201,7 +2200,7 @@ app.post('/getline', async(req,res)=>{
   try{
   var pool = await db.poolPromise
   var result = await pool.request()
-  .query("select mst_line.Line_code,plant.plant_name,plant.plant_code, department.dept_name, mst_line.Line_Name, mst_line.personal_subarea, mst_line.createddt, mst_line.Created_By, mst_line.modifieddt, mst_line.modifiedby from mst_line join plant on mst_line.plant_code = plant.plant_code join department on mst_line.Module_code = department.dept_slno and mst_line.del_status = 'N' ")
+  .query("select mst_line.Line_code, plant.plant_name, plant.plant_code, department.dept_name, mst_line.Line_Name, mst_line.personal_subarea, mst_line.createddt, mst_line.Created_By, mst_line.modifieddt, mst_line.modifiedby from mst_line join plant on mst_line.plant_code = plant.plant_code join department on mst_line.Module_code = department.dept_slno and mst_line.del_status = 'N' ")
   console.log("select mst_line.Line_Name, mst_line.Line_code, plant.plant_name ,mst_line.personal_subarea, mst_line.created_on, mst_line.Created_By, mst_line.modified_on, mst_line.modified_by from mst_line join plant on Mst_Line.Plant_code = plant.plant_code where mst_line.del_status = 'N' ")
   res.send(result['recordset'])
   }catch(err){
@@ -2446,10 +2445,10 @@ app.post('/updateoperation', async(req,res)=>{
   //   .query("select plant_code from plant where plant_name = '"+plant_name+"' ")
   //  var plant_code = result2['recordset'][0].plant_code
 
-      console.log(" update operations set plant_code = '"+plant_code+"' , oprn_desc='"+oprn_desc+"' , skill_level='"+skill_level+"' , critical_oprn='"+critical_oprn +"' where  oprn_slno='"+oprn_slno+"'")
+      console.log(" update operations oprn_desc='"+oprn_desc+"' , skill_level='"+skill_level+"' , critical_oprn='"+critical_oprn +"' where  oprn_slno='"+oprn_slno+"'")
 
     var result = await pool.request()
-      .query(" update operations set plant_code = '"+plant_code+"' , oprn_desc='"+oprn_desc+"' , skill_level='"+skill_level+"' , critical_oprn='"+critical_oprn +"' where  oprn_slno='"+oprn_slno+"'")
+      .query(" update operations set oprn_desc='"+oprn_desc+"' , skill_level='"+skill_level+"' , critical_oprn='"+critical_oprn +"' where  oprn_slno='"+oprn_slno+"'")
       res.send({'message': 'updated'})
   }catch(err){
     console.log(err)
@@ -2962,7 +2961,7 @@ app.post('/getLineName', async(req,res)=>
   var pool =await db.poolPromise
 
   var dept_slno = req.body.dept_slno
-
+  console.log(req.body)
     var result2 = await pool.request()
     .query("select empl_slno, emp_name from employees where Department = '"+dept_slno+"' and is_ReportingAuth = 1 ")
 
@@ -3359,11 +3358,11 @@ app.post('/test-summary', async(req,res)=>
     var plantcode = req.body.plantcode
 
 
-    console.log("select fullname, trainee_idno,submission_date, sum(pretraining_percent)/count(*) as pretraining-percent, sum(posttraining_percent)/count(*) as sum2 from test_result_summary where submission_date >= '"+fromdate+"' and submission_date <= '"+todate+"' group by fullname, trainee_idno, submission_date  ")
+    console.log("select fullname, trainee_idno,MAX(submission_date)  as submission_date, sum(pretraining_percent)/count(*) as pretraining-percent, sum(posttraining_percent)/count(*) as sum2 from test_result_summary where submission_date >= '"+fromdate+"' and submission_date <= '"+todate+"' group by fullname, trainee_idno  ")
 
     var pool = await db.poolPromise
     var result = await pool.request()
-      .query("select fullname, trainee_idno,submission_date, sum(pretraining_percent)/count(*) as pre_training_percent, sum(posttraining_percent)/count(*) as post_training_percent from test_result_summary where submission_date >= '"+fromdate+"' and submission_date <= '"+todate+"' and plant_code = '"+plantcode+"'  group by fullname, trainee_idno, submission_date  ")
+      .query("select fullname, trainee_idno,MAX(submission_date)  as submission_date, sum(pretraining_percent)/count(*) as pre_training_percent, sum(posttraining_percent)/count(*) as post_training_percent from test_result_summary where submission_date >= '"+fromdate+"' and submission_date <= '"+todate+"' and plant_code = '"+plantcode+"'  group by fullname, trainee_idno  ")
     res.send(result['recordset'])
   }
   catch(err)
@@ -3468,7 +3467,7 @@ try
       .query("insert into people_planning(plan_month, plan_year, plant_code, dept_slno, line_code,oprn_slno, shift1_reqd, shift2_reqd, shift3_reqd, genl_reqd, total_reqd, created_by, created_dt) values(@plan_month, @plan_year, @plant_code, @dept_slno,@line_code,23, @shift1_reqd, @shift2_reqd, @shift3_reqd, @genl_reqd, @total_reqd, @created_by, CURRENT_TIMESTAMP) ")
 
    }
-    res.send({message: 'success'})
+    res.send({message: 'inserted people planning'})
 }
 catch(err)
 {
@@ -3513,7 +3512,7 @@ try
     }
 
    }
-    res.send({message: 'success'})
+    res.send({message: 'updated people planning'})
 }
 catch(err)
 {
