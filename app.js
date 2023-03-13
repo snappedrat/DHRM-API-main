@@ -71,7 +71,18 @@ var skill_dev_ = multer.diskStorage({
      cb(null ,file.originalname);   
   }
 });
-var filedrop_ = multer.diskStorage({ 
+
+var storage = multer.diskStorage({ 
+  
+  destination: function(req, file, cb) { 
+     cb(null, './uploads');    
+  }, 
+  filename: function (req, file, cb) { 
+     cb(null ,file.originalname);   
+  }
+});
+
+var filedrop1 = multer.diskStorage({ 
   
   destination: function(req, file, cb) { 
     const folder = "filedrop";
@@ -84,24 +95,31 @@ var filedrop_ = multer.diskStorage({
      cb(null ,file.originalname);   
   }
 });
-
-
-var storage = multer.diskStorage({ 
+var filedrop2 = multer.diskStorage({ 
   
   destination: function(req, file, cb) { 
-     cb(null, './uploads');    
+      cb(null, process.env.FILEDROP);    
   }, 
   filename: function (req, file, cb) { 
      cb(null ,file.originalname);   
   }
 });
 
+const destA = multer({ storage: filedrop1 })
+const destB = multer({ storage: filedrop2 })
+
+function fileDrop(req, res, next) {
+  destA.single('file')(req, res, next);
+  destB.single('file')(req, res, next);
+  next();
+}
+
 const qbank = multer({storage: q_bank}).single('file')
 const upload = multer({storage: storage}).single('file')
 const plant = multer({storage: plant_}).single('file')
 const offline_test = multer({storage: offline_test_}).single('file')
 const skill_dev = multer({storage: skill_dev_}).single('file')
-const filedrop = multer({storage: filedrop_}).single('file')
+// const filedrop = multer({storage: filedrop_}).single('file')
 
 app.use('/uploads',express.static('uploads'))
 app.use('/qbank',express.static('qbank'))
@@ -1545,7 +1563,7 @@ app.post('/skill_dev_upload', skill_dev , async(req,res)=>
   console.log(req.body)
   res.send({'message':'success'})
 })
-app.post('/filedrop', filedrop , async(req,res)=>
+app.post('/filedrop', fileDrop , async(req,res)=>
 {
   console.log(req.body)
   res.send({'message':'success'})
