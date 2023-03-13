@@ -1578,7 +1578,7 @@ try
   var pool = await db.poolPromise
 
   var result =await pool.request()
-    .query("select fullname ,trainee_idno from trainee_apln where plant_code = '"+plantcode+"' and apln_status = 'APPROVED' and test_status is not null ")
+    .query("select fullname ,trainee_idno from trainee_apln where plant_code = '"+plantcode+"' and apln_status = 'APPROVED' ")
 
 res.send(result['recordset'])  
 
@@ -1597,7 +1597,7 @@ app.post('/get_test_status', async(req,res)=>
 
     var pool = await db.poolPromise
 
-    var idno = req.body.idno.trim()
+    var idno = req.body.idno
     var module_name = req.body.module_name
     console.log(req.body)
 
@@ -1629,7 +1629,10 @@ app.post('/get_test_status', async(req,res)=>
       res.send({status:'already'})
     }
   }
-
+  else
+  {
+    res.send({status:'already'})
+  }
   }
   catch(err)
   {
@@ -1656,7 +1659,7 @@ app.post('/offlineUpload', async(req,res)=>
   try{
   var test = req.body.test
   var module = req.body.module.split('.')[1]
-  var username = req.body.trainee.split('-')[1]
+  var username = req.body.trainee
   var apln_slno = req.body.trainee.split('/')
   apln_slno = apln_slno.pop() 
   username = username.trim()
