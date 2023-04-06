@@ -15,6 +15,8 @@ let glob = 0;
 const multer = require('multer');
 const fs = require("fs");
 const nodemailer = require('nodemailer');
+const verifyJWT = require('./Middleware/auth');
+
 
 var q_bank = multer.diskStorage({ 
   
@@ -154,7 +156,6 @@ app.options('*', cors(corsOptions));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-let secret = 'some_secret';
 async function getpool() {
     const pool = await db.poolPromise;
     const result = await pool.request();
@@ -185,7 +186,7 @@ app.post('/logins', async(request, response)=> {
             "User_Name": User_Name,
             "Password": Password
         }
-        let token = jwt.sign(userData, secret, { expiresIn: '15s'})
+        let token = jwt.sign(userData, process.env.RANE)
 
         response.status(200).json({"token": token, "message":"Success"});
     }
@@ -230,7 +231,7 @@ app.post('/ars-login', async(request,response)=>{
               "User_Name": result['recordset'][0].apln_slno,
               "Password": Password
           }
-          let token = jwt.sign(userData, secret, { expiresIn: '15s'})
+          let token = jwt.sign(userData, process.env.RANE)
     
           response.status(200).json({"token": token, "message":"Success", apln_slno: result['recordset'][0].apln_slno});
           } 
@@ -258,7 +259,6 @@ app.post('/traineelogin', async(req, res)=>{
   {
   console.log(req.body)
 
-  let secret = 'boooooo'
 
   var User_Name = req.body.username
   var Password = req.body.pass
@@ -274,7 +274,7 @@ app.post('/traineelogin', async(req, res)=>{
 
   if(result['recordset'].length > 0)
   {
-    let token = jwt.sign(result['recordset'][0], secret)
+    let token = jwt.sign(result['recordset'][0], process.env.RANE)
     res.send({'token': token, 'status': 'success' })
   }
   else
@@ -389,10 +389,10 @@ app.post('/getpincode', async(req,res)=>{
   }
 })
 
-app.get('/getaadhar', async(req,res)=>{
+app.get('/getaadhar', verifyJWT, async(req,res)=>{
   try
   {
-
+  
   var pool = await db.poolPromise
   var result = await pool.request()
     .query("select mobile_no1, aadhar_no from trainee_apln")
