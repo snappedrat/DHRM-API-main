@@ -17,7 +17,6 @@ const fs = require("fs");
 const nodemailer = require('nodemailer');
 const verifyJWT = require('./Middleware/auth');
 
-
 var q_bank = multer.diskStorage({ 
   
   destination: function(req, file, cb) { 
@@ -130,6 +129,12 @@ app.use('/skill_dev',express.static('skill_dev'))
 app.use('/offline_test',express.static('offline_test'))
 app.use('/filedrop',express.static('filedrop'))
 
+//Uploading the file for trainee new application
+//Tables used : trainee_apln
+
+//Uploading the file for trainee new application
+//Tables used : trainee_apln
+
 app.post("/image", upload , verifyJWT, async(req, res) => {
   
   var user = await getpool()
@@ -161,6 +166,10 @@ async function getpool() {
     const result = await pool.request();
     return result;
   }
+
+
+//login api for RANE USER LOGIN.
+//Tables used: Employees  
 app.post('/logins',  async(request, response)=> {
   try{
     var User_Name =request.body.User_Name;
@@ -186,7 +195,7 @@ app.post('/logins',  async(request, response)=> {
             "User_Name": User_Name,
             "Password": Password
         }
-        let token = jwt.sign(userData, process.env.RANE)
+        let token = jwt.sign(userData, process.env.secret)
 
         response.status(200).json({"token": token, "message":"Success"});
     }
@@ -209,7 +218,10 @@ app.post('/logins',  async(request, response)=> {
 
 });
 
-app.post('/ars-login',verifyJWT, async(request,response)=>{
+
+//API for ARS-LOGIN. 
+// Tables used : trainee_apln
+app.post('/ars-login', async(request,response)=>{
   try
   {
     var pool = await db.poolPromise
@@ -254,7 +266,9 @@ app.post('/ars-login',verifyJWT, async(request,response)=>{
   }
 })
 
-app.post('/traineelogin', verifyJWT,async(req, res)=>{
+//API for TraineeLogin for writing test
+// Tables used: trainee_apln
+app.post('/traineelogin', async(req, res)=>{
   try
   {
   console.log(req.body)
@@ -274,7 +288,7 @@ app.post('/traineelogin', verifyJWT,async(req, res)=>{
 
   if(result['recordset'].length > 0)
   {
-    let token = jwt.sign(result['recordset'][0], process.env.RANE)
+    let token = jwt.sign(result['recordset'][0], process.env.secret)
     res.send({'token': token, 'status': 'success' })
   }
   else
@@ -298,24 +312,10 @@ catch(err)
 })
 
 
-app.post('/gethr',verifyJWT, async(req,res)=>{
-  
-  try{
-    var pool = await db.poolPromise;
-  var user_name = req.body.username;
-  var result = await pool.request()
-    .query("select Is_HR from employees where User_Name = '"+user_name+"'")
-    res.send(datas['recordset'])
-  }
-  catch(err)
-  {
-    console.log(err)
-    res.send({message:'failure'})
-  }
-}
-);
 
-app.post('/gethrappr',verifyJWT, async(req,res)=>{
+//Get user details like access control for employees and department, plant details for trainee.
+//Tables Used : employees, trainee_apln.
+app.post('/gethrappr', async(req,res)=>{
   try{
 
   var user_name = req.body.username;
@@ -348,6 +348,7 @@ app.post('/gethrappr',verifyJWT, async(req,res)=>{
 }
 );
 
+//get plant code from plant table 
 app.post('/getplantcode', async(req,res)=>{
   try{
 
@@ -487,7 +488,7 @@ app.post('/bankforms',async(req,res)=>{
 
 
 app.post('/plantcodelist', async(req,res)=>
-{
+{//
   try
   {
     var pool = await db.poolPromise;
@@ -915,7 +916,7 @@ app.post('/others', async(req,res)=>{
     }
 });
 
-app.post('/filter', verifyJWT, async(req,res)=>{
+app.post('/filter',verifyJWT, async(req,res)=>{
   try
   {
   var pool = await db.poolPromise;
@@ -2847,7 +2848,7 @@ app.post('/evaluationdays',verifyJWT, async(req,res)=>{
     if(filter == undefined || filter == 'undefined' || filter == 'PENDING')
     {
       var result = await pool.request()
-      .query("select t.*,e.Emp_Name, DATEDIFF(day, TRY_PARSE(t.doj AS DATE USING 'en-US'), GETDATE()) as diff, d.dept_name, l.line_name from trainee_apln t JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code JOIN employees e on t.reporting_to = e.empl_slno where  apln_status = 'APPOINTED' and test_status = 'completed' and apln_slno not in (select apln_slno from post_evaluation) and apln_status = 'APPOINTED' and t.plant_code = '"+plant_code+"' ")  
+      .query("select t.fullname, t.trainee_idno, t.apln_slno,t.doj,t.mobile_no1, e.Emp_Name, DATEDIFF(day, TRY_PARSE(t.doj AS DATE USING 'en-US'), GETDATE()) as diff, d.dept_name, l.line_name from trainee_apln t JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code JOIN employees e on t.reporting_to = e.empl_slno where  apln_status = 'APPOINTED' and test_status = 'completed' and apln_slno not in (select apln_slno from post_evaluation) and apln_status = 'APPOINTED' and t.plant_code = '"+plant_code+"' ")  
     }
     else if(filter == 'APPROVED')
     {
@@ -3201,10 +3202,7 @@ app.post('/eval_form',verifyJWT, async(req, res)=>
 
 
     console.log("update periodical_eval set tre_eval_date = '"+evaluation_date+"', tre_filename = '"+upload_file+"', tre_submitted = 1,tnr_name = '"+emp_name+"',tnr_eval_date = '"+evaluation_date+"', tnr_filename = '"+upload_file+"', tnr_submitted = 1, tnr_numerator = '"+score_obtained+"' , tnr_denominator= '"+score_for+"', tnr_new_skill= '"+percentage+"',sup_numerator = '"+score_obtained+"' , sup_denominator= '"+score_for+"', sup_new_skill= '"+percentage+"' where apln_slno = '"+apln_slno+"'  ")
-    console.log("update periodical_eval_dept set new_dept_slno = (select top 1 dept_slno from department where dept_name = '"+department+"' and plant_code = '"+plant_code+"' ) , new_line_code = (select top 1 line_code from mst_line where line_name = '"+line+"' and plant_code = '"+plant_code+"' ) where apln_slno = '"+apln_slno+"' ")
     console.log("update periodical_eval_level set new_level = '"+new_skill+"' where apln_slno = '"+apln_slno+"'")
-    console.log("update trainee_apln set dept_slno = (select new_dept_slno from periodical_eval_dept where apln_slno = '"+apln_slno+"'), line_code = (select top 1 line_code from mst_line where line_name = '"+line+"' and plant_code = '"+plant_code+"' ) where apln_slno = '"+apln_slno+"'")
-    console.log("update trainee_apln set dept_slno = (select new_dept_slno from periodical_eval_dept where apln_slno = '"+apln_slno+"'), line_code = (select top 1 line_code from mst_line where line_name = '"+line+"' and plant_code = '"+plant_code+"' ) where apln_slno = '"+apln_slno+"'")
     console.log("insert into periodical_eval_operations values( (select top 1 peval_slno from periodical_eval where apln_slno = '"+apln_slno+"' and plant_code = '"+plant_code+"' ) , (select oprn_slno from operations where oprn_desc = '"+process_trained[i]+"' ) , 1, '"+apln_slno+"')  ")
     console.log("insert into post_evaluation(plant_code, evaluation_days, apln_slno, line_name, evaluator_slno, evaluation_datetime, total_marks, pass_fail, HR_Entry, HR, HR_Date) values('"+plant_code+"','"+eval_days+"','"+apln_slno+"','"+line_name+"','"+emp_slno+"','"+evaluation_date+"','"+score_obtained+"','pass','Y','"+emp_slno+"','"+evaluation_date+"') ")
 
@@ -3213,13 +3211,8 @@ app.post('/eval_form',verifyJWT, async(req, res)=>
     var result = await pool.request()
       .query("update periodical_eval set tre_eval_date = '"+evaluation_date+"', tre_filename = '"+upload_file+"', tre_submitted = 1,tnr_name = '"+emp_name+"',tnr_eval_date = '"+evaluation_date+"', tnr_filename = '"+upload_file+"', tnr_submitted = 1, tnr_numerator = '"+score_obtained+"' , tnr_denominator= '"+score_for+"', tnr_new_skill= '"+percentage+"',sup_numerator = '"+score_obtained+"' , sup_denominator= '"+score_for+"', sup_new_skill= '"+percentage+"' where apln_slno = '"+apln_slno+"'  ")
 
-      var result2 = await pool.request()
-      .query("update periodical_eval_dept set new_dept_slno = (select top 1 dept_slno from department where dept_name = '"+department+"' and plant_code = '"+plant_code+"' ) , new_line_code = (select top 1 line_code from mst_line where line_name = '"+line+"' and plant_code = '"+plant_code+"' ) where apln_slno = '"+apln_slno+"' ")
       var result3 = await pool.request()
       .query("update periodical_eval_level set new_level = '"+new_skill+"' where apln_slno = '"+apln_slno+"'")
-
-      var result5 = await pool.request()
-      .query("update trainee_apln set dept_slno = (select new_dept_slno from periodical_eval_dept where apln_slno = '"+apln_slno+"'), line_code = (select top 1 line_code from mst_line where line_name = '"+line+"' and plant_code = '"+plant_code+"' ) where apln_slno = '"+apln_slno+"'")
 
       for(var i=0; i< process_trained.length; i++)
       {
