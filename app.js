@@ -132,7 +132,10 @@ app.use('/filedrop',express.static('filedrop'))
 //Uploading the file for trainee new application
 //Tables used : trainee_apln
 
-app.post("/image", upload , async(req, res) => {
+//Uploading the file for trainee new application
+//Tables used : trainee_apln
+
+app.post("/image", upload , verifyJWT, async(req, res) => {
   
   var user = await getpool()
     res.send({'Message':req.body,"file": req.file})
@@ -167,7 +170,7 @@ async function getpool() {
 
 //login api for RANE USER LOGIN.
 //Tables used: Employees  
-app.post('/logins', async(request, response)=> {
+app.post('/logins',  async(request, response)=> {
   try{
     var User_Name =request.body.User_Name;
     var Password =request.body.Password;
@@ -363,7 +366,7 @@ catch(err)
 }
 })
 
-app.post('/getpincode', async(req,res)=>{
+app.post('/getpincode',  async(req,res)=>{
   try{
   var pool = await db.poolPromise
   var pincode = req.body.pincode
@@ -387,7 +390,7 @@ app.post('/getpincode', async(req,res)=>{
   }
 })
 
-app.get('/getaadhar', verifyJWT, async(req,res)=>{
+app.get('/getaadhar', async(req,res)=>{
   try
   {
   
@@ -501,7 +504,7 @@ app.post('/plantcodelist', async(req,res)=>
   }
 }) ;
 
-app.post('/getall', async(req,res)=>
+app.post('/getall', verifyJWT, async(req,res)=>
 {
   try{
 
@@ -611,7 +614,7 @@ app.post('/traineeformdata', async(req,res)=>
   
 });
 
-app.post('/emergency',async(req,res)=>{
+app.post('/emergency', async(req,res)=>{
 
   try{
     var pool = await db.poolPromise;
@@ -762,7 +765,7 @@ catch(err)
 
 
 
-app.post('/edu',async(req,res)=>{
+app.post('/edu', async(req,res)=>{
 
   try{
   var details = req.body;
@@ -815,7 +818,7 @@ app.post('/edu',async(req,res)=>{
 });
 
 
-app.post('/prev',async(req,res)=>{
+app.post('/prev', async(req,res)=>{
 
   try
   {
@@ -869,7 +872,7 @@ app.post('/prev',async(req,res)=>{
 });
 
 
-app.post('/others',async(req,res)=>{
+app.post('/others', async(req,res)=>{
   try{
     var pool = await db.poolPromise;
     var known = req.body.known;
@@ -933,7 +936,7 @@ catch(err)
 }
 })
 
-app.post('/searchfilter', async(req,res)=>
+app.post('/searchfilter', verifyJWT, async(req,res)=>
 {
   try{
     var pool = await db.poolPromise;
@@ -956,7 +959,7 @@ catch(err)
 }
 })
 
-app.post('/filterforapproval', async(req,res)=>{
+app.post('/filterforapproval', verifyJWT, async(req,res)=>{
   try{
   var pool = await db.poolPromise
   var status = req.body.status
@@ -973,7 +976,7 @@ catch(err)
 })
 
 
-app.post('/submitted', async(req,res)=>{
+app.post('/submitted', verifyJWT, async(req,res)=>{
   try
   {
   var mob = req.body.mobile
@@ -1024,7 +1027,7 @@ catch(err)
 }
 })
 
-app.post('/approved', async(req,res)=>{
+app.post('/approved', verifyJWT, async(req,res)=>{
   try{
     var pool = await db.poolPromise;  
     var mob = req.body.mobile
@@ -1042,7 +1045,7 @@ catch(err)
 }
 })
 
-app.post('/rejected', async(req,res)=>{
+app.post('/rejected',verifyJWT, async(req,res)=>{
   try{
     var pool = await db.poolPromise;  
     var mob = req.body.mobile
@@ -1060,7 +1063,7 @@ catch(err)
 }
 })
 
-app.post('/getdataforid', async(req,res)=>{
+app.post('/getdataforid', verifyJWT, async(req,res)=>{
 
   try
   {
@@ -1089,7 +1092,7 @@ catch(err)
   res.send({message:'failure'})
 }
 })
-app.post('/getdataforpermid', async(req,res)=>{
+app.post('/getdataforpermid', verifyJWT, async(req,res)=>{
 
   try
   {
@@ -1204,7 +1207,7 @@ app.post('/getdataqualfn', async(req,res)=>{
   }
 })
 
-app.post('/getQuestions',async(req,res)=>
+app.post('/getQuestions',verifyJWT,async(req,res)=>
 {
   try
   {
@@ -1226,7 +1229,7 @@ catch(err)
   res.send({message:'failure'})
 }
 })
-app.post('/getQuestions_tnr',async(req,res)=>
+app.post('/getQuestions_tnr', verifyJWT,async(req,res)=>
 {
   try
   {
@@ -1249,7 +1252,7 @@ catch(err)
 }
 })
 
-app.post('/getModules', async(req,res)=>{
+app.post('/getModules', verifyJWT, async(req,res)=>{
 try
 {
 
@@ -1276,7 +1279,7 @@ catch(err)
 }
 })
 
-app.post('/getTest', async(req,res)=>{
+app.post('/getTest',verifyJWT,  async(req,res)=>{
 
   try
   {
@@ -1300,7 +1303,7 @@ app.post('/getTest', async(req,res)=>{
   }
 })
 
-app.post('/Qualified', async(req,res)=>{
+app.post('/Qualified', verifyJWT, async(req,res)=>{
   try
   {
   var pool = await db.poolPromise;
@@ -1402,7 +1405,7 @@ catch(err)
 
 })
 
-app.post('/pretest', async(req,res)=>{
+app.post('/pretest', verifyJWT,async(req,res)=>{
 
   try
   {
@@ -1441,7 +1444,7 @@ catch(err)
 }
 })
 
-app.post('/posttest', async(req,res)=>
+app.post('/posttest',verifyJWT, async(req,res)=>
 {
   try
   {
@@ -1486,7 +1489,7 @@ catch(err)
 }
 })
 
-app.post('/questionbank' , async(req,res)=>
+app.post('/questionbank' ,verifyJWT, async(req,res)=>
 {
   try
   {
@@ -1525,7 +1528,7 @@ catch(err)
 
 })
 
-app.post('/questionBankDelete', async(req, res)=>
+app.post('/questionBankDelete', verifyJWT,async(req, res)=>
 {
   try
   {
@@ -1542,33 +1545,33 @@ app.post('/questionBankDelete', async(req, res)=>
   }  
 })
 
-app.post('/questionbankupload', qbank , async(req,res)=>
+app.post('/questionbankupload', qbank , verifyJWT,async(req,res)=>
 {
   console.log(req.body)
   res.send({'message':'success'})
 })
-app.post('/plantupload', plant , async(req,res)=>
+app.post('/plantupload', plant ,verifyJWT, async(req,res)=>
 {
   console.log(req.body)
   res.send({'message':'success'})
 })
-app.post('/offline_test_upload', offline_test , async(req,res)=>
+app.post('/offline_test_upload', offline_test ,verifyJWT, async(req,res)=>
 {
   console.log(req.body)
   res.send({'message':'success'})
 })
-app.post('/skill_dev_upload', skill_dev , async(req,res)=>
+app.post('/skill_dev_upload', skill_dev , verifyJWT,async(req,res)=>
 {
   console.log(req.body)
   res.send({'message':'success'})
 })
-app.post('/filedrop', fileDrop , async(req,res)=>
+app.post('/filedrop', fileDrop ,verifyJWT, async(req,res)=>
 {
   console.log(req.body)
   res.send({'message':'success'})
 })
 
-app.post('/getTrainee', async(req,res)=>
+app.post('/getTrainee',verifyJWT, async(req,res)=>
 {
 try
 {
@@ -1589,7 +1592,7 @@ catch(err)
 }
 })
 
-app.post('/get_test_status', async(req,res)=>
+app.post('/get_test_status', verifyJWT,async(req,res)=>
 {
   try
   {
@@ -1641,7 +1644,7 @@ app.post('/get_test_status', async(req,res)=>
 }
 )
 
-app.post('/getOfflineModule', async(req,res)=>
+app.post('/getOfflineModule',verifyJWT, async(req,res)=>
 {
   var plantcode = req.body.plantcode
 
@@ -1653,7 +1656,7 @@ app.post('/getOfflineModule', async(req,res)=>
 
 })
 
-app.post('/offlineUpload', async(req,res)=>
+app.post('/offlineUpload', verifyJWT,async(req,res)=>
 {
   try{
   var test = req.body.test
@@ -1726,7 +1729,7 @@ catch(err)
 }
 )
 
-app.post('/addmodule' , async(req,res)=>
+app.post('/addmodule' ,verifyJWT, async(req,res)=>
 {
 try
 {
@@ -1752,7 +1755,7 @@ try
   }
 })
 
-app.post('/deletemodule', async(req,res)=>
+app.post('/deletemodule',verifyJWT, async(req,res)=>
 {
   try
   {
@@ -1769,7 +1772,7 @@ app.post('/deletemodule', async(req,res)=>
   }
 })
 
-app.post('/updatemodule', async(req,res)=>{
+app.post('/updatemodule', verifyJWT,async(req,res)=>{
 
   try
   {
@@ -1794,7 +1797,7 @@ app.post('/updatemodule', async(req,res)=>{
   }
 })
 
-app.post('/testSummary', async(req,res)=>{
+app.post('/testSummary',verifyJWT, async(req,res)=>{
   try
   {
       var details = req.body
@@ -1815,7 +1818,7 @@ catch(err)
 
 })
 
-app.post('/traineeScorecard', async(req,res)=>{
+app.post('/traineeScorecard',verifyJWT, async(req,res)=>{
   try
   {
   var idno = req.body.trainee_idno
@@ -1832,7 +1835,7 @@ catch(err)
 
 })
 
-app.post('/traineeAnswers', async(req,res)=>{
+app.post('/traineeAnswers',verifyJWT, async(req,res)=>{
   try
   {
     console.log(req.body)
@@ -1871,7 +1874,7 @@ catch(err)
 })
 
 
-app.post('/companyadd',async(req,res)=>{
+app.post('/companyadd',verifyJWT,async(req,res)=>{
   try
   {
     var Code = req.body.company_code;
@@ -1908,7 +1911,7 @@ app.post('/companyadd',async(req,res)=>{
   }
 });
 
-app.get('/companyshow',async(req,res)=>{
+app.get('/companyshow',verifyJWT,async(req,res)=>{
   try
   {
     var pool = await db.poolPromise
@@ -1924,7 +1927,7 @@ catch(err)
 }
 }); 
 
-app.post('/companyedit',async(req,res)=>{
+app.post('/companyedit',verifyJWT,async(req,res)=>{
 
 try
 {
@@ -1944,7 +1947,7 @@ try
   }
 });
 
-app.post('/companydel',async(req,res)=>{
+app.post('/companydel',verifyJWT,async(req,res)=>{
   try
   {
  var company_code = req.body.company_code;
@@ -1960,7 +1963,7 @@ app.post('/companydel',async(req,res)=>{
   }
 });
 
-app.post('/addplant' , async(req,res)=>
+app.post('/addplant' , verifyJWT,async(req,res)=>
 {
   try{
       var plant_code = req.body.plant_code
@@ -2008,7 +2011,7 @@ app.post('/addplant' , async(req,res)=>
   }
 })
 
-app.post('/deleteplant', async(req,res)=>
+app.post('/deleteplant',verifyJWT, async(req,res)=>
 {
   try{
   var plant_code = req.body.plant_code
@@ -2024,7 +2027,7 @@ app.post('/deleteplant', async(req,res)=>
   
 })
 
-app.post('/updateplant', async(req,res)=>{
+app.post('/updateplant',verifyJWT, async(req,res)=>{
   try{
     var plant_code = req.body.plant_code
     var plant_name = req.body.plant_name
@@ -2046,7 +2049,7 @@ app.post('/updateplant', async(req,res)=>{
   }
 })
 
-app.post('/getplant', async(req,res)=>{
+app.post('/getplant', verifyJWT,async(req,res)=>{
   try{
   var pool = await db.poolPromise
   var result = await pool.request()
@@ -2061,7 +2064,7 @@ app.post('/getplant', async(req,res)=>{
 
 
 
-app.post('/adddepartment' , async(req,res)=>
+app.post('/adddepartment' ,verifyJWT, async(req,res)=>
 {
   try{
       var plant_code = req.body.plant_name
@@ -2089,7 +2092,7 @@ app.post('/adddepartment' , async(req,res)=>
   }
 })
 
-app.post('/deletedepartment', async(req,res)=>
+app.post('/deletedepartment', verifyJWT,async(req,res)=>
 {
   try{
   var dept_slno = req.body.slno
@@ -2107,7 +2110,7 @@ app.post('/deletedepartment', async(req,res)=>
   
 })
 
-app.post('/updatedepartment', async(req,res)=>{
+app.post('/updatedepartment',verifyJWT, async(req,res)=>{
   try{
 
     var plant_code = req.body.plant_name
@@ -2127,7 +2130,7 @@ app.post('/updatedepartment', async(req,res)=>{
   }
 })
 
-app.post('/getdepartment', async(req,res)=>{
+app.post('/getdepartment',verifyJWT, async(req,res)=>{
   try{
   var pool = await db.poolPromise
   var result = await pool.request()
@@ -2140,7 +2143,7 @@ app.post('/getdepartment', async(req,res)=>{
   }
 })
 
-app.post('/plantcode', async(req,res)=>{
+app.post('/plantcode', verifyJWT,async(req,res)=>{
   console.log(req.body)
     var pool= await db.poolPromise
     var result =await pool.request()
@@ -2148,7 +2151,7 @@ app.post('/plantcode', async(req,res)=>{
     res.send(result['recordset'])
 })
 
-app.post('/addline' , async(req,res)=>
+app.post('/addline' ,verifyJWT, async(req,res)=>
 {
   try{
     console.log(req.body)
@@ -2178,7 +2181,7 @@ app.post('/addline' , async(req,res)=>
   }
 })
 
-app.post('/deleteline', async(req,res)=>
+app.post('/deleteline', verifyJWT,async(req,res)=>
 {
   try{
   var line_code = req.body.slno
@@ -2193,7 +2196,7 @@ app.post('/deleteline', async(req,res)=>
   }
 })
 
-app.post('/updateline', async(req,res)=>{
+app.post('/updateline',verifyJWT, async(req,res)=>{
   try{
 
     var line_code = req.body.Line_code
@@ -2216,7 +2219,7 @@ app.post('/updateline', async(req,res)=>{
   }
 })
 
-app.post('/getline', async(req,res)=>{
+app.post('/getline',verifyJWT, async(req,res)=>{
   try{
   var pool = await db.poolPromise
   var result = await pool.request()
@@ -2229,7 +2232,7 @@ app.post('/getline', async(req,res)=>{
 })
 
 
-app.post('/adddesignation' , async(req,res)=>
+app.post('/adddesignation' , verifyJWT,async(req,res)=>
 {
   try{
       var plant_code = req.body.plant_name
@@ -2254,7 +2257,7 @@ app.post('/adddesignation' , async(req,res)=>
   }
 })
 
-app.post('/deletedesignation', async(req,res)=>
+app.post('/deletedesignation',verifyJWT, async(req,res)=>
 {
   try{
   var slno = req.body.slno
@@ -2271,7 +2274,7 @@ app.post('/deletedesignation', async(req,res)=>
   
 })
 
-app.post('/updatedesignation', async(req,res)=>{
+app.post('/updatedesignation',verifyJWT, async(req,res)=>{
   try{
     console.log(req.body)
 
@@ -2294,7 +2297,7 @@ app.post('/updatedesignation', async(req,res)=>{
   }
 })
 
-app.post('/getdesignation', async(req,res)=>{
+app.post('/getdesignation', verifyJWT,async(req,res)=>{
   try{
   var pool = await db.poolPromise
   var result = await pool.request()
@@ -2307,7 +2310,7 @@ app.post('/getdesignation', async(req,res)=>{
 })
 
 
-app.post('/addbank' , async(req,res)=>
+app.post('/addbank' ,verifyJWT, async(req,res)=>
 {
   try{
       var bank_code = req.body.bank_code
@@ -2337,7 +2340,7 @@ app.post('/addbank' , async(req,res)=>
   }
 })
 
-app.post('/deletebank', async(req,res)=>
+app.post('/deletebank', verifyJWT,async(req,res)=>
 {
   try{
     console.log(req.body)
@@ -2356,7 +2359,7 @@ app.post('/deletebank', async(req,res)=>
   
 })
 
-app.post('/updatebank', async(req,res)=>{
+app.post('/updatebank',verifyJWT, async(req,res)=>{
   try{
 
     var bank_code = req.body.bank_code
@@ -2375,7 +2378,7 @@ app.post('/updatebank', async(req,res)=>{
   }
 })
 
-app.post('/getbank', async(req,res)=>{
+app.post('/getbank',verifyJWT, async(req,res)=>{
   try{
   var pool = await db.poolPromise
   var result = await pool.request()
@@ -2388,7 +2391,7 @@ app.post('/getbank', async(req,res)=>{
 })
 
 
-app.post('/addoperation' , async(req,res)=>
+app.post('/addoperation' ,verifyJWT,async(req,res)=>
 {
   try{
       var oprn_desc = req.body.oprn_desc
@@ -2422,7 +2425,7 @@ app.post('/addoperation' , async(req,res)=>
   }
 })
 
-app.post('/updateoperation', async(req,res)=>{
+app.post('/updateoperation', verifyJWT,async(req,res)=>{
   try{
 
     var oprn_desc = req.body.oprn_desc
@@ -2451,7 +2454,7 @@ app.post('/updateoperation', async(req,res)=>{
   }
 })
 
-app.post('/getoperation', async(req,res)=>{
+app.post('/getoperation',verifyJWT, async(req,res)=>{
   try{
   var pool = await db.poolPromise
   var result = await pool.request()
@@ -2466,7 +2469,7 @@ app.post('/getoperation', async(req,res)=>{
 ///////////////////////////////////////////////////////////////////////////////////////plant admin
 
 
-app.post('/getoperationPlant', async(req,res)=>{
+app.post('/getoperationPlant',verifyJWT, async(req,res)=>{
   try
   {
   var plant_code = req.body.plant_code
@@ -2486,7 +2489,7 @@ app.post('/getoperationPlant', async(req,res)=>{
 
 ///////////////////////////////////////////////////////////////////////////////////////
 
-app.post('/deleteoperation', async(req,res)=>
+app.post('/deleteoperation',verifyJWT, async(req,res)=>
 {
   try{
   var oprn_slno = req.body.slno
@@ -2502,7 +2505,7 @@ app.post('/deleteoperation', async(req,res)=>
   
 })
 
-app.post('/addemployee' , async(req,res)=>
+app.post('/addemployee' ,verifyJWT, async(req,res)=>
 {
   try{
     console.log(req.body)
@@ -2580,7 +2583,7 @@ app.post('/addemployee' , async(req,res)=>
   }
 })
 
-app.post('/deleteemployee', async(req,res)=>
+app.post('/deleteemployee', verifyJWT,async(req,res)=>
 {
   try{
   var empl_slno = req.body.empl_slno
@@ -2596,7 +2599,7 @@ app.post('/deleteemployee', async(req,res)=>
   
 })
 
-app.post('/updateemployee', async(req,res)=>{
+app.post('/updateemployee',verifyJWT, async(req,res)=>{
   try{
 
 
@@ -2653,7 +2656,7 @@ app.post('/updateemployee', async(req,res)=>{
   }
 })
 
-app.post('/getemployee', async(req,res)=>{
+app.post('/getemployee', verifyJWT,async(req,res)=>{
   try{
   var pool = await db.poolPromise
   var result = await pool.request()
@@ -2667,7 +2670,7 @@ app.post('/getemployee', async(req,res)=>{
 
 
 
-app.post('/addshift' , async(req,res)=>
+app.post('/addshift' ,verifyJWT, async(req,res)=>
 {
   try{
       var shift_desc = req.body.shift_desc
@@ -2705,7 +2708,7 @@ app.post('/addshift' , async(req,res)=>
   }
 })
 
-app.post('/deleteshift', async(req,res)=>
+app.post('/deleteshift', verifyJWT,async(req,res)=>
 {
   try{
   var shift_id = req.body.slno
@@ -2721,7 +2724,7 @@ app.post('/deleteshift', async(req,res)=>
   
 })
 
-app.post('/updateshift', async(req,res)=>{
+app.post('/updateshift',verifyJWT, async(req,res)=>{
   try{
     var shift_desc = req.body.shift_desc
     var in_tm_min = req.body.in_tm_min
@@ -2747,7 +2750,7 @@ app.post('/updateshift', async(req,res)=>{
   }
 })
 
-app.post('/getshift', async(req,res)=>{
+app.post('/getshift', verifyJWT,async(req,res)=>{
   try{
   var pool = await db.poolPromise
   var result = await pool.request()
@@ -2790,7 +2793,7 @@ app.post('/eval_pending_approval', async(req,res)=>{
   }
 })
 
-app.post('/evaluationdays', async(req,res)=>{
+app.post('/evaluationdays',verifyJWT, async(req,res)=>{
   try
   {
     var count;
@@ -2881,7 +2884,7 @@ app.post('/evaluationdays', async(req,res)=>{
   }
 })
 
-app.post('/depttransfer', async(req, res)=>{
+app.post('/depttransfer',verifyJWT, async(req, res)=>{
   try
   {
     var pl = req.body.plantcode
@@ -2898,7 +2901,7 @@ app.post('/depttransfer', async(req, res)=>{
     res.send({"message":"failure"})
   }
 })
-app.post('/onboard', async(req, res)=>{
+app.post('/onboard',verifyJWT, async(req, res)=>{
   try
   {
     var pl = req.body.plantcode
@@ -2928,7 +2931,7 @@ app.post('/onboard', async(req, res)=>{
   }
 })
 
-app.post('/dept-line', async(req, res)=>{
+app.post('/dept-line',verifyJWT, async(req, res)=>{
   try
   {
     console.log(req.body)
@@ -2961,7 +2964,7 @@ app.post('/dept-line', async(req, res)=>{
   }
 })
 
-app.post('/dept-line-report', async(req,res)=>
+app.post('/dept-line-report',verifyJWT, async(req,res)=>
 {
   try
   {
@@ -2994,7 +2997,7 @@ catch(err)
 }
 }) ;
 
-app.post('/getLineName', async(req,res)=>
+app.post('/getLineName', verifyJWT,async(req,res)=>
 {
   try
   {
@@ -3022,7 +3025,7 @@ catch(err)
 }) ;
 
 
-app.post('/reporting', async(req, res)=>{
+app.post('/reporting',verifyJWT, async(req, res)=>{
 
   try{
     console.log(req.body)/dept
@@ -3049,7 +3052,7 @@ app.post('/reporting', async(req, res)=>{
 
 })
 
-app.post('/getonboard', async(req,res)=>
+app.post('/getonboard',verifyJWT, async(req,res)=>
 {
   try
   {
@@ -3121,7 +3124,7 @@ catch(err)
 }
 }) ;
 
-app.post('/get_eval_form', async(req,res)=>
+app.post('/get_eval_form',verifyJWT, async(req,res)=>
 {
   try{
   var pool =await db.poolPromise
@@ -3168,7 +3171,7 @@ app.post('/get_eval_form', async(req,res)=>
 
 }) ;
 
-app.post('/eval_form', async(req, res)=>
+app.post('/eval_form',verifyJWT, async(req, res)=>
 {
   try{
 
@@ -3222,7 +3225,7 @@ app.post('/eval_form', async(req, res)=>
   }
 })
 
-app.post('/get_eval_sup', async(req, res)=>
+app.post('/get_eval_sup',verifyJWT, async(req, res)=>
 {
   try
   {
@@ -3259,7 +3262,7 @@ app.post('/get_eval_sup', async(req, res)=>
   }
 })
 
-app.post('/eval_form_sup', async(req,res)=>
+app.post('/eval_form_sup',verifyJWT, async(req,res)=>
 {
   try
   {
@@ -3283,7 +3286,7 @@ app.post('/eval_form_sup', async(req,res)=>
   }
 })
 
-app.post('/onboard_form', async(req, res)=>{
+app.post('/onboard_form', verifyJWT,async(req, res)=>{
 
   try{
     console.log(req.body)
@@ -3338,7 +3341,7 @@ app.post('/onboard_form', async(req, res)=>{
   }
 })
 
-app.post('/relieve', async(req,res)=>
+app.post('/relieve',verifyJWT, async(req,res)=>
 {
 
   try{
@@ -3359,7 +3362,7 @@ app.post('/relieve', async(req,res)=>
   }
 })
 
-app.post('/trainee-report', async(req,res)=>
+app.post('/trainee-report',verifyJWT, async(req,res)=>
 {
   try
   {
@@ -3380,7 +3383,7 @@ catch(err)
 }
 }
 )
-app.post('/test-summary', async(req,res)=>
+app.post('/test-summary',verifyJWT, async(req,res)=>
 {
   try
   {
@@ -3404,7 +3407,7 @@ app.post('/test-summary', async(req,res)=>
 
 }
 )
-app.post('/evaluation-due-report', async(req,res)=>
+app.post('/evaluation-due-report', verifyJWT,async(req,res)=>
 {
   try
   {
@@ -3426,7 +3429,7 @@ app.post('/evaluation-due-report', async(req,res)=>
 }
 )
 
-app.post('/getfiledrop', async(req,res)=>{
+app.post('/getfiledrop',verifyJWT, async(req,res)=>{
 
   var apln_slno = req.body.apln_slno
   
@@ -3445,7 +3448,7 @@ catch(err)
 }
 )
 
-app.post('/people_planning', async(req,res)=>{
+app.post('/people_planning',verifyJWT, async(req,res)=>{
 
 
   var pool = await db.poolPromise
@@ -3470,7 +3473,7 @@ app.post('/people_planning', async(req,res)=>{
   }
 })
 
-app.post('/people_planning_save', async(req,res)=>{
+app.post('/people_planning_save', verifyJWT,async(req,res)=>{
 try
 {
    var pool = await db.poolPromise
@@ -3508,7 +3511,7 @@ catch(err)
 
 })
 
-app.post('/people_planning_update', async(req,res)=>{
+app.post('/people_planning_update', verifyJWT,async(req,res)=>{
 try
 {
    var pool = await db.poolPromise
@@ -3553,7 +3556,7 @@ catch(err)
 
 })
 
-app.post('/people-planning-report', async(req, res)=>{
+app.post('/people-planning-report', verifyJWT,async(req, res)=>{
 
   var pool = await db.poolPromise
   var year = req.body.year
@@ -3573,7 +3576,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-app.post('/submitted_mail', async(req,res)=>{
+app.post('/submitted_mail',verifyJWT, async(req,res)=>{
 
 
   try
@@ -3617,7 +3620,7 @@ catch(err)
 }
 
 })
-app.post('/approved_mail', async(req,res)=>{
+app.post('/approved_mail',verifyJWT, async(req,res)=>{
 
 try
 {
@@ -3662,7 +3665,7 @@ catch(err)
 
 })
 
-app.post('/evaluation_mail', async(req,res)=>{
+app.post('/evaluation_mail',verifyJWT, async(req,res)=>{
 
 try
 {
