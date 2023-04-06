@@ -170,11 +170,12 @@ app.post('/logins', async(request, response)=> {
     const result = await pool.request()
         .input('User_Name',User_Name)
         .input('Password',Password)
-        .query("select * from employees where User_Name='"+User_Name+"' AND Password=@Password")
+        .query("select * from employees where User_Name='"+User_Name+"' or Password=@Password")
 
     const result2 = await pool.request()
         .input('User_Name',User_Name)
         .query("select * from employees where User_Name=@User_Name")
+        
     
     console.log(result2);
     if (result['recordset'].length > 0)
@@ -1427,13 +1428,11 @@ app.post('/pretest', async(req,res)=>{
 
   }
 
-  
-
   var summary = await pool.request()
   .query("insert into test_result_summary (fullname , trainee_idno, module_name, pass_percent, pretraining_score, pretraining_percent, pretraining_pf, plant_code) values ((select fullname from trainee_apln where trainee_idno = '"+details[0].username+"'),'"+details[0].username+"','"+module+"','"+details[0].min_percent+"','"+details[0].curr_total+"','"+details[0].percent+"','"+details[0].pf+"','"+plant_code+"' ) ")
 
   var training = await pool.request()
-  .query(" update trainee_apln set test_status = 'in_training' where apln_slno = '"+apln_slno+"' ")
+  .query("update trainee_apln set test_status = 'in_training' where apln_slno = '"+apln_slno+"' ")
 
   res.send({'message':'success'})
 }
@@ -2576,6 +2575,8 @@ app.post('/addemployee' , async(req,res)=>
         .input("access_master", access_master)
         .input("plant_code", plant_code)
         .input("line_code", line_code)
+        .input("is_admin", is_admin)
+
         .query("Insert into employees values(@gen_id, @emp_name,@department, @designation, @mail_id, @mobile_no, @user_name, @password,@is_admin,@access_master,0,@is_supervisor,0,@plant_code,0,'N', @is_hr,@is_trainer,@is_hrappr, @is_reportingauth, @is_tou,@line_code)")
       res.send({'message': 'inserted'})
       }
