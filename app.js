@@ -243,7 +243,7 @@ app.post('/ars-login', async(request,response)=>{
               "User_Name": result['recordset'][0].apln_slno,
               "Password": Password
           }
-          let token = jwt.sign(userData, process.env.RANE)
+          let token = jwt.sign(userData, process.env.secret)
     
           response.status(200).json({"token": token, "message":"Success", apln_slno: result['recordset'][0].apln_slno});
           } 
@@ -947,6 +947,7 @@ app.post('/searchfilter', verifyJWT, async(req,res)=>
   var colname = req.body.colname
   var colvalue = req.body.colvalue
   colvalue = colvalue.trim()
+  console.log("select t.created_dt, t.fullname, t.fathername, t.birthdate, t.mobile_no1, t.aadhar_no, t.apln_status, m.sno from trainee_apln as t left join master_company as m on t.company_code = m.company_code where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND "+colname+" like '"+colvalue+"%' AND plant_code = '"+plantcode+"' ")
 
   var result = await pool.request()
     .query("select t.created_dt, t.fullname, t.fathername, t.birthdate, t.mobile_no1, t.aadhar_no, t.apln_status, m.sno from trainee_apln as t left join master_company as m on t.company_code = m.company_code where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND "+colname+" like '"+colvalue+"%' AND plant_code = '"+plantcode+"' ")
@@ -2053,7 +2054,7 @@ app.post('/getplant', verifyJWT,async(req,res)=>{
   try{
   var pool = await db.poolPromise
   var result = await pool.request()
-    .query("SELECT p.plant_code, p.plant_name, p.pl, p.addr, p.locatn, p.personal_area, p.payroll_area, c.company_name FROM plant AS p JOIN master_company AS c ON p.company_code = c.company_code WHERE p.del_status = 0") 
+    .query("SELECT p.plant_code, p.plant_name, p.pl, p.addr, p.locatn, p.personal_area, p.payroll_area, c.company_name,p.company_code FROM plant AS p JOIN master_company AS c ON p.company_code = c.company_code WHERE p.del_status = 0") 
   res.send(result['recordset'])
   }catch(err){
     console.log(err)
@@ -2364,7 +2365,7 @@ app.post('/updatebank',verifyJWT, async(req,res)=>{
 
     var bank_code = req.body.bank_code
     var bank_name = req.body.bank_name
-    var slno = req.body.Slno+1
+    var slno = req.body.Slno
 
     var pool =await db.poolPromise
     console.log("update bank set bank_code = '"+bank_code+"' , bank_name='"+bank_name+"' where  slno= "+slno+" ")
