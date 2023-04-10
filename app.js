@@ -406,6 +406,28 @@ catch(err)
 }
 })
 
+app.get('/checkAadhar', async(req,res)=>{
+  try
+  {
+  var aadhar = req.query.aadhar
+  var pool = await db.poolPromise
+  var result = await pool.request()
+    .query("select apln_slno from trainee_apln where aadhar_no = '"+aadhar+"' ")
+  console.log(result['recordset']);
+  if(result['recordset'].length == 0)
+    res.send({message : 'new'})
+  else if(result['recordset'].length >= 1)
+    res.send({message : 'old'})
+  else
+    res.send({message : 'invalid'})
+}
+catch(err)
+{
+  console.log(err)
+  res.send({message:'failure'})
+}
+})
+
 app.post('/basicforms', async(req,res,err)=>{
   
   try
