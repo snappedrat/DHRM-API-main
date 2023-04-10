@@ -2807,6 +2807,7 @@ app.post('/evaluationdays',verifyJWT, async(req,res)=>{
   var emp_id = req.body.emp_id
   var filter = req.body.filter
   var plant_code = req.body.plantcode
+  var year = req.body.year
 
   if(id==2 || (id==1 && filter == 'APPROVED'))
   {
@@ -2845,12 +2846,12 @@ app.post('/evaluationdays',verifyJWT, async(req,res)=>{
     if(filter == undefined || filter == 'undefined' || filter == 'PENDING')
     {
       var result = await pool.request()
-      .query("EXEC POST_EVALUATION_LIST_HR_BASIC @plant_code = "+plant_code+" ")  
+      .query("EXEC POST_EVALUATION_LIST_HR_BASIC @plant_code = "+plant_code+", @year = "+year+" ")  
     }
     else if(filter == 'APPROVED')
     {
       var result = await pool.request()
-      .query("exec POST_EVALUATION_LIST_HR_FILTER @start= "+start+" , @end = "+end+", @count="+count+", @plant_code = '"+plant_code+"' ")
+      .query("exec POST_EVALUATION_LIST_HR_FILTER @start= "+start+" , @end = "+end+", @count="+count+", @plant_code = '"+plant_code+"', @year = "+year+" ")
     }
   }
   else if(id==3)
@@ -2866,12 +2867,12 @@ app.post('/evaluationdays',verifyJWT, async(req,res)=>{
     if(filter == undefined || filter == 'undefined' || filter == 'PENDING')
     {
       var result = await pool.request()
-      .query(" EXEC POST_EVALUATION_LIST_HR @start= "+start+" , @end = "+end+" , @count = "+count+", @plant_code = '"+plant_code+"' ")    
+      .query(" EXEC POST_EVALUATION_LIST_HR @start= "+start+" , @end = "+end+" , @count = "+count+", @plant_code = '"+plant_code+"', @year = "+year+" ")    
     }
     else if(filter == 'APPROVED')
     {
       var result = await pool.request()
-      .query(" EXEC POST_EVALUATION_LIST_HR_FILTER @start= "+start+" , @end = "+end+" , @count = "+count+", @plant_code = '"+plant_code+"' ")    
+      .query(" EXEC POST_EVALUATION_LIST_HR_FILTER @start= "+start+" , @end = "+end+" , @count = "+count+", @plant_code = '"+plant_code+"', @year = "+year+" ")    
     }
 
   }
