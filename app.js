@@ -1410,9 +1410,10 @@ app.post('/pretest', verifyJWT,async(req,res)=>{
 
   try
   {
+  console.log(req.body);
   details = req.body
   var username = req.body[0].username
-  var apln_slno = username.split('/')[2]
+  var apln_slno = req.body[0].apln_slno
   var module = req.body[0].module
   module = module.split('.')[1]
 
@@ -2864,7 +2865,6 @@ app.post('/evaluationdays',verifyJWT, async(req,res)=>{
     console.log(3, count)
     if(filter == undefined || filter == 'undefined' || filter == 'PENDING')
     {
-      console.log(" EXEC POST_EVALUATION_LIST_HR @start= "+start+" , @end = "+end+" , @count = "+count+", @plant_code = '"+plant_code+"' ") 
       var result = await pool.request()
       .query(" EXEC POST_EVALUATION_LIST_HR @start= "+start+" , @end = "+end+" , @count = "+count+", @plant_code = '"+plant_code+"' ")    
     }
@@ -2884,6 +2884,27 @@ app.post('/evaluationdays',verifyJWT, async(req,res)=>{
     res.send({"message":"failure"})
   }
 })
+
+app.get('/evaluationDueSupervisor', verifyJWT, async(req, res)=>
+{
+  try
+  {
+    var pool = await db.poolPromise
+    var plantcode = req.query.plantcode
+    var dept_slno = req.query.dept_slno
+
+    var result = await pool.request()
+    .query(" EXEC POST_EVALUATION_LIST_SUP_DUE @plant_code = '"+plantcode+"', @dept_slno = "+dept_slno+" ")    
+    res.send(result['recordset'])
+
+  }
+  catch(err)
+  {
+    console.log(err)
+    res.send({"message":"evaluationDueSupervisor_failure"})
+  }
+})
+
 
 app.post('/depttransfer',verifyJWT, async(req, res)=>{
   try
@@ -3007,7 +3028,7 @@ app.post('/getLineName', verifyJWT,async(req,res)=>
   var dept_slno = req.body.dept_slno
   console.log(req.body)
     var result2 = await pool.request()
-    .query("select empl_slno, emp_name from employees where Department = '"+dept_slno+"' and is_ReportingAuth = 1 ")
+    .query("select empl_slno, emp_name from employees where Department = '"+dept_slno+"'  and is_ReportingAuth = 1 ")
 
     var result = await pool.request()
     .query("select convert(INT, line_code) as line_code, line_name from mst_line where module_code = '"+dept_slno+"' and del_status = 'N'  ")
@@ -3308,6 +3329,10 @@ app.post('/onboard_form', verifyJWT,async(req, res)=>{
   var designation= req.body.designation
   var apln_slno = req.body.apln_slno
   var category = req.body.category
+  var ifsc_code = req.body.ifsc_code
+  var account_number = req.body.account_number
+  var bank_name = req.body.bank_name
+
 
   if(active_status == undefined)
     active_status = 'ACTIVE'
@@ -3325,7 +3350,7 @@ app.post('/onboard_form', verifyJWT,async(req, res)=>{
 
   var pool = await db.poolPromise
   var result = await pool.request()
-    .query("EXEC onboard @plantcode = '"+plantcode+"' ,  @grade = "+grade+" , @bio_id = 1 , @dept  = '"+dept+"', @doj = '"+doj+"', @active_status = '"+active_status+"', @line = '"+line+"', @bio_no = "+bio_no+", @uan = '"+uan+"', @gen_id  = '"+id+"', @reporting_to = '"+reporting_to+"', @apln_slno= "+apln_slno+", @category = '"+category+"' ")
+    .query("EXEC onboard @plantcode = '"+plantcode+"' ,  @grade = "+grade+" , @bio_id = 1 , @dept  = '"+dept+"', @doj = '"+doj+"', @active_status = '"+active_status+"', @line = '"+line+"', @bio_no = "+bio_no+", @uan = '"+uan+"', @gen_id  = '"+id+"', @reporting_to = '"+reporting_to+"', @apln_slno= "+apln_slno+", @category = '"+category+"', @ifsc_code = '"+ifsc_code+"', @account_number = '"+account_number+"', @bank_name = '"+bank_name+"' ")
     console.log(process_trained)
     for(var i =0; i<process_trained.length; i++)
     {

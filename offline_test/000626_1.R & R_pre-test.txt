@@ -1,0 +1,64 @@
+icon corner in front page
+
+DHRM should be above 
+
+new trainee-> test login -> trainer login -> user login-> ARS login
+
+trainee apln :
+
+remove logo from login page
+
+increase font size in login page
+
+login button right side, trainee apln in bold
+
+aadhar no 12 digit validation
+
+when it is disabled turn into grey color
+
+'submit is not permitted' near submit button.
+
+nationality india default
+
+prev(optional)
+
+speak as mandatory
+
+name of the company -> place to change
+
+employee related not mandatory for trainee
+
+200kb to 1mb in file upload
+
+show which field is not filled
+
+remove the red block
+
+rml login:
+
+increase the container size
+
+code showing in master instantly
+
+plant code in employee
+
+gen id emp name , plant name, dept name in left side
+desig, mobile, user name, password in right side
+
+get master data -> change query format
+
+trainee apln status:
+
+remove readonly, change letter to captital
+
+only pending rejected is editable.
+
+remove colon. dept mapped to line. 
+
+eval form -> upload mandatory
+
+pending approval -> supervisor evaluation
+
+
+
+
