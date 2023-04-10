@@ -1662,7 +1662,7 @@ app.post('/offlineUpload', verifyJWT,async(req,res)=>
 {
   try{
   var test = req.body.test
-  var module = req.body.module.split('.')[1]
+  var module = req.body.module
   var username = req.body.trainee
   var apln_slno = req.body.trainee.split('/')
   apln_slno = apln_slno.pop() 
