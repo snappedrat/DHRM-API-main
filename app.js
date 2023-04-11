@@ -1229,14 +1229,13 @@ app.get('/getdataqualfn', async(req,res)=>{
   }
 })
 
-app.post('/getQuestions',verifyJWT,async(req,res)=>
+app.get('/getQuestions',verifyJWT,async(req,res)=>
 {
   try
   {
-  var module = req.body.module
+  var module = req.query.module
   module = module.split('.')[1]
-
-  var username = req.body.username
+  var username = req.query.username
 
   var pool = await db.poolPromise
   console.log("select question, correct_answer from question_bank2 where module_name = '"+module+"' and plant_code = (select plant_code from trainee_apln where trainee_idno = '"+username+"') ")
@@ -1251,17 +1250,14 @@ catch(err)
   res.send({message:'failure'})
 }
 })
-app.post('/getQuestions_tnr', verifyJWT,async(req,res)=>
+app.get('/getQuestions_tnr', verifyJWT,async(req,res)=>
 {
   try
   {
-  var module = req.body.module
-  var plant_code = req.body.plant_code
-
-  console.log
+  var module = req.query.module
+  var plant_code = req.query.plant_code
 
   var pool = await db.poolPromise
-  console.log("select * from question_bank2 where module_name = '"+module+"' and plant_code = '"+plant_code+"' order by qslno ")
   let result = await pool.request()
     .query("select * from question_bank2 where module_name = '"+module+"' and plant_code = '"+plant_code+"' order by qslno ")
   
@@ -1274,11 +1270,11 @@ catch(err)
 }
 })
 
-app.post('/getModules', verifyJWT, async(req,res)=>{
+app.get('/getModules', verifyJWT, async(req,res)=>{
 try
 {
 
-  let username = req.body.username
+  let username = req.query.username
 
   var pool = await db.poolPromise
   console.log("select * from trg_modules where plant_code = (select plant_code from trainee_apln where trainee_idno = '"+username+"') and del_status = 'N' order by priorityval ")
@@ -1301,12 +1297,12 @@ catch(err)
 }
 })
 
-app.post('/getTest',verifyJWT,  async(req,res)=>{
+app.get('/getTest',verifyJWT,  async(req,res)=>{
 
   try
   {
-  let username = req.body.username
-  let module = req.body.module
+  let username = req.query.username
+  let module = req.query.module
   module = module.split('.')[1]
 
   var pool = await db.poolPromise
@@ -1325,13 +1321,13 @@ app.post('/getTest',verifyJWT,  async(req,res)=>{
   }
 })
 
-app.post('/Qualified', verifyJWT, async(req,res)=>{
+app.get('/Qualified', verifyJWT, async(req,res)=>{
   try
   {
   var pool = await db.poolPromise;
 
-  let username = req.body.username;
-  let m = req.body.module;
+  let username = req.query.username;
+  let m = req.query.module;
   let pass_mark
 
   let module = m.split('.')[1]
@@ -1594,11 +1590,11 @@ app.post('/filedrop', fileDrop ,verifyJWT, async(req,res)=>
   res.send({'message':'success'})
 })
 
-app.post('/getTrainee',verifyJWT, async(req,res)=>
+app.get('/getTrainee',verifyJWT, async(req,res)=>
 {
 try
 {
-  var plantcode = req.body.plantcode
+  var plantcode = req.query.plantcode
 
   var pool = await db.poolPromise
 
@@ -1615,16 +1611,16 @@ catch(err)
 }
 })
 
-app.post('/get_test_status', verifyJWT,async(req,res)=>
+app.get('/get_test_status', verifyJWT,async(req,res)=>
 {
   try
   {
 
     var pool = await db.poolPromise
 
-    var idno = req.body.idno
-    var module_name = req.body.module_name
-    console.log(req.body)
+    var idno = req.query.idno
+    var module_name = req.query.module_name
+    console.log(req.query)
 
     var r= await pool.request()
     .input('module_name', module_name)
@@ -1667,9 +1663,9 @@ app.post('/get_test_status', verifyJWT,async(req,res)=>
 }
 )
 
-app.post('/getOfflineModule',verifyJWT, async(req,res)=>
+app.get('/getOfflineModule',verifyJWT, async(req,res)=>
 {
-  var plantcode = req.body.plantcode
+  var plantcode = req.query.plantcode
 
   var pool = await db.poolPromise
   var result =await pool.request()
@@ -1682,6 +1678,7 @@ app.post('/getOfflineModule',verifyJWT, async(req,res)=>
 app.post('/offlineUpload', verifyJWT,async(req,res)=>
 {
   try{
+  console.log(req.body);
   var test = req.body.test
   var module = req.body.module
   var username = req.body.trainee
@@ -1779,14 +1776,14 @@ try
   }
 })
 
-app.post('/deletemodule',verifyJWT, async(req,res)=>
+app.put('/deletemodule',verifyJWT, async(req,res)=>
 {
   try
   {
   var slno = req.body.slno
   var pool = await db.poolPromise
   var result = await pool.request()
-    .query("  update trg_modules set del_status = 'Y' where slno = "+slno+" ")
+    .query("update trg_modules set del_status = 'Y' where slno = "+slno+" ")
   res.send({'message': 'success'})
   }
   catch(err)
@@ -1796,7 +1793,7 @@ app.post('/deletemodule',verifyJWT, async(req,res)=>
   }
 })
 
-app.post('/updatemodule', verifyJWT,async(req,res)=>{
+app.put('/updatemodule', verifyJWT,async(req,res)=>{
 
   try
   {
@@ -1821,11 +1818,11 @@ app.post('/updatemodule', verifyJWT,async(req,res)=>{
   }
 })
 
-app.post('/testSummary',verifyJWT, async(req,res)=>{
+app.get('/testSummary',verifyJWT, async(req,res)=>{
   try
   {
-      var details = req.body
-      console.log(req.body)
+      var details = req.query
+      console.log(req.query)
 
   console.log("select fullname, trainee_idno,MAX(submission_date)  as submission_date, sum(pretraining_percent)/count(*) as sum1,  sum(posttraining_percent)/count(*) as sum2 from test_result_summary where submission_date >= '"+details.start+"' and submission_date <= '"+details.end+"  23:59:59'  and plant_code = '"+details.plantcode+"' group by fullname, trainee_idno  ")
 
@@ -1842,10 +1839,10 @@ catch(err)
 
 })
 
-app.post('/traineeScorecard',verifyJWT, async(req,res)=>{
+app.get('/traineeScorecard',verifyJWT, async(req,res)=>{
   try
   {
-  var idno = req.body.trainee_idno
+  var idno = req.query.trainee_idno
   var pool = await db.poolPromise
   var result = await pool.request()
   .query("select * from test_result_summary where trainee_idno = '"+idno+"' ")
@@ -1859,12 +1856,12 @@ catch(err)
 
 })
 
-app.post('/traineeAnswers',verifyJWT, async(req,res)=>{
+app.get('/traineeAnswers',verifyJWT, async(req,res)=>{
   try
   {
     console.log(req.body)
-  var idno = req.body.idno
-  var module = req.body.module
+  var idno = req.query.idno
+  var module = req.query.module
   var pool = await db.poolPromise
   
   var result2= await pool.request()
