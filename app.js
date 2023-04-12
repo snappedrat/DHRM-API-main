@@ -7,7 +7,7 @@ const multer = require('multer');
 const fs = require("fs");
 const nodemailer = require('nodemailer');
 const verifyJWT = require('./Middleware/auth');
-
+const jwt = require('jsonwebtoken')
 const cors = require('cors');
 app.use(cors())
 app.use(morgan('dev'));

@@ -98,16 +98,15 @@ hrOperation.get('/gethrappr', async(req,res)=>{
     try
     {
     var aadhar = req.query.aadhar
+    var mobile = req.query.mobile
     var pool = await db.poolPromise
     var result = await pool.request()
-      .query("select apln_slno from trainee_apln where aadhar_no = '"+aadhar+"' ")
-    console.log(result['recordset']);
+      .query("select mobile_no1 from trainee_apln where aadhar_no = '"+aadhar+"' ")
+    
     if(result['recordset'].length == 0)
-      res.send({message : 'new'})
-    else if(result['recordset'].length >= 1)
-      res.send({message : 'old'})
+      res.send({mobile: 'null'})
     else
-      res.send({message : 'invalid'})
+      res.send(result['recordset'][0])
   }
   catch(err)
   {
@@ -204,7 +203,7 @@ hrOperation.get('/gethrappr', async(req,res)=>{
       var pool = await db.poolPromise;
     var company_name = req.query.company_name
     var result = await pool.request()
-      .query("select plant_name from plant where company_code =  (select top 1 company_code from master_company where company_name = '"+company_name+"') and del_status= 0 ")
+      .query("select plant_name from plant where company_code =  (select top 1 company_code from master_company where sno = '"+company_name+"') and del_status= 0 ")
       res.send(result['recordset'])
     }
     catch(err)
@@ -888,7 +887,7 @@ hrOperation.get('/filter',verifyJWT, async(req,res)=>{
   
       var pool = await db.poolPromise
       var result = await pool.request()
-        .query("select * from trainee_apln where apln_status = 'APPOINTED' and test_status = 'completed' and plant_code = '"+pl+"' and gen_id is not null ")
+        .query("select t.apln_slno, t.fullname, t.trainee_idno, t.fathername, t.birthdate, t.mobile_no1, t.gen_id, t.aadhar_no, t.apln_status, t.doj, d.dept_name, t.dept_slno, t.line_code from trainee_apln t join department d on t.dept_slno = d.dept_slno where t.apln_status = 'APPOINTED' and t.test_status = 'completed' and t.plant_code = '"+pl+"' and gen_id is not null ")
       
       res.send(result['recordset'])
     }
@@ -937,14 +936,14 @@ hrOperation.get('/filter',verifyJWT, async(req,res)=>{
       var slno = req.query.apln_slno
   
       var pool = await db.poolPromise
-      console.log("select emp_name from employees where empl_slno = (select reporting_to from trainee_apln where gen_id = "+slno+") ")
+      console.log("select emp_name from employees where empl_slno = (select reporting_to from trainee_apln where apln_slno = "+slno+") ")
   
       var result = await pool.request()
         .query("select dept_name from department where dept_slno ="+dept+" ")
       var result1 = await pool.request()
         .query("select line_name from mst_line where line_code ="+line+" ")
       var result2 = await pool.request()
-        .query("select emp_name from employees where empl_slno = (select reporting_to from trainee_apln where gen_id = '"+slno+"') ")
+        .query("select emp_name from employees where empl_slno = (select reporting_to from trainee_apln where apln_slno = '"+slno+"') ")
       
       var object = [];
       object[0] = result['recordset'][0]
@@ -999,19 +998,19 @@ hrOperation.get('/filter',verifyJWT, async(req,res)=>{
   hrOperation.put('/transfer',verifyJWT, async(req, res)=>{
   
     try{
-      console.log(req.body)/dept
+      console.log(req.body)
     var pool =await db.poolPromise
-    var gen_id = req.body.apln_slno
+    var apln_slno = req.body.apln_slno
     var dept = req.body.changedepartment
     var line = req.body.changeline
     var RA = req.body.reportingto
     var pl = req.body.plantcode
   
-    console.log("update trainee_apln set dept_slno ='"+dept+"', line_code= '"+line+"', reporting_to = "+RA+" where gen_id ='"+gen_id+"'  ")
+    console.log("update trainee_apln set dept_slno ='"+dept+"', line_code= '"+line+"', reporting_to = "+RA+" where apln_slno ='"+apln_slno+"'  ")
   
   
     var result = await pool.request()
-      .query("update trainee_apln set dept_slno = '"+dept+"', line_code ='"+line+"', reporting_to = "+RA+" where gen_id ='"+gen_id+"'  ")
+      .query("update trainee_apln set dept_slno = '"+dept+"', line_code ='"+line+"', reporting_to = "+RA+" where apln_slno ='"+apln_slno+"' ")
   
     res.send({message: 'success'})
     }
@@ -1038,12 +1037,12 @@ hrOperation.get('/filter',verifyJWT, async(req,res)=>{
   
     console.log("select  t.*, d.dept_name, l.line_name, e.emp_name from trainee_apln t join designation ds on t.desig_slno = ds.slno JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code join employees e on t.reporting_to = e.empl_slno where apln_slno = '"+apln_slno+"' ")
   
-    if(readonly)
+    if(readonly == 'true')
     {
       var details = await pool.request()
       .query("select  t.*, d.dept_name, l.line_name, e.emp_name from trainee_apln t JOIN department d on t.dept_slno = d.dept_slno join mst_line l on t.line_code = l.line_code join employees e on t.reporting_to = e.empl_slno where apln_slno = '"+apln_slno+"' ")  
     }
-    else
+    else if(readonly == 'false')
     {
       var details = await pool.request()
       .query("select fullname, trainee_idno, plant_code , ifsc_code, bank_name, bank_account_number, apln_slno from trainee_apln where apln_slno = '"+apln_slno+"' ")  

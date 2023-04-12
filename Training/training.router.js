@@ -363,7 +363,7 @@ try
   var pool = await db.poolPromise
 
   var result =await pool.request()
-    .query("select fullname ,trainee_idno from trainee_apln where plant_code = '"+plantcode+"' and apln_status = 'APPROVED' ")
+    .query("select fullname ,trainee_idno from trainee_apln where plant_code = '"+plantcode+"' and apln_status = 'APPROVED' and test_status <> 'COMPLETED' ")
 
 res.send(result['recordset'])  
 
@@ -592,8 +592,10 @@ trainingRouter.get('/testSummary',verifyJWT, async(req,res)=>{
 
   var pool = await db.poolPromise
   var result = await pool.request()
-  .query("select fullname, trainee_idno,MAX(submission_date) as submission_date, sum(pretraining_percent)/count(*) as sum1,  sum(posttraining_percent)/count(*) as sum2 from test_result_summary where submission_date >= '"+details.start+"' and submission_date <= '"+details.end+"  23:59:59' and plant_code = '"+details.plantcode+"' group by fullname, trainee_idno  ")
+  .query("EXEC filterevalation @frmdt = '"+details.start+"', @todt = '"+details.end+"', @plant_code = '"+details.plantcode+"' ")
+  // .query("select ts.fullname, ts.trainee_idno,MAX(ts.submission_date) as submission_date, sum(ts.pretraining_percent)/count(*) as sum1,  sum(ts.posttraining_percent)/count(*) as sum2 from test_result_summary ts join trainee_apln t on ts.trainee_idno = t.trainee_idno where ts.submission_date >= '"+details.start+"' and ts.submission_date <= '"+details.end+"  23:59:59' and ts.plant_code = '"+details.plantcode+"' group by ts.fullname, ts.trainee_idno  ")
   res.send(result['recordset'])
+
 }
 catch(err)
 {
@@ -609,7 +611,7 @@ trainingRouter.get('/traineeScorecard',verifyJWT, async(req,res)=>{
   var idno = req.query.trainee_idno
   var pool = await db.poolPromise
   var result = await pool.request()
-  .query("select * from test_result_summary where trainee_idno = '"+idno+"' ")
+  .query("EXEC filterevalation_trainee @trainee_idno = '"+idno+"' ")
   res.send(result['recordset'])
 }
 catch(err)
@@ -623,14 +625,14 @@ catch(err)
 trainingRouter.get('/traineeAnswers',verifyJWT, async(req,res)=>{
   try
   {
-    console.log(req.body)
+    console.log(req.query)
   var idno = req.query.idno
   var module = req.query.module
   var pool = await db.poolPromise
   
   var result2= await pool.request()
     .query("select category from trg_modules where module_name = '"+module+"' ")
-  
+  console.log(result2.recordset);
   if(result2['recordset'][0].category == 'ONLINE')
   {
     var result = await pool.request()
