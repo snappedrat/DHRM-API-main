@@ -326,7 +326,7 @@ masterRouter.post('/companyadd',verifyJWT,async(req,res)=>{
     }
   })
   
-  masterRouter.post('/deleteline', verifyJWT,async(req,res)=>
+  masterRouter.put('/deleteline', verifyJWT,async(req,res)=>
   {
     try{
     var line_code = req.body.slno
@@ -341,7 +341,7 @@ masterRouter.post('/companyadd',verifyJWT,async(req,res)=>{
     }
   })
   
-  masterRouter.post('/updateline',verifyJWT, async(req,res)=>{
+  masterRouter.put('/updateline',verifyJWT, async(req,res)=>{
     try{
   
       var line_code = req.body.Line_code
@@ -364,7 +364,7 @@ masterRouter.post('/companyadd',verifyJWT,async(req,res)=>{
     }
   })
   
-  masterRouter.post('/getline',verifyJWT, async(req,res)=>{
+  masterRouter.get('/getline',verifyJWT, async(req,res)=>{
     try{
     var pool = await db.poolPromise
     var result = await pool.request()
