@@ -1,7 +1,6 @@
 const express = require('express')
 const loginRouter = express.Router();
-const jwt = require('jsonwebtoken')
-
+const jwt  = require('jsonwebtoken')
 const morgan = require('morgan');
 const bodyParser = require('body-parser');
 const db = require('../db');
