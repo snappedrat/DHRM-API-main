@@ -363,8 +363,7 @@ try
   var pool = await db.poolPromise
 
   var result =await pool.request()
-    .query("select fullname ,trainee_idno from trainee_apln where plant_code = '"+plantcode+"' and apln_status = 'APPROVED' and test_status <> 'COMPLETED' ")
-
+.query("select fullname ,trainee_idno from trainee_apln where plant_code = '"+plantcode+"' and apln_status = 'APPROVED' and (test_status IS NULL OR  test_status='IN_TRAINING')")
 res.send(result['recordset'])  
 
 }
