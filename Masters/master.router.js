@@ -837,7 +837,7 @@ masterRouter.post('/companyadd',verifyJWT,async(req,res)=>{
     try{
     var pool = await db.poolPromise
     var result = await pool.request()
-      .query("select * from mst_defaultshift where del_status = 'N'") 
+      .query("select shift_id,plant_code, plant_desc, shift_desc, CONVERT(varchar(8), act_tm_from, 108) as Shift_Start, CONVERT(varchar(8), act_tm_to, 108) as Shift_End , CONVERT(varchar(8), in_tm_min, 108) as Min_Time , CONVERT(varchar(8),in_tm_max , 108) as Max_Time, type,shift_group,security_shift,coff_eligible_hours from mst_defaultshift where del_status = 'N'") 
     res.send(result['recordset'])
     }catch(err){
       console.log(err)

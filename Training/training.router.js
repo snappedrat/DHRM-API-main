@@ -162,7 +162,7 @@ trainingRouter.get('/Qualified', verifyJWT, async(req,res)=>{
     if(result['recordset'].length == 0)
     {
       var prev_module = await pool.request()
-        .query("select module_name from trg_modules where priorityval = ((select priorityval from trg_modules where module_name = '"+module+"')-1) and plant_code = (select plant_code from trg_modules where module_name = '"+module+"' ) ")
+        .query(`select module_name from trg_modules where priorityval = ((select priorityval from trg_modules where module_name = '${module}'  and plant_code=(select plant_code from trainee_apln where trainee_idno='${username}'))-1) and plant_code = (select plant_code from trainee_apln where trainee_idno='${username}') `)
 
         // console.log("select sum(posttraining_score) as sum from ontraining_evalation where trainee_idno = '"+username+"' and module_name = '"+prev_module['recordset'][0].module_name+"'")
       
@@ -314,14 +314,12 @@ trainingRouter.post('/questionbank' ,verifyJWT, async(req,res)=>
   for(var i = 0; i < insert.length-1 ; i++)
   {
     let image = insert[i].image_filename == undefined ? 'NULL' : insert[i].image_filename
-    // console.log("insert into question_bank2(module_name, question, question_type, correct_answer, image_filename, plant_code) values('"+insert[insert.length-1].module.split('.')[1]+"',   N'"+insert[i].question+"' , 'O', '"+insert[i].correct_answer+"', '"+image+"', '"+insert[insert.length-1].plantcode+"')")
 
     var result1 = await pool.request()
     .query("insert into question_bank2(module_name, question, question_type, correct_answer, image_filename, plant_code) values('"+insert[insert.length-1].module.split('.')[1]+"',   N'"+insert[i].question+"' , 'O', '"+insert[i].correct_answer+"', '"+image+"', '"+insert[insert.length-1].plantcode+"')")
   }
   for(var i = 0; i < update.length ; i++)
   {
-    // console.log("update question_bank2 set question = N'"+update[i].question+"', correct_answer = '"+update[i].correct_answer+"', image_filename = '"+update[i].image_filename+"' where qslno = "+update[i].qslno+" ")
 
     var result3 = await pool.request()
     .query("update question_bank2 set question = N'"+update[i].question+"', correct_answer = '"+update[i].correct_answer+"' , image_filename = '"+update[i].image_filename+"' where qslno = "+update[i].qslno+" ")
@@ -387,7 +385,7 @@ trainingRouter.get('/get_test_status', verifyJWT,async(req,res)=>
 
     var r= await pool.request()
     .input('module_name', module_name)
-    .query("select pass_criteria from trg_modules where module_name = @module_name")
+    .query("select pass_criteria from trg_modules where module_name = @module_name and plant_code = (select plant_code from trainee_apln where trainee_idno = '"+idno+"' )")
 
     var result = await pool.request()
     .input('module_name', module_name)
@@ -529,7 +527,7 @@ try
   var pool =await db.poolPromise
 
       var result = await pool.request()
-        .query("insert into trg_modules values('"+module_name+"', "+total_marks+","+pass_criteria+", "+pass_percent+", '"+category+"', 'N', "+priorityval+", 0, '"+plantcode+"'  )")
+        .query("insert into trg_modules values(N'"+module_name+"', "+total_marks+","+pass_criteria+", "+pass_percent+", '"+category+"', 'N', "+priorityval+", 0, '"+plantcode+"'  )")
         res.send({'message': 'inserted'})
   }
   catch(err)
@@ -571,7 +569,7 @@ trainingRouter.put('/updatemodule', verifyJWT,async(req,res)=>{
 
   var pool =await db.poolPromise
       var result = await pool.request()
-        .query("update trg_modules set module_name = '"+module_name+"' , pass_criteria='"+pass_criteria+"', total_marks = '"+total_marks+"', pass_percent = '"+pass_percent+"', category = '"+category+"', priorityval = '"+priorityval+"' where slno = '"+slno+"' ")
+        .query("update trg_modules set module_name = N'"+module_name+"' , pass_criteria='"+pass_criteria+"', total_marks = '"+total_marks+"', pass_percent = '"+pass_percent+"', category = '"+category+"', priorityval = '"+priorityval+"' where slno = '"+slno+"' ")
         res.send({'message': 'updated'})
   }
   catch(err)
@@ -630,7 +628,7 @@ trainingRouter.get('/traineeAnswers',verifyJWT, async(req,res)=>{
   var pool = await db.poolPromise
   
   var result2= await pool.request()
-    .query("select category from trg_modules where module_name = '"+module+"' ")
+    .query("select category from trg_modules where module_name = '"+module+"'  ")
   console.log(result2.recordset);
   if(result2['recordset'][0].category == 'ONLINE')
   {
