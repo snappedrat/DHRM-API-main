@@ -708,7 +708,7 @@ hrOperation.get('/filter',verifyJWT, async(req,res)=>{
       var company = req.body.company
   
     var result = await pool.request()
-    .query("update trainee_apln set apln_status = 'APPROVED' where mobile_no1 = '"+mob+"' and company_code = (select company_code from master_company where sno = "+company+") ")
+    .query("update trainee_apln set apln_status = 'APPROVED', biometric_no = apln_slno where mobile_no1 = '"+mob+"' and company_code = (select company_code from master_company where sno = "+company+") ")
       res.send({message: 'success'})
   
   }
