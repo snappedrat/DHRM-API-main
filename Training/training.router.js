@@ -356,7 +356,7 @@ trainingRouter.get('/get_test_status', verifyJWT, async (req, res) => {
       if (result['recordset'].length == 0) {
       console.log(3333);
         var prev_module = await pool.request()
-          .query("select * from trg_modules where slno = (select previous_sno from (SELECT *, LAG(slno) OVER (ORDER BY slno) AS previous_sno FROM trg_modules where del_status = 'N' and plant_code = (select plant_code from trainee_apln where trainee_idno = 'P4/23/12759'))tbl where slno = (select slno from trg_modules where module_name = '"+module_name+"' and plant_code = (select plant_code from trainee_apln where trainee_idno = '"+idno+"' )) ) ")
+          .query("select * from trg_modules where slno = (select previous_sno from (SELECT *, LAG(slno) OVER (ORDER BY slno) AS previous_sno FROM trg_modules where del_status = 'N' and plant_code = (select plant_code from trainee_apln where trainee_idno = '"+idno+"'))tbl where slno = (select slno from trg_modules where module_name = '"+module_name+"' and plant_code = (select plant_code from trainee_apln where trainee_idno = '"+idno+"' )) ) ")
         console.log(4444);
         if(prev_module['recordset'].length == 0)
         {
