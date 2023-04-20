@@ -944,11 +944,14 @@ hrOperation.get('/filter',verifyJWT, async(req,res)=>{
         .query("select line_name from mst_line where line_code ="+line+" ")
       var result2 = await pool.request()
         .query("select emp_name from employees where empl_slno = (select reporting_to from trainee_apln where apln_slno = '"+slno+"') ")
-      
+        var result3 = await pool.request()
+        .query("select trainee_idno, fullname from trainee_apln where apln_slno = '"+slno+"' ")
+
       var object = [];
       object[0] = result['recordset'][0]
       object[1] = result1['recordset'][0]
       object[2] = result2['recordset'][0]
+      object[3] = result3['recordset'][0]
   
   
       res.send(object)

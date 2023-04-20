@@ -146,8 +146,6 @@ trainingRouter.get('/Qualified', verifyJWT, async (req, res) => {
         var prev_module = await pool.request()
           .query(`select module_name from trg_modules where priorityval = ((select priorityval from trg_modules where module_name = '${module}'  and plant_code=(select plant_code from trainee_apln where trainee_idno='${username}'))-1) and plant_code = (select plant_code from trainee_apln where trainee_idno='${username}') `)
 
-        // console.log("select sum(posttraining_score) as sum from ontraining_evalation where trainee_idno = '"+username+"' and module_name = '"+prev_module['recordset'][0].module_name+"'")
-
         var prev_score = await pool.request()
           .query("select sum(posttraining_score) as sum from ontraining_evalation where trainee_idno = '" + username + "' and module_name = '" + prev_module['recordset'][0].module_name + "'")
 
@@ -338,18 +336,41 @@ trainingRouter.get('/get_test_status', verifyJWT, async (req, res) => {
     var idno = req.query.idno
     var module_name = req.query.module_name
     console.log(req.query)
-
+    console.log("select pass_criteria from trg_modules where module_name = @module_name and plant_code = (select plant_code from trainee_apln where trainee_idno = '"+idno+"' )")
     var r = await pool.request()
       .input('module_name', module_name)
-      .query("select pass_criteria from trg_modules where module_name = @module_name and plant_code = (select plant_code from trainee_apln where trainee_idno = '" + idno + "' )")
-
+      .query("select pass_criteria from trg_modules where module_name = @module_name and plant_code = (select plant_code from trainee_apln where trainee_idno = '"+idno+"' )")
+    console.log(11111);
     var result = await pool.request()
       .input('module_name', module_name)
       .input('idno', idno)
       .query("select posttraining_score from ontraining_evalation where module_name = @module_name and trainee_idno = @idno ")
-
+    console.log(22222);
     if (result['recordset'].length == 0) {
-      res.send({ status: 'pre-test' })
+    console.log(3333);
+      var prev_module = await pool.request()
+        .query("select * from trg_modules where slno = (select previous_sno from (SELECT *, LAG(slno) OVER (ORDER BY slno) AS previous_sno FROM trg_modules where del_status = 'N' and plant_code = (select plant_code from trainee_apln where trainee_idno = 'P4/23/12759'))tbl where slno = (select slno from trg_modules where module_name = '"+module_name+"' and plant_code = (select plant_code from trainee_apln where trainee_idno = '"+idno+"' )) ) ")
+      console.log(4444);
+      if(prev_module['recordset'].length == 0)
+      {
+        res.send({ status: 'pre-test' })
+      }
+      else
+      {
+      var prev_score = await pool.request()
+        .query("select sum(posttraining_score) as sum from ontraining_evalation where trainee_idno = '" + idno + "' and module_name = '" + prev_module['recordset'][0].module_name + "'")
+      console.log(5555);
+      pass_mark = prev_module['recordset'][0].pass_criteria
+      console.log(pass_mark)
+
+      if (prev_score['recordset'][0].sum == null || prev_score['recordset'][0].sum < pass_mark) {
+        res.send({ status: 'The trainee is not qualified for this exam' })
+      }
+      else if (prev_score['recordset'][0].sum >= pass_mark) {
+        res.send({ status: 'pre-test' })
+      } 
+      }
+
     }
     else if (result['recordset'].length == 1) {
       if (result['recordset'][0].posttraining_score == null) {
@@ -405,9 +426,12 @@ trainingRouter.post('/offlineUpload', verifyJWT, async (req, res) => {
 
     let apln_slno = apln['recordset'][0].apln_slno
     if (test == 'pre-test') {
+      
       var r = await pool.request()
         .query("select module_name from trg_modules where plant_code = '" + plant_code + "' and category='OFFLINE' ")
+
       console.log(r['recordset'][0].module_name, module)
+
       if (r['recordset'][0].module_name == module) {
         var last = await pool.request()
           .query("update trainee_apln set test_status = 'IN_TRAINING' where trainee_idno = '" + username + "' ")

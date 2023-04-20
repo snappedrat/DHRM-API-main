@@ -33,7 +33,7 @@ peoplePlanningRouter.get('/people_planning',verifyJWT, async(req,res)=>{
     if(result['recordset'].length == 0)
     {
       var result2 = await pool.request()
-      .query("select d.dept_slno, m.line_code, m.line_name,d.dept_name, d.dept_group  from mst_line m join department d on m.module_code = d.dept_slno where m.plant_code = '"+plantcode+"' ")
+      .query("select d.dept_slno, m.line_code, m.line_name,d.dept_name, d.dept_group  from mst_line m join department d on m.module_code = d.dept_slno where m.plant_code = '"+plantcode+"' and d.del_staus = 1 and m.del_status = 'N' ")
   
       res.send(result2['recordset'])
     }
