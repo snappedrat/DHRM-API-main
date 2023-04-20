@@ -597,9 +597,19 @@ hrOperation.get('/filter',verifyJWT, async(req,res)=>{
     var fromdate = req.query.fromdate
     var todate = req.query.todate
     var plantcode = req.query.plantcode
-  
+    var date; 
+
+    if(status == 'appointed')
+      date = 'doj'
+    else if(status == 'relieved')
+      date = 'dol'
+    else
+      date = 'created_dt'
+
+    console.log("select t.created_dt, t.fullname, t.fathername, t.birthdate, t.mobile_no1, t.aadhar_no, t.apln_status, m.sno, t.doj, t.dol from trainee_apln as t left join master_company as m on t.company_code = m.company_code where apln_status = '"+status+"' AND ("+date+" between '"+fromdate+"' AND '"+todate+"') AND plant_code = '"+plantcode+"' ")
+
     var result = await pool.request()
-      .query("select t.created_dt, t.fullname, t.fathername, t.birthdate, t.mobile_no1, t.aadhar_no, t.apln_status, m.sno, t.doj, t.dol from trainee_apln as t left join master_company as m on t.company_code = m.company_code where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND plant_code = '"+plantcode+"' ")
+      .query("select t.created_dt, t.fullname, t.fathername, t.birthdate, t.mobile_no1, t.aadhar_no, t.apln_status, m.sno, t.doj, t.dol from trainee_apln as t left join master_company as m on t.company_code = m.company_code where apln_status = '"+status+"' AND ("+date+" between '"+fromdate+"' AND '"+todate+"') AND plant_code = '"+plantcode+"' ")
       res.send(result['recordset'])
   }
   catch(err)
@@ -620,10 +630,18 @@ hrOperation.get('/filter',verifyJWT, async(req,res)=>{
     var colname = req.body.colname
     var colvalue = req.body.colvalue
     colvalue = colvalue.trim()
-    console.log("select t.created_dt, t.fullname, t.fathername, t.birthdate, t.mobile_no1, t.aadhar_no, t.apln_status, m.sno from trainee_apln as t left join master_company as m on t.company_code = m.company_code where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND "+colname+" like '"+colvalue+"%' AND plant_code = '"+plantcode+"' ")
+    var date; 
+
+    if(status == 'appointed')
+      date = 'doj'
+    else if(status == 'relieved')
+      date = 'dol'
+    else
+      date = 'created_dt'
+
   
     var result = await pool.request()
-      .query("select t.created_dt, t.fullname, t.fathername, t.birthdate, t.mobile_no1, t.aadhar_no, t.apln_status, m.sno from trainee_apln as t left join master_company as m on t.company_code = m.company_code where apln_status = '"+status+"' AND (created_dt between '"+fromdate+"' AND '"+todate+"') AND "+colname+" like '"+colvalue+"%' AND plant_code = '"+plantcode+"' ")
+      .query("select t.created_dt, t.fullname, t.fathername, t.birthdate, t.mobile_no1, t.aadhar_no, t.apln_status, m.sno from trainee_apln as t left join master_company as m on t.company_code = m.company_code where apln_status = '"+status+"' AND ("+date+" between '"+fromdate+"' AND '"+todate+"') AND "+colname+" like '"+colvalue+"%' AND plant_code = '"+plantcode+"' ")
       res.send(result['recordset'])
   }
   catch(err)
