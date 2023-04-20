@@ -61,7 +61,7 @@ masterRouter.post('/companyadd',verifyJWT,async(req,res)=>{
     {
       var pool = await db.poolPromise
       var result = await pool.request()
-        .query("select * from master_company where del_status=0")
+        .query("select sno, company_code, company_name, status, CONVERT(varchar(10),CAST(created_on AS datetime), 103) as created_on, created_by, CONVERT(varchar(10),CAST(modified_on AS date), 103) as modified_on, modified_by, del_status from master_company where del_status=0")
       let miu=result['recordset'];
          res.send(miu)
   }
@@ -279,7 +279,7 @@ masterRouter.post('/companyadd',verifyJWT,async(req,res)=>{
     try{
     var pool = await db.poolPromise
     var result = await pool.request()
-      .query("select department.dept_group, department.dept_slno, department.dept_name ,department.sap_code, plant.plant_name, department.plant_code from department join plant on department.plant_code = plant.plant_code where department.del_staus=1") 
+      .query("select department.dept_slno, department.dept_group, department.dept_name ,department.sap_code, plant.plant_name, department.plant_code from department join plant on department.plant_code = plant.plant_code where department.del_staus=1") 
   
     res.send(result['recordset'])
     }catch(err){

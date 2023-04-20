@@ -335,56 +335,64 @@ trainingRouter.get('/get_test_status', verifyJWT, async (req, res) => {
 
     var idno = req.query.idno
     var module_name = req.query.module_name
-    console.log(req.query)
-    console.log("select pass_criteria from trg_modules where module_name = @module_name and plant_code = (select plant_code from trainee_apln where trainee_idno = '"+idno+"' )")
-    var r = await pool.request()
-      .input('module_name', module_name)
-      .query("select pass_criteria from trg_modules where module_name = @module_name and plant_code = (select plant_code from trainee_apln where trainee_idno = '"+idno+"' )")
-    console.log(11111);
-    var result = await pool.request()
-      .input('module_name', module_name)
-      .input('idno', idno)
-      .query("select posttraining_score from ontraining_evalation where module_name = @module_name and trainee_idno = @idno ")
-    console.log(22222);
-    if (result['recordset'].length == 0) {
-    console.log(3333);
-      var prev_module = await pool.request()
-        .query("select * from trg_modules where slno = (select previous_sno from (SELECT *, LAG(slno) OVER (ORDER BY slno) AS previous_sno FROM trg_modules where del_status = 'N' and plant_code = (select plant_code from trainee_apln where trainee_idno = 'P4/23/12759'))tbl where slno = (select slno from trg_modules where module_name = '"+module_name+"' and plant_code = (select plant_code from trainee_apln where trainee_idno = '"+idno+"' )) ) ")
-      console.log(4444);
-      if(prev_module['recordset'].length == 0)
-      {
-        res.send({ status: 'pre-test' })
-      }
-      else
-      {
-      var prev_score = await pool.request()
-        .query("select sum(posttraining_score) as sum from ontraining_evalation where trainee_idno = '" + idno + "' and module_name = '" + prev_module['recordset'][0].module_name + "'")
-      console.log(5555);
-      pass_mark = prev_module['recordset'][0].pass_criteria
-      console.log(pass_mark)
-
-      if (prev_score['recordset'][0].sum == null || prev_score['recordset'][0].sum < pass_mark) {
-        res.send({ status: 'The trainee is not qualified for this exam' })
-      }
-      else if (prev_score['recordset'][0].sum >= pass_mark) {
-        res.send({ status: 'pre-test' })
-      } 
-      }
-
+    
+    if(idno=='' || idno == undefined || idno == 'undefined')
+    {
+      res.send({ status: 'Please select the Trainee' })
     }
-    else if (result['recordset'].length == 1) {
-      if (result['recordset'][0].posttraining_score == null) {
-        res.send({ status: 'post-test' })
+    else
+    {
+      console.log(req.query)
+      console.log("select pass_criteria from trg_modules where module_name = @module_name and plant_code = (select plant_code from trainee_apln where trainee_idno = '"+idno+"' )")
+      var r = await pool.request()
+        .input('module_name', module_name)
+        .query("select pass_criteria from trg_modules where module_name = @module_name and plant_code = (select plant_code from trainee_apln where trainee_idno = '"+idno+"' )")
+      console.log(11111);
+      var result = await pool.request()
+        .input('module_name', module_name)
+        .input('idno', idno)
+        .query("select posttraining_score from ontraining_evalation where module_name = @module_name and trainee_idno = @idno ")
+      console.log(22222);
+      if (result['recordset'].length == 0) {
+      console.log(3333);
+        var prev_module = await pool.request()
+          .query("select * from trg_modules where slno = (select previous_sno from (SELECT *, LAG(slno) OVER (ORDER BY slno) AS previous_sno FROM trg_modules where del_status = 'N' and plant_code = (select plant_code from trainee_apln where trainee_idno = 'P4/23/12759'))tbl where slno = (select slno from trg_modules where module_name = '"+module_name+"' and plant_code = (select plant_code from trainee_apln where trainee_idno = '"+idno+"' )) ) ")
+        console.log(4444);
+        if(prev_module['recordset'].length == 0)
+        {
+          res.send({ status: 'pre-test' })
+        }
+        else
+        {
+        var prev_score = await pool.request()
+          .query("select sum(posttraining_score) as sum from ontraining_evalation where trainee_idno = '" + idno + "' and module_name = '" + prev_module['recordset'][0].module_name + "'")
+        console.log(5555);
+        pass_mark = prev_module['recordset'][0].pass_criteria
+        console.log(pass_mark)
+  
+        if (prev_score['recordset'][0].sum == null || prev_score['recordset'][0].sum < pass_mark) {
+          res.send({ status: 'The trainee is not qualified for this exam' })
+        }
+        else if (prev_score['recordset'][0].sum >= pass_mark) {
+          res.send({ status: 'pre-test' })
+        } 
+        }
+  
       }
-      else if (result['recordset'][0].posttraining_score < r['recordset'][0].pass_criteria) {
-        res.send({ status: 'exam failed' })
+      else if (result['recordset'].length == 1) {
+        if (result['recordset'][0].posttraining_score == null) {
+          res.send({ status: 'post-test' })
+        }
+        else if (result['recordset'][0].posttraining_score < r['recordset'][0].pass_criteria) {
+          res.send({ status: 'exam failed' })
+        }
+        else {
+          res.send({ status: 'already' })
+        }
       }
       else {
         res.send({ status: 'already' })
       }
-    }
-    else {
-      res.send({ status: 'already' })
     }
   }
   catch (err) {
