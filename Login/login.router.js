@@ -28,12 +28,13 @@ loginRouter.post('/emp-login',  async(request, response)=> {
   
       console.log(User_Name, Password)
       const pool = await db.poolPromise;
+      console.log("select * from employees where User_Name='"+User_Name+"' and Password= '"+Password+"' ")
+
       const result = await pool.request()
-          .query("select * from employees where User_Name='"+User_Name+"' or Password= '"+Password+"' ")
+          .query("select * from employees where User_Name='"+User_Name+"' and Password= '"+Password+"' ")
   
       const result2 = await pool.request()
-          .input('User_Name',User_Name)
-          .query("select * from employees where User_Name=@User_Name")
+          .query("select * from employees where User_Name='"+User_Name+"' ")
         
       console.log(result2);
       if (result['recordset'].length > 0)
