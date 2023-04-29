@@ -148,14 +148,6 @@ hrOperation.get('/gethrappr', async(req,res)=>{
       var bg = req.body.bg
       var religion = req.body.reg;
       var martial = req.body.mar;
-      if(martial == 'SINGLE')
-        martial = 0
-      else if(martial == 'MARRIED')
-        martial = 1
-      else if(martial == 'WIDOWER')
-        martial = 2
-      else if(martial == 'WIDOW')
-        martial = 7
       var phy_disable = req.body.pd;
       var mobilenumber = req.body.mobilenumber
       var company = req.body.company
