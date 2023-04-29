@@ -794,7 +794,7 @@ hrOperation.get('/filter',verifyJWT, async(req,res)=>{
     var result = await r.request()
       .query("select addr from plant where plant_code = (select plant_code from trainee_apln where apln_slno = '"+apln_slno+"' ) ")
     var result2 = await r.request()
-      .query("select gen_id, mobile_no1, birthdate,blood_group ,fullname,fathername, trainee_idno,dept_slno, permanent_address, emergency_name, emergency_rel, other_files6, mobile_no2, plant_code, biometric_no from trainee_apln where apln_slno = '"+apln_slno+"' ")
+      .query("select t.gen_id, t.mobile_no1, t.birthdate, t.blood_group , t.fullname,t.fathername,t.trainee_idno, t.dept_slno, t.permanent_address, t.emergency_name, t.emergency_rel, t.other_files6, t.mobile_no2, t.plant_code,t.biometric_no, d.dept_name from trainee_apln t left join department d on t.dept_slno = d.dept_slno where apln_slno = '"+apln_slno+"' ")
       object = result2['recordset']
     var result3 = await r.request()
       .query("select plant_sign from plant where plant_code = (select plant_code from trainee_apln where apln_slno = '"+apln_slno+"' ) ")
