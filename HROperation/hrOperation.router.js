@@ -1171,6 +1171,11 @@ hrOperation.get('/filter',verifyJWT, async(req,res)=>{
       active_status = 'ACTIVE'
     else
       active_status = 'INACTIVE'
+
+    if(work_contract == 'DIRECT')
+      work_contract = '01'
+    else(work_contract == 'INDIRECT')
+    work_contract = '02'
       
   
     if(bio_id == 'true')
@@ -1183,7 +1188,7 @@ hrOperation.get('/filter',verifyJWT, async(req,res)=>{
   
     var pool = await db.poolPromise
     var result = await pool.request()
-      .query("EXEC onboard @plantcode = '"+plantcode+"' ,  @grade = "+grade+" , @bio_id = 1 , @dept  = '"+dept+"', @doj = '"+doj+"', @active_status = '"+active_status+"', @line = '"+line+"', @bio_no = "+bio_no+", @uan = '"+uan+"', @gen_id  = '"+id+"', @reporting_to = '"+reporting_to+"', @apln_slno= "+apln_slno+", @category = '"+category+"', @ifsc_code = '"+ifsc_code+"', @account_number = '"+account_number+"', @bank_name = '"+bank_name+"', , @workcontract= '"+work_contract+"' ")
+      .query("EXEC onboard @plantcode = '"+plantcode+"' ,  @grade = "+grade+" , @bio_id = 1 , @dept  = '"+dept+"', @doj = '"+doj+"', @active_status = '"+active_status+"', @line = '"+line+"', @bio_no = "+bio_no+", @uan = '"+uan+"', @gen_id  = '"+id+"', @reporting_to = '"+reporting_to+"', @apln_slno= "+apln_slno+", @category = '"+category+"', @ifsc_code = '"+ifsc_code+"', @account_number = '"+account_number+"', @bank_name = '"+bank_name+"', @workcontract= '"+work_contract+"' ")
       console.log(process_trained)
       for(var i =0; i<process_trained.length; i++)
       {
