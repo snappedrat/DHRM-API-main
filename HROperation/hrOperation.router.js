@@ -1178,12 +1178,12 @@ hrOperation.get('/filter',verifyJWT, async(req,res)=>{
     else
       bio_id= 0
   
-      console.log("EXEC onboard @plantcode = '"+plantcode+"' ,  @grade = "+grade+" , @bio_id = 1 , @dept  = '"+dept+"', @doj = '"+doj+"', @active_status = '"+active_status+"', @line = '"+line+"', @bio_no = "+bio_no+", @uan = '"+uan+"', @gen_id  = '"+id+"', @reporting_to = '"+reporting_to+"', @apln_slno= "+apln_slno+", @category = '"+category+"' ")
+      console.log("EXEC onboard @plantcode = '"+plantcode+"' ,  @grade = "+grade+" , @bio_id = 1 , @dept  = '"+dept+"', @doj = '"+doj+"', @active_status = '"+active_status+"', @line = '"+line+"', @bio_no = "+bio_no+", @uan = '"+uan+"', @gen_id  = '"+id+"', @reporting_to = '"+reporting_to+"', @apln_slno= "+apln_slno+", @category = '"+category+"' , @workcontract= '"+work_contract+"' ")
   
   
     var pool = await db.poolPromise
     var result = await pool.request()
-      .query("EXEC onboard @plantcode = '"+plantcode+"' ,  @grade = "+grade+" , @bio_id = 1 , @dept  = '"+dept+"', @doj = '"+doj+"', @active_status = '"+active_status+"', @line = '"+line+"', @bio_no = "+bio_no+", @uan = '"+uan+"', @gen_id  = '"+id+"', @reporting_to = '"+reporting_to+"', @apln_slno= "+apln_slno+", @category = '"+category+"', @ifsc_code = '"+ifsc_code+"', @account_number = '"+account_number+"', @bank_name = '"+bank_name+"' ")
+      .query("EXEC onboard @plantcode = '"+plantcode+"' ,  @grade = "+grade+" , @bio_id = 1 , @dept  = '"+dept+"', @doj = '"+doj+"', @active_status = '"+active_status+"', @line = '"+line+"', @bio_no = "+bio_no+", @uan = '"+uan+"', @gen_id  = '"+id+"', @reporting_to = '"+reporting_to+"', @apln_slno= "+apln_slno+", @category = '"+category+"', @ifsc_code = '"+ifsc_code+"', @account_number = '"+account_number+"', @bank_name = '"+bank_name+"', , @workcontract= '"+work_contract+"' ")
       console.log(process_trained)
       for(var i =0; i<process_trained.length; i++)
       {
