@@ -183,7 +183,7 @@ app.post('/filedrop', fileDrop ,verifyJWT, async(req,res)=>
 })
 
 
-app.post("/image", upload , verifyJWT, async(req, res) => {
+app.post("/image", upload , async(req, res) => {
   
   var user = await getpool()
     res.send({'Message':req.body,"file": req.file})
