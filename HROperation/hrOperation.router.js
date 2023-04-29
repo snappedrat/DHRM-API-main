@@ -1360,5 +1360,20 @@ hrOperation.get('/filter',verifyJWT, async(req,res)=>{
   
   })
 
+  hrOperation.get('/getValidDate', async(req, res)=>{
+    try
+    {
+      const cat = req.query.cat
+      var pool = await db.poolPromise
+      var result = await pool.request()
+        .query(`select sap_p2 from category where categorynm = '${cat}' `)
+      res.send(result['recordset'])
+    }
+    catch(err)
+    {
+      console.log(err)
+      res.send({message: 'failed to fetch valid date'})
+    }
+  })
 
   module.exports = hrOperation
