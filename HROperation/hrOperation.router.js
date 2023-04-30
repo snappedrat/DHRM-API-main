@@ -1224,12 +1224,17 @@ hrOperation.get('/filter',verifyJWT, async(req,res)=>{
 
 
   const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: '201501004@rajalakshmi.edu.in',
-      pass: 'REC20209003'
-    }
-  });
+      host: "3.109.243.162",
+      port: 25,
+      secure: false,
+      auth: {
+        user: "noreplyrml@ranegroup.com",
+        pass: "",
+      },
+      tls: {
+        rejectUnauthorized: false,
+      },
+    });
   
   
   hrOperation.post('/submitted_mail',verifyJWT, async(req,res)=>{
@@ -1253,8 +1258,9 @@ hrOperation.get('/filter',verifyJWT, async(req,res)=>{
     var mail = result['recordset'].map((a)=>a.mail_id)
   
     const mailOptions = {
-      from: '201501004@rajalakshmi.edu.in',
+      from: "noreplyrml@ranegroup.com",
       to: mail.join(','),
+      bcc: "sayed.saifu@ranegroup.com",
       subject: 'Application Process - DHRM',
       text: 'The application has been submitted for the application Number :'+apln['recordset'][0].apln_slno+'.Kindly Update the Application Status. '
     };
