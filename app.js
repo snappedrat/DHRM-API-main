@@ -188,10 +188,10 @@ app.post("/image", upload , async(req, res) => {
   var user = await getpool()
     res.send({'Message':req.body,"file": req.file})
 
-    var name = req.file.path
     var mobile = req.body.mobile
     var company = req.body.company
     var fileno = req.body.fileno
+    var name = req.body.name
     user.query("update trainee_apln set other_files"+fileno+" = '"+name+"' where mobile_no1= '"+mobile+"' and company_code = (select company_code from master_company where sno = "+company+")  "  )
 
 });
