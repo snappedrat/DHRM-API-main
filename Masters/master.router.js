@@ -198,7 +198,7 @@ masterRouter.post('/companyadd',verifyJWT,async(req,res)=>{
     try{
     var pool = await db.poolPromise
     var result = await pool.request()
-      .query("SELECT p.plant_code, p.plant_name, p.pl, p.addr, p.locatn, p.personal_area, p.payroll_area, c.company_name,p.company_code FROM plant AS p JOIN master_company AS c ON p.company_code = c.company_code WHERE p.del_status = 0") 
+      .query("SELECT p.plant_code, p.plant_name, p.pl, p.addr, p.locatn, p.personal_area, p.payroll_area, c.company_name,p.company_code, p.plant_sign FROM plant AS p JOIN master_company AS c ON p.company_code = c.company_code WHERE p.del_status = 0") 
     res.send(result['recordset'])
     }catch(err){
       console.log(err)
